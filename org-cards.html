@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ORG // ROSTER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#05070c;
+    --panel:#0c111c;
+    --steel:#1b2233;
+    --cyan:#00e5ff;
+    --purple:#8b5cf6;
+    --amber:#ffb020;
+    --ghost:#e8edf5;
+    --dim:#7a8399;
+    --danger:#ff4d6d;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(0,229,255,.08), transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, rgba(139,92,246,.10), transparent 55%),
+      var(--void);
+    color:var(--ghost);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:32px 20px 80px;
+  }
+  .display{font-family:'Chakra Petch',sans-serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  header{max-width:1180px;margin:0 auto 28px;}
+  .eyebrow{
+    display:flex;align-items:center;gap:10px;
+    color:var(--cyan);font-size:12.5px;letter-spacing:.14em;
+    margin-bottom:10px;
+  }
+  .eyebrow::before{content:"";width:22px;height:1px;background:var(--cyan);opacity:.6;}
+  h1{
+    font-family:'Chakra Petch',sans-serif;
+    font-weight:700;font-size:clamp(28px,4vw,42px);
+    margin:0 0 6px;letter-spacing:.01em;
+  }
+  h1 span{color:var(--dim);font-weight:500;}
+  .sub{color:var(--dim);font-size:14.5px;max-width:60ch;line-height:1.55;margin:0;}
+
+  .controls{
+    max-width:1180px;margin:26px auto 8px;
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  }
+  input[type="text"], input[type="password"]{
+    background:var(--panel);border:1px solid var(--steel);
+    color:var(--ghost);font-family:'JetBrains Mono',monospace;font-size:13.5px;
+    padding:10px 12px;border-radius:3px;outline:none;
+  }
+  input::placeholder{color:#4d5568;}
+  input:focus{border-color:var(--cyan);}
+  #orgInput{width:220px;}
+  #userInput{width:170px;}
+  #tokenInput{width:230px;}
+  button{
+    font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:13.5px;
+    letter-spacing:.03em;
+    background:transparent;border:1px solid var(--cyan);color:var(--cyan);
+    padding:10px 16px;border-radius:3px;cursor:pointer;
+    transition:background .15s, color .15s;
+  }
+  button:hover{background:var(--cyan);color:var(--void);}
+  button.ghost{border-color:var(--steel);color:var(--dim);}
+  button.ghost:hover{background:var(--steel);color:var(--ghost);}
+  .tokenNote{color:#4d5568;font-size:11.5px;width:100%;margin-top:-2px;}
+
+  #status{
+    max-width:1180px;margin:18px auto;color:var(--dim);
+    font-family:'JetBrains Mono',monospace;font-size:13px;min-height:18px;
+  }
+  #status.err{color:var(--danger);}
+
+  .grid{
+    max-width:1180px;margin:18px auto 0;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+    gap:22px;
+  }
+
+  .card{
+    position:relative;
+    background:linear-gradient(160deg, #0d1320 0%, #090d16 100%);
+    border:1px solid var(--steel);
+    clip-path:polygon(0 14px,14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%);
+    padding:16px 16px 18px;
+    cursor:pointer;
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .card::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(115deg, transparent 40%, rgba(0,229,255,.05) 50%, transparent 60%);
+  }
+  .card:hover{transform:translateY(-3px);border-color:var(--rarity, var(--cyan));}
+  .card:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;}
+
+  .cardTop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+  .levelTag{
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--void);
+    background:var(--rarity, var(--cyan));padding:3px 7px;line-height:1;
+    font-weight:700;
+  }
+  .rankTag{
+    font-family:'Chakra Petch',sans-serif;font-size:10.5px;letter-spacing:.1em;
+    color:var(--rarity, var(--cyan));border:1px solid var(--rarity, var(--cyan));
+    padding:3px 7px;
+  }
+
+  .avatarWrap{
+    width:76px;height:76px;margin:0 auto 12px;position:relative;
+  }
+  .avatarWrap img{
+    width:100%;height:100%;object-fit:cover;
+    clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+    display:block;filter:saturate(1.05) contrast(1.05);
+  }
+  .avatarWrap::after{
+    content:"";position:absolute;inset:-4px;
+    clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+    border:1px solid var(--rarity, var(--cyan));opacity:.6;
+    pointer-events:none;
+  }
+
+  .name{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:16px;text-align:center;margin:0;}
+  .login{
+    font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--dim);
+    text-align:center;margin:2px 0 12px;
+  }
+  .classRow{
+    text-align:center;font-family:'Chakra Petch',sans-serif;font-size:11.5px;
+    letter-spacing:.08em;color:var(--purple);margin-bottom:14px;
+  }
+
+  .statBar{margin-bottom:8px;}
+  .statLabel{
+    display:flex;justify-content:space-between;
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);
+    margin-bottom:3px;
+  }
+  .statTrack{height:4px;background:var(--steel);position:relative;}
+  .statFill{position:absolute;inset:0;background:var(--rarity, var(--cyan));}
+
+  .xpRow{
+    margin-top:14px;padding-top:12px;border-top:1px dashed var(--steel);
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);
+  }
+  .xpRow b{color:var(--ghost);}
+
+  .skeleton{opacity:.35;}
+  .skeleton *{color:transparent !important;background-color:#161d2c !important;border-color:#161d2c !important;}
+
+  /* focus overlay */
+  #overlay{
+    position:fixed;inset:0;background:rgba(2,4,8,.86);
+    backdrop-filter:blur(3px);
+    display:none;align-items:center;justify-content:center;
+    padding:24px;z-index:50;
+  }
+  #overlay.open{display:flex;}
+  .dossier{
+    width:min(560px,100%);background:var(--panel);border:1px solid var(--rarity, var(--cyan));
+    position:relative;padding:28px 26px 26px;
+    clip-path:polygon(0 18px,18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%);
+  }
+  .dossier .scan{
+    position:absolute;inset:0;pointer-events:none;opacity:.5;
+    background:repeating-linear-gradient(0deg, rgba(0,229,255,.03) 0 1px, transparent 1px 3px);
+  }
+  .closeBtn{
+    position:absolute;top:14px;right:16px;background:none;border:none;color:var(--dim);
+    font-size:20px;cursor:pointer;line-height:1;padding:4px;
+  }
+  .closeBtn:hover{color:var(--ghost);background:none;}
+  .dHead{display:flex;gap:18px;align-items:center;margin-bottom:16px;}
+  .dHead img{
+    width:88px;height:88px;object-fit:cover;
+    clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+    border:1px solid var(--rarity, var(--cyan));
+  }
+  .dName{font-family:'Chakra Petch',sans-serif;font-size:22px;font-weight:700;margin:0;}
+  .dLogin{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);}
+  .dTags{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+  .bio{font-size:13.5px;line-height:1.6;color:#c3cadb;margin:14px 0 18px;}
+  .statGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 18px;margin-bottom:16px;}
+  .statBox{border:1px solid var(--steel);padding:10px 12px;}
+  .statBox .k{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);}
+  .statBox .v{font-family:'Chakra Petch',sans-serif;font-size:18px;font-weight:600;margin-top:2px;}
+  .langList{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .langChip{
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--dim);
+    border:1px solid var(--steel);padding:4px 8px;
+  }
+  .profileLink{
+    display:inline-block;font-family:'Chakra Petch',sans-serif;font-size:13px;font-weight:600;
+    color:var(--void);background:var(--rarity, var(--cyan));padding:9px 16px;text-decoration:none;
+  }
+
+  footer{max-width:1180px;margin:50px auto 0;color:#3d4457;font-size:11.5px;font-family:'JetBrains Mono',monospace;line-height:1.7;}
+  footer a{color:#5a6480;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow mono">GITHUB ORG // LIVE ROSTER</div>
+  <h1>Contributor <span>Codex</span></h1>
+  <p class="sub">Pulls public GitHub profile data client-side and turns each member into a stat card. Nothing is stored — every load re-fetches live from the GitHub API.</p>
+</header>
+
+<div class="controls">
+  <input type="text" id="orgInput" class="mono" placeholder="org name" value="boy-offi9-inc">
+  <button id="loadOrgBtn">Load org</button>
+  <input type="text" id="userInput" class="mono" placeholder="add username">
+  <button id="addUserBtn" class="ghost">Add card</button>
+  <input type="password" id="tokenInput" class="mono" placeholder="GitHub token (optional)">
+  <div class="tokenNote mono">Optional — raises the rate limit from 60/hr to 5,000/hr. Stays in this tab only, never sent anywhere but api.github.com.</div>
+</div>
+
+<div id="status" class="mono"></div>
+<div class="grid" id="grid"></div>
+
+<div id="overlay">
+  <div class="dossier" id="dossier"></div>
+</div>
+
+<footer>
+  Unauthenticated GitHub API requests are capped at 60/hr per IP; each card costs 2 requests. // "Top language" and "class" are derived from a member's own repos (forks excluded). // "Level" is a flavor stat computed from public repos, stars, followers and account age — it is not an official GitHub metric.
+</footer>
+
+<script>
+const grid = document.getElementById('grid');
+const statusEl = document.getElementById('status');
+const overlay = document.getElementById('overlay');
+const dossier = document.getElementById('dossier');
+
+const LANG_CLASS = {
+  JavaScript:'NETRUNNER', TypeScript:'CIPHER ADEPT', Python:'DATA MAGE',
+  Java:'IRON WARDEN', Kotlin:'IRON WARDEN', Go:'FORGE RUNNER', Rust:'VOID SMITH',
+  C:'CORE ENGINEER', 'C++':'CORE ENGINEER', 'C#':'CORE ENGINEER',
+  HTML:'SIGNAL WEAVER', CSS:'SIGNAL WEAVER', Shell:'TERMINAL RONIN',
+  Swift:'GLASS ARCHITECT', Dart:'GLASS ARCHITECT', Ruby:'RUNE SMITH',
+  PHP:'GRID WARDEN', Vue:'SIGNAL WEAVER'
+};
+
+function classFor(lang){ return LANG_CLASS[lang] || 'WANDERER'; }
+
+function rarityFor(level){
+  if (level >= 25) return { color:'#ffb020', rank:'LEGENDARY' };
+  if (level >= 16) return { color:'#ff4d6d', rank:'ELITE' };
+  if (level >= 10) return { color:'#8b5cf6', rank:'SPECIALIST' };
+  if (level >= 5)  return { color:'#00e5ff', rank:'OPERATIVE' };
+  return { color:'#7a8399', rank:'INITIATE' };
+}
+
+function authHeaders(){
+  const token = document.getElementById('tokenInput').value.trim();
+  return token ? { Authorization: 'token ' + token } : {};
+}
+
+async function ghFetch(url){
+  const res = await fetch(url, { headers: { Accept:'application/vnd.github+json', ...authHeaders() } });
+  if (!res.ok) {
+    const err = new Error(res.status + ' ' + res.statusText);
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
+}
+
+function setStatus(msg, isErr){
+  statusEl.textContent = msg || '';
+  statusEl.classList.toggle('err', !!isErr);
+}
+
+function skeletonCard(login){
+  const el = document.createElement('div');
+  el.className = 'card skeleton';
+  el.dataset.login = login;
+  el.innerHTML = `
+    <div class="cardTop"><span class="levelTag">LV --</span><span class="rankTag">----</span></div>
+    <div class="avatarWrap"><img src="" alt=""></div>
+    <p class="name">Loading…</p>
+    <p class="login">@${login}</p>
+    <div class="classRow">— — —</div>
+  `;
+  return el;
+}
+
+async function buildCardData(login){
+  const user = await ghFetch(`https://api.github.com/users/${login}`);
+  let repos = [];
+  try {
+    repos = await ghFetch(`https://api.github.com/users/${login}/repos?per_page=100&type=owner`);
+  } catch { /* repos endpoint failing shouldn't kill the whole card */ }
+
+  const original = repos.filter(r => !r.fork);
+  const langCounts = {};
+  let totalStars = 0;
+  original.forEach(r => {
+    totalStars += r.stargazers_count || 0;
+    if (r.language) langCounts[r.language] = (langCounts[r.language] || 0) + 1;
+  });
+  const topLangs = Object.entries(langCounts).sort((a,b) => b[1]-a[1]).map(([l]) => l);
+  const topLang = topLangs[0] || null;
+
+  const ageYears = (Date.now() - new Date(user.created_at).getTime()) / (1000*60*60*24*365);
+  const xp = (user.followers||0)*10 + (user.public_repos||0)*15 + totalStars*5 + Math.floor(ageYears)*20;
+  const level = Math.max(1, Math.min(99, 1 + Math.floor(Math.sqrt(xp) / 6)));
+
+  return { user, topLang, topLangs, totalStars, level, xp, ageYears };
+}
+
+function statBarHTML(label, value, max){
+  const pct = Math.max(4, Math.min(100, Math.round((value/max)*100)));
+  return `
+    <div class="statBar">
+      <div class="statLabel"><span>${label}</span><span>${value}</span></div>
+      <div class="statTrack"><div class="statFill" style="width:${pct}%"></div></div>
+    </div>`;
+}
+
+function renderCard(el, data){
+  const { user, topLang, level, xp, totalStars } = data;
+  const rarity = rarityFor(level);
+  el.style.setProperty('--rarity', rarity.color);
+  el.classList.remove('skeleton');
+  el.innerHTML = `
+    <div class="cardTop">
+      <span class="levelTag mono">LV ${level}</span>
+      <span class="rankTag">${rarity.rank}</span>
+    </div>
+    <div class="avatarWrap"><img src="${user.avatar_url}&s=160" alt="${user.login}"></div>
+    <p class="name">${user.name || user.login}</p>
+    <p class="login">@${user.login}</p>
+    <div class="classRow">${classFor(topLang)}${topLang ? ' · ' + topLang : ''}</div>
+    ${statBarHTML('REPOS', user.public_repos || 0, 60)}
+    ${statBarHTML('STARS', totalStars, 200)}
+    ${statBarHTML('FOLLOWERS', user.followers || 0, 200)}
+    <div class="xpRow"><span>XP</span><b>${xp.toLocaleString()}</b></div>
+  `;
+  el.onclick = () => openDossier(data);
+}
+
+function openDossier(data){
+  const { user, topLangs, level, xp, totalStars, ageYears } = data;
+  const rarity = rarityFor(level);
+  dossier.style.setProperty('--rarity', rarity.color);
+  const joined = new Date(user.created_at).getFullYear();
+  dossier.innerHTML = `
+    <div class="scan"></div>
+    <button class="closeBtn" aria-label="Close">✕</button>
+    <div class="dHead">
+      <img src="${user.avatar_url}&s=200" alt="${user.login}">
+      <div>
+        <p class="dName">${user.name || user.login}</p>
+        <p class="dLogin mono">@${user.login} · member since ${joined}</p>
+        <div class="dTags">
+          <span class="levelTag mono">LV ${level}</span>
+          <span class="rankTag">${rarity.rank}</span>
+        </div>
+      </div>
+    </div>
+    ${user.bio ? `<p class="bio">${user.bio}</p>` : ''}
+    <div class="statGrid">
+      <div class="statBox"><div class="k mono">PUBLIC REPOS</div><div class="v">${user.public_repos||0}</div></div>
+      <div class="statBox"><div class="k mono">TOTAL STARS</div><div class="v">${totalStars}</div></div>
+      <div class="statBox"><div class="k mono">FOLLOWERS</div><div class="v">${user.followers||0}</div></div>
+      <div class="statBox"><div class="k mono">XP</div><div class="v">${xp.toLocaleString()}</div></div>
+    </div>
+    ${topLangs.length ? `<div class="langList">${topLangs.slice(0,5).map(l=>`<span class="langChip">${l}</span>`).join('')}</div>` : ''}
+    <a class="profileLink" href="${user.html_url}" target="_blank" rel="noopener">VIEW ON GITHUB →</a>
+  `;
+  dossier.querySelector('.closeBtn').onclick = closeDossier;
+  overlay.classList.add('open');
+}
+
+function closeDossier(){ overlay.classList.remove('open'); }
+overlay.addEventListener('click', (e) => { if (e.target === overlay) closeDossier(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDossier(); });
+
+async function loadCard(login){
+  if (document.querySelector(`.card[data-login="${login}" i]`)) return;
+  const el = skeletonCard(login);
+  grid.appendChild(el);
+  try {
+    const data = await buildCardData(login);
+    renderCard(el, data);
+  } catch (err) {
+    el.classList.remove('skeleton');
+    el.onclick = null;
+    el.innerHTML = `
+      <div class="cardTop"><span class="rankTag" style="color:var(--danger);border-color:var(--danger)">ERROR</span></div>
+      <p class="login" style="margin-top:8px;">@${login}</p>
+      <p class="bio" style="font-size:12px;color:var(--danger);margin:8px 0 0;">
+        ${err.status === 403 ? 'Rate limited — add a token above and reload.' : err.status === 404 ? 'User not found.' : 'Failed to load.'}
+      </p>`;
+  }
+}
+
+async function loadOrg(){
+  const org = document.getElementById('orgInput').value.trim();
+  if (!org) return;
+  grid.innerHTML = '';
+  setStatus(`Fetching ${org}'s member list…`);
+  try {
+    const members = await ghFetch(`https://api.github.com/orgs/${org}/members?per_page=100`);
+    if (!members.length) {
+      setStatus(`No public members returned for "${org}" — its member list may be private. Add usernames manually below instead.`, true);
+      return;
+    }
+    setStatus(`Loading ${members.length} member${members.length===1?'':'s'}…`);
+    for (const m of members) await loadCard(m.login);
+    setStatus(`${members.length} card${members.length===1?'':'s'} loaded.`);
+  } catch (err) {
+    if (err.status === 404) setStatus(`Org "${org}" not found.`, true);
+    else if (err.status === 403) setStatus('Rate limited by GitHub — add a token above and try again.', true);
+    else setStatus('Failed to load org: ' + err.message, true);
+  }
+}
+
+document.getElementById('loadOrgBtn').onclick = loadOrg;
+document.getElementById('addUserBtn').onclick = () => {
+  const input = document.getElementById('userInput');
+  const login = input.value.trim();
+  if (!login) return;
+  input.value = '';
+  setStatus(`Adding @${login}…`);
+  loadCard(login).then(() => setStatus(''));
+};
+document.getElementById('userInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('addUserBtn').click();
+});
+
+loadOrg();
+</script>
+</body>
+</html>
