@@ -37,6 +37,18 @@ async function ghFetch(url, token) {
   return res.json();
 }
 
+async function avatarDataUri(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const contentType = res.headers.get('content-type') || 'image/jpeg';
+    const buf = Buffer.from(await res.arrayBuffer());
+    return `data:${contentType};base64,${buf.toString('base64')}`;
+  } catch {
+    return null;
+  }
+}
+
 function statBar(y, label, value, max, color) {
   const pct = Math.max(4, Math.min(100, Math.round((value / max) * 100)));
   return `
@@ -46,9 +58,12 @@ function statBar(y, label, value, max, color) {
     <rect x="28" y="${y + 6}" width="${(304 * pct) / 100}" height="4" fill="${color}"/>`;
 }
 
-function renderCardSVG({ user, topLang, level, xp, totalStars, rank, color }) {
+function renderCardSVG({ user, avatarUri, topLang, level, xp, totalStars, rank, color }) {
   const name = esc(user.name || user.login);
   const classLabel = `${classFor(topLang)}${topLang ? ' · ' + esc(topLang) : ''}`;
+  const avatarTag = avatarUri
+    ? `<image href="${avatarUri}" x="4" y="5" width="64" height="62" clip-path="url(#hex)"/>`
+    : '';
 
   return `<svg width="360" height="360" viewBox="0 0 360 360" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -80,7 +95,7 @@ function renderCardSVG({ user, topLang, level, xp, totalStars, rank, color }) {
 
     <g transform="translate(144,54)">
       <polygon points="36,0 72,18 72,54 36,72 0,54 0,18" fill="#1b2233" stroke="${color}"/>
-      <image href="${user.avatar_url}&amp;s=160" x="4" y="5" width="64" height="62" clip-path="url(#hex)"/>
+      ${avatarTag}
     </g>
 
     <text x="180" y="156" text-anchor="middle" class="t1">${name}</text>
@@ -122,6 +137,7 @@ module.exports = async (req, res) => {
     try {
       repos = await ghFetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`, token);
     } catch { /* repos failing shouldn't kill the card */ }
+    const avatarUri = await avatarDataUri(`${user.avatar_url}&s=160`);
 
     const original = repos.filter((r) => !r.fork);
     const langCounts = {};
@@ -141,7 +157,7 @@ module.exports = async (req, res) => {
     // for up to a day after that so a burst of README views never hits GitHub's
     // API directly and risks the 60/hr unauthenticated cap.
     res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
-    res.status(200).send(renderCardSVG({ user, topLang, level, xp, totalStars, rank, color }));
+    res.status(200).send(renderCardSVG({ user, avatarUri, topLang, level, xp, totalStars, rank, color }));
   } catch (err) {
     res.setHeader('Cache-Control', 'public, s-maxage=60');
     if (err.status === 404) res.status(404).send(errorSVG(`user "${username}" not found`));
