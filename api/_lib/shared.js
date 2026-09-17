@@ -92,7 +92,8 @@ function computeStats(user, repos) {
     totalStars += r.stargazers_count || 0;
     if (r.language) langCounts[r.language] = (langCounts[r.language] || 0) + 1;
   });
-  const topLang = Object.entries(langCounts).sort((a, b) => b[1] - a[1]).map(([l]) => l)[0] || null;
+  const langs = Object.entries(langCounts).sort((a, b) => b[1] - a[1]).map(([l]) => l);
+  const topLang = langs[0] || null;
 
   const years = (Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24 * 365);
   const repoCount = user.public_repos || 0;
@@ -102,7 +103,7 @@ function computeStats(user, repos) {
   const level = Math.max(1, Math.min(99, 1 + Math.floor(Math.sqrt(xp) / 6)));
   const { color, tier } = tierFor(level);
 
-  return { topLang, totalStars, xp, level, color, tier };
+  return { topLang, langs, totalStars, xp, level, color, tier };
 }
 
 function sanitizeColor(input) {
