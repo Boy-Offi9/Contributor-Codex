@@ -1,7 +1,5 @@
-// GET /api/leaderboard?org=boy-offi9-inc&limit=10
-//   -> image/svg+xml — a wide ranked banner, embeddable directly in the org README.
-
-const { classFor, esc, ghFetch, avatarDataUri, computeStats, sanitizeColor } = require('./_lib/shared');
+const { checkRateLimit } = require('@vercel/firewall');
+const { classFor, esc, ghFetch, avatarDataUri, computeStats, sanitizeColor, XP_FORMULA } = require('./_lib/shared');
 
 const ROW_H = 56;
 const WIDTH = 640;
@@ -11,13 +9,13 @@ function errorSVG(message, height = 100) {
   return `<svg width="${WIDTH}" height="${height}" viewBox="0 0 ${WIDTH} ${height}" xmlns="http://www.w3.org/2000/svg">
     <rect width="${WIDTH}" height="${height}" fill="#05070c"/>
     <rect width="${WIDTH}" height="${height}" fill="none" stroke="#ff4d6d"/>
-    <text x="20" y="${height / 2}" font="700 13px system-ui,sans-serif" fill="#ff4d6d">LEADERBOARD ERROR — ${esc(message)}</text>
+    <text x="20" y="${height / 2 + 5}" font-family="'Courier New',monospace" font-size="12" fill="#ff4d6d">${esc(message)}</text>
   </svg>`;
 }
 
 function row(index, entry, total) {
   const y = HEADER_H + index * ROW_H;
-  const { user, avatarUri, topLang, level, xp, rank, color } = entry;
+  const { user, avatarUri, topLang, level, xp, tier, color } = entry;
   const name = esc(user.name || user.login);
   const classLabel = `${classFor(topLang)}${topLang ? ' · ' + esc(topLang) : ''}`;
   const avatarTag = avatarUri
@@ -33,7 +31,7 @@ function row(index, entry, total) {
     <text x="98" y="${y + 40}" class="cls" fill="${color}">${esc(classLabel.toUpperCase())}</text>
     <rect x="${WIDTH - 150}" y="${y + 14}" width="46" height="18" fill="${color}"/>
     <text x="${WIDTH - 127}" y="${y + 27}" text-anchor="middle" class="tag" fill="#05070c">LV ${level}</text>
-    <text x="${WIDTH - 20}" y="${y + 27}" text-anchor="end" class="xp">${xp.toLocaleString()} XP</text>`;
+    <text x="${WIDTH - 20}" y="${y + 27}" text-anchor="end" class="xp"><title>${XP_FORMULA}</title>${xp.toLocaleString()} XP</text>`;
 }
 
 async function buildEntry(login, token) {
@@ -41,33 +39,37 @@ async function buildEntry(login, token) {
   let repos = [];
   try {
     repos = await ghFetch(`https://api.github.com/users/${login}/repos?per_page=100&type=owner`, token);
-  } catch { /* ok without repos */ }
-  const avatarUri = await avatarDataUri(`${user.avatar_url}&s=80`);
-  return { user, avatarUri, ...computeStats(user, repos) };
+  } catch {}
+  const avatarUri = await avatarDataUri(`${user.avatar_url}&s=100`);
+  const stats = computeStats(user, repos);
+  return { user, avatarUri, ...stats };
 }
 
-module.exports = async (req, res) => {
-  const org = (req.query.org || '').trim();
-  const limit = Math.max(1, Math.min(20, parseInt(req.query.limit, 10) || 10));
-  const accent = sanitizeColor(req.query.color) || '#00e5ff';
-  res.setHeader('Content-Type', 'image/svg+xml');
+function svgResponse(body, status, cacheControl) {
+  const headers = { 'Content-Type': 'image/svg+xml' };
+  if (cacheControl) headers['Cache-Control'] = cacheControl;
+  return new Response(body, { status, headers });
+}
 
-  if (!org) {
-    res.status(400).send(errorSVG('missing ?org='));
-    return;
-  }
+module.exports.GET = async (request) => {
+  const { rateLimited } = await checkRateLimit('leaderboard-endpoint', { request });
+  if (rateLimited) return svgResponse(errorSVG('rate limited — slow down a bit'), 100);
+
+  const url = new URL(request.url);
+  const org = (url.searchParams.get('org') || '').trim();
+  const limit = Math.max(1, Math.min(20, parseInt(url.searchParams.get('limit'), 10) || 10));
+  const accent = sanitizeColor(url.searchParams.get('color')) || '#00e5ff';
+
+  if (!org) return svgResponse(errorSVG('missing ?org='), 100, undefined);
 
   const token = process.env.GITHUB_TOKEN;
   try {
     const members = await ghFetch(`https://api.github.com/orgs/${org}/members?per_page=100`, token);
-    if (!members.length) {
-      res.status(404).send(errorSVG(`"${org}" has no public members`));
-      return;
-    }
+    if (!members.length) return svgResponse(errorSVG(`"${org}" has no public members`), 100);
 
     const entries = [];
     for (const m of members) {
-      try { entries.push(await buildEntry(m.login, token)); } catch { /* skip users that fail to load */ }
+      try { entries.push(await buildEntry(m.login, token)); } catch {}
     }
     entries.sort((a, b) => b.xp - a.xp);
     const top = entries.slice(0, limit);
@@ -76,6 +78,7 @@ module.exports = async (req, res) => {
     const rowsSVG = top.map((entry, i) => row(i, entry, top.length)).join('');
 
     const svg = `<svg width="${WIDTH}" height="${height}" viewBox="0 0 ${WIDTH} ${height}" xmlns="http://www.w3.org/2000/svg">
+      <title>${esc(org)} — Team Leaderboard. XP = ${XP_FORMULA}</title>
       <defs>
         <style>
           .title{font:700 15px system-ui,sans-serif;fill:#e8edf5;letter-spacing:1px;}
@@ -98,12 +101,10 @@ module.exports = async (req, res) => {
       ${rowsSVG}
     </svg>`;
 
-    res.setHeader('Cache-Control', 'public, s-maxage=21600, stale-while-revalidate=86400');
-    res.status(200).send(svg);
+    return svgResponse(svg, 200, 'public, s-maxage=21600, stale-while-revalidate=86400');
   } catch (err) {
-    res.setHeader('Cache-Control', 'public, s-maxage=60');
-    if (err.status === 404) res.status(404).send(errorSVG(`org "${org}" not found`));
-    else if (err.status === 403) res.status(503).send(errorSVG('rate limited — set GITHUB_TOKEN'));
-    else res.status(500).send(errorSVG('failed to load'));
+    if (err.status === 404) return svgResponse(errorSVG(`org "${org}" not found`), 100, 'public, s-maxage=60');
+    if (err.status === 403) return svgResponse(errorSVG('rate limited — set GITHUB_TOKEN'), 100, 'public, s-maxage=60');
+    return svgResponse(errorSVG('failed to load'), 100, 'public, s-maxage=60');
   }
 };
