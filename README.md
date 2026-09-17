@@ -1,2 +1,2 @@
-# github-cards
+# Contributor Codex
 ![My card](https://github-tech-cards.vercel.app/api/card?username=Boy-Offi9)
