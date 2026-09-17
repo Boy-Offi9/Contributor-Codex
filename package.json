@@ -1,0 +1,13 @@
+{
+  "name": "contributor-codex",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sci-fi RPG-style GitHub contributor cards, embeddable in any README",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@vercel/firewall": "^1.2.1",
+    "@boy-offi9-inc/reqkit": "^0.1.7"
+  }
+}
