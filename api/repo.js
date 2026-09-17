@@ -10,12 +10,6 @@ function errorSVG(message) {
   </svg>`;
 }
 
-function statBlock(x, label, value, color) {
-  return `
-    <text x="${x}" y="70" class="lbl">${label}</text>
-    <text x="${x}" y="94" class="statVal" fill="${color}">${value}</text>`;
-}
-
 function wrapText(text, maxChars) {
   const words = text.split(' ');
   const lines = [];
@@ -32,10 +26,14 @@ function wrapText(text, maxChars) {
   return lines.slice(0, 2);
 }
 
-function renderRepoSVG({ repo, color, fontFace }) {
+function licenseOf(repo) {
+  return repo.license?.spdx_id && repo.license.spdx_id !== 'NOASSERTION' ? repo.license.spdx_id : null;
+}
+
+function renderCyberpunk({ repo, color, fontFace }) {
   const displayFont = fontFace ? "'Chakra Petch',system-ui,sans-serif" : 'system-ui,sans-serif';
   const descLines = repo.description ? wrapText(esc(repo.description), 58) : [];
-  const license = repo.license?.spdx_id && repo.license.spdx_id !== 'NOASSERTION' ? repo.license.spdx_id : null;
+  const license = licenseOf(repo);
 
   return `<svg width="420" height="200" viewBox="0 0 420 200" xmlns="http://www.w3.org/2000/svg">
     <title>${esc(repo.full_name)} — Repository Card</title>
@@ -53,25 +51,71 @@ function renderRepoSVG({ repo, color, fontFace }) {
         <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
       </radialGradient>
     </defs>
-
     <rect width="420" height="200" fill="#05070c"/>
     <rect width="420" height="200" fill="url(#bg)"/>
-    <polygon points="0,14 14,0 420,0 420,186 406,200 0,200" fill="none" stroke="#1b2233"/>
     <polygon points="0,14 14,0 420,0 420,186 406,200 0,200" fill="none" stroke="${color}" opacity="0.5"/>
-
     <text x="24" y="36" class="name">${esc(repo.name)}</text>
     <text x="24" y="52" class="desc" fill="#7a8399">${esc(repo.owner.login)}</text>
-
     ${descLines.map((line, i) => `<text x="24" y="${118 + i * 16}" class="desc">${line}</text>`).join('')}
-
-    ${statBlock(24, 'STARS', repo.stargazers_count, color)}
-    ${statBlock(140, 'FORKS', repo.forks_count, color)}
-    ${statBlock(256, 'ISSUES', repo.open_issues_count, color)}
-
+    <text x="24" y="70" class="lbl">STARS</text><text x="24" y="94" class="statVal" fill="${color}">${repo.stargazers_count}</text>
+    <text x="140" y="70" class="lbl">FORKS</text><text x="140" y="94" class="statVal" fill="${color}">${repo.forks_count}</text>
+    <text x="256" y="70" class="lbl">ISSUES</text><text x="256" y="94" class="statVal" fill="${color}">${repo.open_issues_count}</text>
     ${repo.language ? `<rect x="24" y="164" width="${16 + repo.language.length * 7}" height="20" fill="${color}"/><text x="32" y="178" class="chip">${esc(repo.language)}</text>` : ''}
     ${license ? `<rect x="${repo.language ? 40 + repo.language.length * 7 : 24}" y="164" width="${16 + license.length * 7}" height="20" fill="none" stroke="#1b2233"/><text x="${repo.language ? 48 + repo.language.length * 7 : 32}" y="178" class="chip" fill="#7a8399">${esc(license)}</text>` : ''}
   </svg>`;
 }
+
+function renderTerminal({ repo }) {
+  const green = '#3ddc6a';
+  const license = licenseOf(repo);
+  const rows = [
+    `repo     ${esc(repo.full_name)}`,
+    `lang     ${repo.language || 'n/a'}`,
+    `license  ${license || 'none'}`,
+    `stars    ${repo.stargazers_count}`,
+    `forks    ${repo.forks_count}`,
+    `issues   ${repo.open_issues_count}`,
+  ];
+  return `<svg width="420" height="220" viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg">
+    <title>${esc(repo.full_name)} — Repository Card (terminal theme)</title>
+    <defs><style>.term{font:400 13px 'Courier New',monospace;fill:${green};}.head{font:700 13px 'Courier New',monospace;fill:${green};}</style></defs>
+    <rect width="420" height="220" fill="#020402"/>
+    <rect width="420" height="220" fill="none" stroke="${green}" opacity="0.5"/>
+    <text x="16" y="30" class="head">$ git remote show origin</text>
+    ${rows.map((line, i) => `<text x="16" y="${58 + i * 20}" class="term">${esc(line)}</text>`).join('')}
+  </svg>`;
+}
+
+function renderGlass({ repo, color }) {
+  const descLines = repo.description ? wrapText(esc(repo.description), 60) : [];
+  const license = licenseOf(repo);
+  return `<svg width="420" height="200" viewBox="0 0 420 200" xmlns="http://www.w3.org/2000/svg">
+    <title>${esc(repo.full_name)} — Repository Card (glass theme)</title>
+    <defs>
+      <style>
+        .name{font:700 17px system-ui,sans-serif;fill:#1c2333;}
+        .desc{font:400 12px system-ui,sans-serif;fill:#5b6478;}
+        .lbl{font:500 9px system-ui,sans-serif;fill:#8891a3;letter-spacing:.5px;}
+        .statVal{font:700 18px system-ui,sans-serif;}
+        .chip{font:600 10px system-ui,sans-serif;fill:#1c2333;}
+      </style>
+      <linearGradient id="glassBg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#eef1f8"/><stop offset="100%" stop-color="#dde3f0"/>
+      </linearGradient>
+    </defs>
+    <rect width="420" height="200" rx="18" fill="url(#glassBg)"/>
+    <text x="24" y="36" class="name">${esc(repo.name)}</text>
+    <text x="24" y="52" class="desc">${esc(repo.owner.login)}</text>
+    ${descLines.map((line, i) => `<text x="24" y="${118 + i * 16}" class="desc">${line}</text>`).join('')}
+    <text x="24" y="70" class="lbl">STARS</text><text x="24" y="94" class="statVal" fill="${color}">${repo.stargazers_count}</text>
+    <text x="140" y="70" class="lbl">FORKS</text><text x="140" y="94" class="statVal" fill="${color}">${repo.forks_count}</text>
+    <text x="256" y="70" class="lbl">ISSUES</text><text x="256" y="94" class="statVal" fill="${color}">${repo.open_issues_count}</text>
+    ${repo.language ? `<rect x="24" y="164" width="${16 + repo.language.length * 7}" height="20" rx="10" fill="#ffffff" opacity="0.7"/><text x="32" y="178" class="chip">${esc(repo.language)}</text>` : ''}
+    ${license ? `<rect x="${repo.language ? 40 + repo.language.length * 7 : 24}" y="164" width="${16 + license.length * 7}" height="20" rx="10" fill="#ffffff" opacity="0.4"/><text x="${repo.language ? 48 + repo.language.length * 7 : 32}" y="178" class="chip" fill="#5b6478">${esc(license)}</text>` : ''}
+  </svg>`;
+}
+
+const THEMES = { cyberpunk: renderCyberpunk, terminal: renderTerminal, glass: renderGlass };
 
 function svg(body, status, cacheControl) {
   const headers = { 'Content-Type': 'image/svg+xml' };
@@ -88,13 +132,16 @@ module.exports.GET = async (request) => {
   const repoName = (url.searchParams.get('repo') || '').trim();
   if (!owner || !repoName) return svg(errorSVG('missing ?owner= or ?repo='), 400);
 
+  const requestedTheme = url.searchParams.get('theme');
+  const render = THEMES[requestedTheme] || THEMES.cyberpunk;
+
   const token = process.env.GITHUB_TOKEN;
   try {
     const repo = await ghFetch(`https://api.github.com/repos/${owner}/${repoName}`, token);
     const fontFace = await chakraPetchFontFace();
     const color = sanitizeColor(url.searchParams.get('color')) || '#00e5ff';
 
-    return svg(renderRepoSVG({ repo, color, fontFace }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
+    return svg(render({ repo, color, fontFace }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
   } catch (err) {
     if (err.status === 404) return svg(errorSVG(`"${owner}/${repoName}" not found`), 404, 'public, s-maxage=60');
     if (err.status === 403) return svg(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=60');
