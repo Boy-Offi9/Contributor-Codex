@@ -194,7 +194,9 @@
   .profileLink{
     display:inline-block;font-family:'Chakra Petch',sans-serif;font-size:13px;font-weight:600;
     color:var(--void);background:var(--rarity, var(--cyan));padding:9px 16px;text-decoration:none;
+    border:none;cursor:pointer;letter-spacing:.03em;
   }
+  .dossierCard{display:block;margin:0 auto;max-width:100%;height:auto;}
 
   footer a{color:#5a6480;}
 </style>
@@ -334,36 +336,34 @@ function renderCard(el, data){
   el.onclick = () => openDossier(data);
 }
 
+const API_BASE = 'https://github-tech-cards.vercel.app';
+
 function openDossier(data){
-  const { user, topLangs, level, xp, totalStars, ageYears } = data;
+  const { user, level } = data;
   const rarity = rarityFor(level);
   dossier.style.setProperty('--rarity', rarity.color);
   const joined = new Date(user.created_at).getFullYear();
+  const cardUrl = `${API_BASE}/api/card?username=${encodeURIComponent(user.login)}`;
   dossier.innerHTML = `
     <div class="scan"></div>
     <button class="closeBtn" aria-label="Close">✕</button>
-    <div class="dHead">
-      <img src="${user.avatar_url}&s=200" alt="${user.login}">
-      <div>
-        <p class="dName">${user.name || user.login}</p>
-        <p class="dLogin mono">@${user.login} · member since ${joined}</p>
-        <div class="dTags">
-          <span class="levelTag mono">LV ${level}</span>
-          <span class="rankTag">${rarity.rank}</span>
-        </div>
-      </div>
-    </div>
+    <img class="dossierCard" src="${cardUrl}" alt="${user.login} card" width="300">
+    <p class="dLogin mono" style="text-align:center;margin-top:10px;">member since ${joined}</p>
     ${user.bio ? `<p class="bio">${user.bio}</p>` : ''}
-    <div class="statGrid">
-      <div class="statBox"><div class="k mono">PUBLIC REPOS</div><div class="v">${user.public_repos||0}</div></div>
-      <div class="statBox"><div class="k mono">TOTAL STARS</div><div class="v">${totalStars}</div></div>
-      <div class="statBox"><div class="k mono">FOLLOWERS</div><div class="v">${user.followers||0}</div></div>
-      <div class="statBox"><div class="k mono">XP</div><div class="v">${xp.toLocaleString()}</div></div>
-    </div>
-    ${topLangs.length ? `<div class="langList">${topLangs.slice(0,5).map(l=>`<span class="langChip">${l}</span>`).join('')}</div>` : ''}
-    <a class="profileLink" href="${user.html_url}" target="_blank" rel="noopener">VIEW ON GITHUB →</a>
+    <button class="profileLink copyBtn" data-url="${cardUrl}">COPY EMBED LINK</button>
   `;
   dossier.querySelector('.closeBtn').onclick = closeDossier;
+  const copyBtn = dossier.querySelector('.copyBtn');
+  copyBtn.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(copyBtn.dataset.url);
+      const original = copyBtn.textContent;
+      copyBtn.textContent = 'COPIED ✓';
+      setTimeout(() => { copyBtn.textContent = original; }, 1500);
+    } catch {
+      copyBtn.textContent = 'COPY FAILED — SELECT MANUALLY';
+    }
+  };
   overlay.classList.add('open');
 }
 
