@@ -210,10 +210,10 @@ function renderDetailed({ user, avatarUri, topLang, langs, level, xp, totalStars
     : '';
   const bioLines = user.bio ? wrapBio(esc(user.bio), 52) : [];
   const chips = langs.slice(0, 5);
-  const height = 420 + bioLines.length * 16;
+  const height = 340 + bioLines.length * 16;
 
   return `<svg width="420" height="${height}" viewBox="0 0 420 ${height}" xmlns="http://www.w3.org/2000/svg">
-    <title>${name} — Contributor Card (detailed theme). XP = ${XP_FORMULA}. The GitHub link only works when this SVG is opened directly, not when embedded via an img tag.</title>
+    <title>${name} — Contributor Card (detailed theme). XP = ${XP_FORMULA}</title>
     <defs>
       ${fontFace ? `<style>${fontFace}</style>` : ''}
       <style>
@@ -223,7 +223,6 @@ function renderDetailed({ user, avatarUri, topLang, langs, level, xp, totalStars
         .cls{font:600 12px ${displayFont};fill:${color};letter-spacing:1px;}
         .bio{font:400 12px system-ui,sans-serif;fill:#a8b0c2;}
         .chip{font:600 10px 'Courier New',monospace;fill:${color};}
-        .btnText{font:700 12px ${displayFont};fill:#05070c;}
       </style>
       <clipPath id="hex"><polygon points="36,2 68,20 68,52 36,70 4,52 4,20"/></clipPath>
     </defs>
@@ -249,11 +248,6 @@ function renderDetailed({ user, avatarUri, topLang, langs, level, xp, totalStars
     ${statBox(212, 216 + bioLines.length * 16, 'XP', xp.toLocaleString(), color)}
 
     ${chips.map((lang, i) => `<rect x="${24 + i * 76}" y="${292 + bioLines.length * 16}" width="70" height="20" fill="none" stroke="${color}"/><text x="${59 + i * 76}" y="${306 + bioLines.length * 16}" text-anchor="middle" class="chip">${esc(lang)}</text>`).join('')}
-
-    <a href="${user.html_url}" target="_blank">
-      <rect x="24" y="${330 + bioLines.length * 16}" width="180" height="34" fill="${color}"/>
-      <text x="114" y="${352 + bioLines.length * 16}" text-anchor="middle" class="btnText">VIEW ON GITHUB →</text>
-    </a>
   </svg>`;
 }
 
