@@ -20,6 +20,24 @@ const classFor = (lang) => LANG_CLASS[lang] || 'WANDERER';
 const XP_WEIGHTS = { repo: 15, star: 5, follower: 10, year: 20 };
 const XP_FORMULA = `repos×${XP_WEIGHTS.repo} + stars×${XP_WEIGHTS.star} + followers×${XP_WEIGHTS.follower} + years×${XP_WEIGHTS.year}`;
 
+const TIERS = [
+  { name: 'INITIATE', color: '#7a8399' },
+  { name: 'OPERATIVE', color: '#00e5ff' },
+  { name: 'SPECIALIST', color: '#8b5cf6' },
+  { name: 'ELITE', color: '#ff4d6d' },
+  { name: 'LEGENDARY', color: '#ffb020' },
+];
+
+function trophyTier(value, thresholds) {
+  let index = 0;
+  for (let i = 0; i < thresholds.length; i++) {
+    if (value >= thresholds[i]) index = i + 1;
+  }
+  const current = TIERS[index];
+  const nextThreshold = thresholds[index] ?? null;
+  return { name: current.name, color: current.color, index, nextThreshold };
+}
+
 function tierFor(level) {
   if (level >= 25) return { color: '#ffb020', tier: 'LEGENDARY' };
   if (level >= 16) return { color: '#ff4d6d', tier: 'ELITE' };
@@ -88,8 +106,10 @@ function computeStats(user, repos) {
   const original = repos.filter((r) => !r.fork);
   const langCounts = {};
   let totalStars = 0;
+  let totalForks = 0;
   original.forEach((r) => {
     totalStars += r.stargazers_count || 0;
+    totalForks += r.forks_count || 0;
     if (r.language) langCounts[r.language] = (langCounts[r.language] || 0) + 1;
   });
   const langs = Object.entries(langCounts).sort((a, b) => b[1] - a[1]).map(([l]) => l);
@@ -103,7 +123,7 @@ function computeStats(user, repos) {
   const level = Math.max(1, Math.min(99, 1 + Math.floor(Math.sqrt(xp) / 6)));
   const { color, tier } = tierFor(level);
 
-  return { topLang, langs, totalStars, xp, level, color, tier };
+  return { topLang, langs, totalStars, totalForks, years, xp, level, color, tier };
 }
 
 function sanitizeColor(input) {
@@ -114,5 +134,5 @@ function sanitizeColor(input) {
 
 module.exports = {
   classFor, esc, ghFetch, avatarDataUri, computeStats, chakraPetchFontFace,
-  sanitizeColor, XP_FORMULA,
+  sanitizeColor, XP_FORMULA, trophyTier,
 };
