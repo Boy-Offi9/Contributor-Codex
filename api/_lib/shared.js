@@ -102,6 +102,20 @@ async function chakraPetchFontFace() {
   }
 }
 
+async function byteWeightedLangs(repos, token) {
+  const candidates = repos.filter((r) => !r.fork).sort((a, b) => b.stargazers_count - a.stargazers_count).slice(0, 6);
+  const totals = {};
+  for (const repo of candidates) {
+    try {
+      const bytes = await ghFetch(repo.languages_url, token);
+      for (const [lang, count] of Object.entries(bytes)) {
+        totals[lang] = (totals[lang] || 0) + count;
+      }
+    } catch {}
+  }
+  return Object.entries(totals).sort((a, b) => b[1] - a[1]).map(([l]) => l);
+}
+
 function computeStats(user, repos) {
   const original = repos.filter((r) => !r.fork);
   const langCounts = {};
@@ -134,5 +148,5 @@ function sanitizeColor(input) {
 
 module.exports = {
   classFor, esc, ghFetch, avatarDataUri, computeStats, chakraPetchFontFace,
-  sanitizeColor, XP_FORMULA, trophyTier,
+  sanitizeColor, XP_FORMULA, trophyTier, byteWeightedLangs,
 };
