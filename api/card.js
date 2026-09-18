@@ -1,5 +1,5 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { classFor, esc, ghFetch, avatarDataUri, computeStats, chakraPetchFontFace, sanitizeColor, XP_FORMULA } = require('./_lib/shared');
+const { classFor, esc, ghFetch, avatarDataUri, computeStats, chakraPetchFontFace, sanitizeColor, XP_FORMULA, byteWeightedLangs } = require('./_lib/shared');
 
 function errorSVG(message) {
   return `<svg width="360" height="120" viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg">
@@ -283,6 +283,11 @@ module.exports.GET = async (request) => {
       chakraPetchFontFace(),
     ]);
     const stats = computeStats(user, repos);
+    const byteLangs = await byteWeightedLangs(repos, token);
+    if (byteLangs.length) {
+      stats.langs = byteLangs;
+      stats.topLang = byteLangs[0];
+    }
     const colorOverride = sanitizeColor(url.searchParams.get('color'));
     if (colorOverride) stats.color = colorOverride;
 
