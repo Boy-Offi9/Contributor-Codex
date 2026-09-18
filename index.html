@@ -242,7 +242,6 @@ async function openDossier(login){
     ${joined ? `<p class="dLogin mono" style="text-align:center;margin-top:10px;">member since ${joined}</p>` : ''}
     ${user?.bio ? `<p class="bio">${user.bio}</p>` : ''}
     <button class="profileLink copyBtn" data-url="${cardUrl}">COPY EMBED LINK</button>
-    ${user ? `<a class="profileLink" href="${user.html_url}" target="_blank" rel="noopener">VIEW ON GITHUB →</a>` : ''}
   `;
   dossier.querySelector('.closeBtn').onclick = closeDossier;
   const copyBtn = dossier.querySelector('.copyBtn');
