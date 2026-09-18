@@ -67,3 +67,4 @@ Vercel serverless functions (Web `Request`/`Response`, no Next.js) · hand-writt
 - Org roster requires a public member list
 - `/api/leaderboard` fetches members sequentially — risks timeout past ~20-30 members
 - Chakra Petch is fetched and base64-embedded per cold start, not bundled
+- Contributor Card's top language is byte-weighted across a user's 6 most-starred repos (one extra API call each). Leaderboard intentionally keeps the cheaper repo-count method instead — adding per-member byte-weighting there would multiply its existing timeout risk
