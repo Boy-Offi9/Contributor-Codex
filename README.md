@@ -25,7 +25,9 @@ All params: `theme`, `color` (hex, no `#`) on every card; `limit` (leaderboard o
 
 ## Themes
 
-`cyberpunk` (default) · `terminal` · `glass` · `detailed` (Contributor Card only — bio, full stat grid, language chips, no GitHub link since links inside an `<img>`-embedded SVG don't work)
+`cyberpunk` (default) · `terminal` · `glass` · `detailed`
+
+`detailed` on Contributor Card adds bio, full stat grid, and language chips — no GitHub link, since links inside an `<img>`-embedded SVG don't work. On Repository Card it adds topics, watchers, default branch, last push date, and size.
 
 ## Scoring
 
