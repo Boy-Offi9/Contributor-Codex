@@ -238,7 +238,7 @@ async function openDossier(login){
   dossier.innerHTML = `
     <div class="scan"></div>
     <button class="closeBtn" aria-label="Close">✕</button>
-    <img class="dossierCard" src="${cardUrl}" alt="${login} card" width="300">
+    <img class="dossierCard" src="${cardUrl}" alt="${login} card">
     ${joined ? `<p class="dLogin mono" style="text-align:center;margin-top:10px;">member since ${joined}</p>` : ''}
     ${user?.bio ? `<p class="bio">${user.bio}</p>` : ''}
     <button class="profileLink copyBtn" data-url="${cardUrl}">COPY EMBED LINK</button>
