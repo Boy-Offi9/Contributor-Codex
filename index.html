@@ -33,13 +33,18 @@
   .display{font-family:'Chakra Petch',sans-serif;}
   .mono{font-family:'JetBrains Mono',monospace;}
 
-  header{max-width:1180px;margin:0 auto 28px;}
+  header{max-width:1180px;margin:0 auto 28px;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;}
   h1{
     font-family:'Chakra Petch',sans-serif;
     font-weight:700;font-size:clamp(28px,4vw,42px);
     margin:0 0 6px;letter-spacing:.01em;
   }
   h1 span{color:var(--dim);font-weight:500;}
+  header nav a{
+    font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);
+    text-decoration:none;border:1px solid var(--steel);padding:7px 12px;border-radius:3px;
+  }
+  header nav a:hover{color:var(--ghost);border-color:var(--cyan);}
 
   .controls{
     max-width:1180px;margin:26px auto 8px;
@@ -147,6 +152,7 @@
 
 <header>
   <h1>Contributor <span>Codex</span></h1>
+  <nav><a href="/builder.html">card builder →</a></nav>
 </header>
 
 <div class="controls">

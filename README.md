@@ -26,6 +26,10 @@ Live at [contributor-codex.vercel.app](https://contributor-codex.vercel.app).
 
 All params: `theme`, `color` (hex, no `#`) on every card; `limit` (leaderboard only, max 20).
 
+## Card Builder
+
+`/builder.html` — pick a card type, fill in the fields, get a live preview plus ready-to-copy Markdown, raw URL, and `<img>` snippet. No coding or query-param guessing required. Linked from the roster page.
+
 ## Themes
 
 `cyberpunk` (default) · `terminal` · `glass` · `detailed`
