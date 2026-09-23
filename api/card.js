@@ -1,5 +1,5 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { classFor, esc, ghFetch, avatarDataUri, computeStats, chakraPetchFontFace, sanitizeColor, XP_FORMULA, byteWeightedLangs } = require('./_lib/shared');
+const { classFor, esc, ghFetch, avatarDataUri, computeStats, CHAKRA_PETCH_FONT_FACE, sanitizeColor, XP_FORMULA, byteWeightedLangs } = require('./_lib/shared');
 
 function errorSVG(message) {
   return `<svg width="360" height="120" viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg">
@@ -278,10 +278,8 @@ module.exports.GET = async (request) => {
       repos = await ghFetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`, token);
     } catch {}
 
-    const [avatarUri, fontFace] = await Promise.all([
-      avatarDataUri(`${user.avatar_url}&s=160`),
-      chakraPetchFontFace(),
-    ]);
+    const avatarUri = await avatarDataUri(`${user.avatar_url}&s=160`);
+    const fontFace = CHAKRA_PETCH_FONT_FACE;
     const stats = computeStats(user, repos);
     const byteLangs = await byteWeightedLangs(repos, token);
     if (byteLangs.length) {

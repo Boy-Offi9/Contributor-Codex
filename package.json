@@ -6,6 +6,9 @@
   "engines": {
     "node": ">=18"
   },
+  "scripts": {
+    "build-font": "node scripts/build-font.js"
+  },
   "dependencies": {
     "@vercel/firewall": "^1.2.1",
     "@boy-offi9-inc/reqkit": "^0.1.7"

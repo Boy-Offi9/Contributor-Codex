@@ -83,24 +83,13 @@ async function avatarDataUri(url) {
   }
 }
 
-let fontCache = null;
-async function chakraPetchFontFace() {
-  if (fontCache) return fontCache;
-  try {
-    const cssRes = await fetch('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&display=swap', {
-      headers: { 'User-Agent': 'Mozilla/5.0' },
-    });
-    const css = await cssRes.text();
-    const fontUrl = css.match(/url\((https:\/\/fonts\.gstatic\.com[^)]+)\)/)?.[1];
-    if (!fontUrl) return null;
-    const fontRes = await fetch(fontUrl);
-    const buf = Buffer.from(await fontRes.arrayBuffer());
-    fontCache = `@font-face{font-family:'Chakra Petch';font-weight:600 700;src:url(data:font/woff2;base64,${buf.toString('base64')}) format('woff2');}`;
-    return fontCache;
-  } catch {
-    return null;
-  }
+let fontCache;
+try {
+  fontCache = require('./font-data');
+} catch {
+  fontCache = null; // scripts/build-font.js hasn't been run yet - falls back to system-ui, same as a failed fetch used to
 }
+const CHAKRA_PETCH_FONT_FACE = fontCache;
 
 async function byteWeightedLangs(repos, token) {
   const candidates = repos.filter((r) => !r.fork).sort((a, b) => b.stargazers_count - a.stargazers_count).slice(0, 6);
@@ -147,6 +136,6 @@ function sanitizeColor(input) {
 }
 
 module.exports = {
-  classFor, esc, ghFetch, avatarDataUri, computeStats, chakraPetchFontFace,
+  classFor, esc, ghFetch, avatarDataUri, computeStats, CHAKRA_PETCH_FONT_FACE,
   sanitizeColor, XP_FORMULA, trophyTier, byteWeightedLangs,
 };
