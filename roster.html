@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roster — Contributor Codex</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#05070c;
+    --panel:#0c111c;
+    --steel:#1b2233;
+    --cyan:#00e5ff;
+    --purple:#8b5cf6;
+    --amber:#ffb020;
+    --ghost:#e8edf5;
+    --dim:#7a8399;
+    --danger:#ff4d6d;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(0,229,255,.08), transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, rgba(139,92,246,.10), transparent 55%),
+      var(--void);
+    color:var(--ghost);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:32px 20px 80px;
+  }
+  .display{font-family:'Chakra Petch',sans-serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  header{max-width:1180px;margin:0 auto 28px;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  h1{
+    font-family:'Chakra Petch',sans-serif;
+    font-weight:700;font-size:clamp(28px,4vw,42px);
+    margin:0 0 6px;letter-spacing:.01em;
+  }
+  h1 span{color:var(--dim);font-weight:500;}
+  header nav{display:flex;gap:10px;flex-wrap:wrap;}
+  header nav a{
+    font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);
+    text-decoration:none;border:1px solid var(--steel);padding:7px 12px;border-radius:3px;
+  }
+  header nav a:hover{color:var(--ghost);border-color:var(--cyan);}
+
+  .controls{
+    max-width:1180px;margin:26px auto 8px;
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  }
+  input[type="text"], input[type="password"]{
+    background:var(--panel);border:1px solid var(--steel);
+    color:var(--ghost);font-family:'JetBrains Mono',monospace;font-size:13.5px;
+    padding:10px 12px;border-radius:3px;outline:none;
+  }
+  input::placeholder{color:#4d5568;}
+  input:focus{border-color:var(--cyan);}
+  #orgInput{width:220px;}
+  #userInput{width:170px;}
+  #tokenInput{width:230px;}
+  button{
+    font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:13.5px;
+    letter-spacing:.03em;
+    background:transparent;border:1px solid var(--cyan);color:var(--cyan);
+    padding:10px 16px;border-radius:3px;cursor:pointer;
+    transition:background .15s, color .15s;
+  }
+  button:hover{background:var(--cyan);color:var(--void);}
+  button.ghost{border-color:var(--steel);color:var(--dim);}
+  button.ghost:hover{background:var(--steel);color:var(--ghost);}
+
+  #status{
+    max-width:1180px;margin:18px auto;color:var(--dim);
+    font-family:'JetBrains Mono',monospace;font-size:13px;min-height:18px;
+  }
+  #status.err{color:var(--danger);}
+
+  .grid{
+    max-width:1180px;margin:18px auto 0;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+    gap:22px;
+  }
+
+  .card{
+    position:relative;
+    cursor:pointer;
+    transition:transform .15s ease;
+    min-height:200px;
+  }
+  .card img{display:block;width:100%;height:auto;}
+  .card:hover{transform:translateY(-3px);}
+  .card:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;}
+  .card.skeleton{
+    background:#0d1320;border:1px solid var(--steel);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim);
+  }
+  .card.errorCard{
+    background:#0d1320;border:1px solid var(--danger);color:var(--danger);
+    font-family:'JetBrains Mono',monospace;font-size:12px;padding:16px;
+  }
+
+  #overlay{
+    position:fixed;inset:0;background:rgba(2,4,8,.86);
+    backdrop-filter:blur(3px);
+    display:none;align-items:center;justify-content:center;
+    padding:24px;z-index:50;
+  }
+  #overlay.open{display:flex;}
+  .dossier{
+    width:min(560px,100%);background:var(--panel);border:1px solid var(--rarity, var(--cyan));
+    position:relative;padding:28px 26px 26px;
+    clip-path:polygon(0 18px,18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%);
+  }
+  .dossier .scan{
+    position:absolute;inset:0;pointer-events:none;opacity:.5;
+    background:repeating-linear-gradient(0deg, rgba(0,229,255,.03) 0 1px, transparent 1px 3px);
+  }
+  .closeBtn{
+    position:absolute;top:14px;right:16px;background:none;border:none;color:var(--dim);
+    font-size:20px;cursor:pointer;line-height:1;padding:4px;
+  }
+  .closeBtn:hover{color:var(--ghost);background:none;}
+  .dLogin{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);}
+  .bio{font-size:13.5px;line-height:1.6;color:#c3cadb;margin:14px 0 18px;}
+  .statGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 18px;margin-bottom:16px;}
+  .statBox{border:1px solid var(--steel);padding:10px 12px;}
+  .statBox .k{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);}
+  .statBox .v{font-family:'Chakra Petch',sans-serif;font-size:18px;font-weight:600;margin-top:2px;}
+  .langList{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .langChip{
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--dim);
+    border:1px solid var(--steel);padding:4px 8px;
+  }
+  .profileLink{
+    display:inline-block;font-family:'Chakra Petch',sans-serif;font-size:13px;font-weight:600;
+    color:var(--void);background:var(--cyan);padding:9px 16px;text-decoration:none;
+    border:none;cursor:pointer;letter-spacing:.03em;margin-right:8px;
+  }
+  .profileLink.ghost{background:transparent;color:var(--dim);border:1px solid var(--steel);}
+  .profileLink.ghost:hover{background:var(--steel);color:var(--ghost);}
+  .dossierCard{display:block;margin:0 auto;max-width:100%;height:auto;}
+  .themeSelect{
+    background:var(--panel);border:1px solid var(--steel);color:var(--ghost);
+    font-family:'JetBrains Mono',monospace;font-size:13px;padding:10px 12px;border-radius:3px;
+  }
+
+  footer a{color:#5a6480;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Contributor <span>Codex</span></h1>
+  <nav><a href="/">← home</a> <a href="/profile.html">full profile →</a> <a href="/builder.html">card builder →</a></nav>
+</header>
+
+<div class="controls">
+  <input type="text" id="orgInput" class="mono" placeholder="org name" value="boy-offi9-inc">
+  <button id="loadOrgBtn">Load org</button>
+  <input type="text" id="userInput" class="mono" placeholder="add username">
+  <button id="addUserBtn" class="ghost">Add card</button>
+  <input type="password" id="tokenInput" class="mono" placeholder="GitHub token (optional)" title="Raises the rate limit from 60/hr to 5,000/hr. Stays in this tab, only sent to api.github.com.">
+  <select id="themeSelect" class="themeSelect">
+    <option value="cyberpunk">cyberpunk</option>
+    <option value="terminal">terminal</option>
+    <option value="glass">glass</option>
+    <option value="detailed">detailed</option>
+  </select>
+</div>
+
+<div id="status" class="mono"></div>
+<div class="grid" id="grid"></div>
+
+<div id="overlay">
+  <div class="dossier" id="dossier"></div>
+</div>
+
+<script>
+const grid = document.getElementById('grid');
+const statusEl = document.getElementById('status');
+const overlay = document.getElementById('overlay');
+const dossier = document.getElementById('dossier');
+const themeSelect = document.getElementById('themeSelect');
+const API_BASE = 'https://contributor-codex.vercel.app';
+
+function authHeaders(){
+  const token = document.getElementById('tokenInput').value.trim();
+  return token ? { Authorization: 'token ' + token } : {};
+}
+
+async function ghFetch(url){
+  const res = await fetch(url, { headers: { Accept:'application/vnd.github+json', ...authHeaders() } });
+  if (!res.ok) {
+    const err = new Error(res.status + ' ' + res.statusText);
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
+}
+
+function setStatus(msg, isErr){
+  statusEl.textContent = msg || '';
+  statusEl.classList.toggle('err', !!isErr);
+}
+
+function cardUrlFor(login, theme){
+  return `${API_BASE}/api/card?username=${encodeURIComponent(login)}&theme=${encodeURIComponent(theme)}`;
+}
+
+function renderCard(login){
+  if (document.querySelector(`.card[data-login="${login}" i]`)) return;
+  const el = document.createElement('div');
+  el.className = 'card skeleton';
+  el.dataset.login = login;
+  el.textContent = `loading @${login}…`;
+  grid.appendChild(el);
+
+  const img = new Image();
+  img.alt = `${login} card`;
+  img.src = cardUrlFor(login, themeSelect.value);
+  img.onload = () => {
+    el.classList.remove('skeleton');
+    el.textContent = '';
+    el.appendChild(img);
+    el.onclick = () => openDossier(login);
+  };
+  img.onerror = () => {
+    el.classList.remove('skeleton');
+    el.classList.add('errorCard');
+    el.textContent = `@${login} — failed to load card`;
+  };
+}
+
+async function openDossier(login){
+  dossier.innerHTML = `<div class="scan"></div><button class="closeBtn" aria-label="Close">✕</button><p class="dLogin mono">loading @${login}…</p>`;
+  overlay.classList.add('open');
+
+  const cardUrl = cardUrlFor(login, themeSelect.value);
+  let user = null;
+  try { user = await ghFetch(`https://api.github.com/users/${login}`); } catch {}
+
+  const joined = user ? new Date(user.created_at).getFullYear() : null;
+  dossier.innerHTML = `
+    <div class="scan"></div>
+    <button class="closeBtn" aria-label="Close">✕</button>
+    <img class="dossierCard" src="${cardUrl}" alt="${login} card">
+    ${joined ? `<p class="dLogin mono" style="text-align:center;margin-top:10px;">member since ${joined}</p>` : ''}
+    ${user?.bio ? `<p class="bio">${user.bio}</p>` : ''}
+    <a class="profileLink" href="/profile.html?u=${encodeURIComponent(login)}">FULL PROFILE →</a>
+    <button class="profileLink ghost copyBtn" data-url="${cardUrl}">COPY EMBED LINK</button>
+  `;
+  dossier.querySelector('.closeBtn').onclick = closeDossier;
+  const copyBtn = dossier.querySelector('.copyBtn');
+  copyBtn.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(copyBtn.dataset.url);
+      const original = copyBtn.textContent;
+      copyBtn.textContent = 'COPIED ✓';
+      setTimeout(() => { copyBtn.textContent = original; }, 1500);
+    } catch {
+      copyBtn.textContent = 'COPY FAILED — SELECT MANUALLY';
+    }
+  };
+}
+
+function closeDossier(){ overlay.classList.remove('open'); }
+overlay.addEventListener('click', (e) => { if (e.target === overlay) closeDossier(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDossier(); });
+
+async function loadOrg(){
+  const org = document.getElementById('orgInput').value.trim();
+  if (!org) return;
+  grid.innerHTML = '';
+  setStatus(`Fetching ${org}'s member list…`);
+  try {
+    const members = await ghFetch(`https://api.github.com/orgs/${org}/members?per_page=100`);
+    if (!members.length) {
+      setStatus(`No public members returned for "${org}" — its member list may be private. Add usernames manually below instead.`, true);
+      return;
+    }
+    setStatus(`Loading ${members.length} member${members.length===1?'':'s'}…`);
+    members.forEach(m => renderCard(m.login));
+    setStatus(`${members.length} card${members.length===1?'':'s'} loaded.`);
+  } catch (err) {
+    if (err.status === 404) setStatus(`Org "${org}" not found.`, true);
+    else if (err.status === 403) setStatus('Rate limited by GitHub — add a token above and try again.', true);
+    else setStatus('Failed to load org: ' + err.message, true);
+  }
+}
+
+document.getElementById('loadOrgBtn').onclick = loadOrg;
+document.getElementById('addUserBtn').onclick = () => {
+  const input = document.getElementById('userInput');
+  const login = input.value.trim();
+  if (!login) return;
+  input.value = '';
+  renderCard(login);
+};
+document.getElementById('userInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('addUserBtn').click();
+});
+themeSelect.addEventListener('change', () => {
+  document.querySelectorAll('.card[data-login]').forEach(el => {
+    const login = el.dataset.login;
+    el.remove();
+    renderCard(login);
+  });
+});
+
+loadOrg();
+</script>
+</body>
+</html>

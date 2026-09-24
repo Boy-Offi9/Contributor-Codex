@@ -18,7 +18,8 @@ Live at [contributor-codex.vercel.app](https://contributor-codex.vercel.app).
 | Team / Leaderboard | `/api/leaderboard?org=&limit=` |
 | Repository | `/api/repo?owner=&repo=` |
 | Achievements | `/api/trophies?username=&trophies=` |
-| Organization roster | `/` (interactive, not embeddable) |
+| Landing page | `/` (marketing/overview, not embeddable) |
+| Organization roster | `/roster.html` (interactive, not embeddable) |
 | Codex profile page | `/profile.html?u=` (interactive, not embeddable) |
 
 ```md
@@ -29,11 +30,17 @@ All params: `theme`, `color` (hex, no `#`) on every card; `limit` (leaderboard o
 
 ## Card Builder
 
-`/builder.html` — pick a card type, fill in the fields, get a live preview plus ready-to-copy Markdown, raw URL, and `<img>` snippet. No coding or query-param guessing required. Linked from the roster page.
+`/builder.html` — pick a card type, fill in the fields, get a live preview plus ready-to-copy Markdown, raw URL, and `<img>` snippet. No coding or query-param guessing required. Linked from the landing page.
 
 ## Codex Profile
 
 `/profile.html?u=USERNAME` — a shareable, linkable page per contributor. Combines the generated Contributor Card (detailed theme) and Achievements card with live-fetched extras that don't fit on a card: bio, location, company, member-since year, and a top-5-by-stars repo list. Same client-side GitHub fetch pattern as the roster page (works with or without a token, 60/hr vs 5,000/hr). Reachable from the roster's dossier modal via "FULL PROFILE →", or by sharing the URL directly.
+
+## Landing page & roster
+
+`/` is the marketing/overview page — a live card-generator demo, a look at all four card types, and links out to the roster, builder, and profile tools. The org roster tool itself lives at `/roster.html`: load any org and every public member's card renders in a grid; click one for a quick-look dossier with a link into the full Codex profile.
+
+Icons across all four pages are hand-drawn inline SVG in the same hex/shield motif as the cards themselves — no emoji, no icon font, no external icon library (keeps every page a single self-contained file with zero extra requests).
 
 ## Themes
 

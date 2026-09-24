@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Contributor Codex</title>
+<title>Contributor Codex — sci-fi GitHub cards</title>
+<meta name="description" content="Sci-fi RPG-style GitHub cards, rendered server-side as SVG. Point it at a username, an org, or a repo.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -28,290 +29,281 @@
     color:var(--ghost);
     font-family:'Inter',sans-serif;
     min-height:100vh;
-    padding:32px 20px 80px;
   }
   .display{font-family:'Chakra Petch',sans-serif;}
   .mono{font-family:'JetBrains Mono',monospace;}
+  a{color:inherit;}
+  svg.icon{width:22px;height:22px;flex-shrink:0;}
 
-  header{max-width:1180px;margin:0 auto 28px;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;}
-  h1{
-    font-family:'Chakra Petch',sans-serif;
-    font-weight:700;font-size:clamp(28px,4vw,42px);
-    margin:0 0 6px;letter-spacing:.01em;
+  /* ---------- nav ---------- */
+  .topnav{
+    max-width:1180px;margin:0 auto;padding:26px 20px 0;
+    display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;
   }
-  h1 span{color:var(--dim);font-weight:500;}
-  header nav{display:flex;gap:10px;flex-wrap:wrap;}
-  header nav a{
+  .wordmark{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:18px;text-decoration:none;letter-spacing:.01em;}
+  .wordmark span{color:var(--dim);font-weight:500;}
+  .topnav nav{display:flex;gap:10px;flex-wrap:wrap;}
+  .topnav nav a{
     font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);
     text-decoration:none;border:1px solid var(--steel);padding:7px 12px;border-radius:3px;
   }
-  header nav a:hover{color:var(--ghost);border-color:var(--cyan);}
+  .topnav nav a:hover{color:var(--ghost);border-color:var(--cyan);}
 
-  .controls{
-    max-width:1180px;margin:26px auto 8px;
-    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  /* ---------- hero ---------- */
+  .hero{max-width:1180px;margin:0 auto;padding:56px 20px 40px;}
+  h1{
+    font-family:'Chakra Petch',sans-serif;font-weight:700;
+    font-size:clamp(34px,5.4vw,58px);line-height:1.05;letter-spacing:.005em;
+    margin:0 0 18px;max-width:14ch;
   }
-  input[type="text"], input[type="password"]{
+  .heroSub{font-size:16px;line-height:1.6;color:#c3cadb;max-width:56ch;margin:0 0 30px;}
+
+  .demo{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:22px;
+  }
+  .demo input{
     background:var(--panel);border:1px solid var(--steel);
-    color:var(--ghost);font-family:'JetBrains Mono',monospace;font-size:13.5px;
-    padding:10px 12px;border-radius:3px;outline:none;
+    color:var(--ghost);font-family:'JetBrains Mono',monospace;font-size:14px;
+    padding:12px 14px;border-radius:3px;outline:none;width:220px;
   }
-  input::placeholder{color:#4d5568;}
-  input:focus{border-color:var(--cyan);}
-  #orgInput{width:220px;}
-  #userInput{width:170px;}
-  #tokenInput{width:230px;}
-  button{
-    font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:13.5px;
-    letter-spacing:.03em;
-    background:transparent;border:1px solid var(--cyan);color:var(--cyan);
-    padding:10px 16px;border-radius:3px;cursor:pointer;
-    transition:background .15s, color .15s;
+  .demo input::placeholder{color:#4d5568;}
+  .demo input:focus{border-color:var(--cyan);}
+  .demo button{
+    font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:14px;letter-spacing:.03em;
+    background:var(--cyan);border:none;color:var(--void);
+    padding:12px 20px;border-radius:3px;cursor:pointer;
   }
-  button:hover{background:var(--cyan);color:var(--void);}
-  button.ghost{border-color:var(--steel);color:var(--dim);}
-  button.ghost:hover{background:var(--steel);color:var(--ghost);}
+  .demo button:hover{background:#33ecff;}
 
-  #status{
-    max-width:1180px;margin:18px auto;color:var(--dim);
-    font-family:'JetBrains Mono',monospace;font-size:13px;min-height:18px;
+  .demoStage{
+    min-height:110px;display:flex;align-items:center;
+    padding:4px 0;
   }
-  #status.err{color:var(--danger);}
+  .demoStage img{max-width:100%;height:auto;display:block;}
+  .demoStage .msg{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);}
+  .demoStage .msg.err{color:var(--danger);}
 
-  .grid{
-    max-width:1180px;margin:18px auto 0;
-    display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
-    gap:22px;
+  /* ---------- shared section chrome ---------- */
+  section{max-width:1180px;margin:0 auto;padding:40px 20px;}
+  .sectionHead{margin-bottom:26px;max-width:60ch;}
+  .sectionHead h2{
+    font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:24px;margin:0 0 8px;
+  }
+  .sectionHead p{color:var(--dim);font-size:14px;line-height:1.6;margin:0;}
+
+  .hexPanel{
+    background:var(--panel);border:1px solid var(--steel);padding:22px;
+    clip-path:polygon(0 14px,14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%);
   }
 
-  .card{
+  /* ---------- card types grid ---------- */
+  .typeGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;}
+  @media (max-width:720px){.typeGrid{grid-template-columns:1fr;}}
+  .typeCard{display:flex;flex-direction:column;gap:14px;}
+  .typeCard .head{display:flex;gap:12px;align-items:center;}
+  .typeCard svg.icon{color:var(--cyan);}
+  .typeCard h3{font-family:'Chakra Petch',sans-serif;font-size:16px;margin:0;}
+  .typeCard p{color:var(--dim);font-size:13px;line-height:1.55;margin:0;}
+  .typeCard .thumb{border:1px solid var(--steel);padding:10px;background:var(--void);overflow:auto;}
+  .typeCard .thumb img{max-width:100%;height:auto;display:block;}
+  .typeCard code{
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);
+    background:var(--void);border:1px solid var(--steel);padding:6px 8px;border-radius:3px;
+    word-break:break-all;
+  }
+
+  /* ---------- tools grid ---------- */
+  .toolGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  @media (max-width:900px){.toolGrid{grid-template-columns:1fr;}}
+  .toolCard{display:flex;flex-direction:column;gap:12px;}
+  .toolCard svg.icon{color:var(--purple);width:26px;height:26px;}
+  .toolCard h3{font-family:'Chakra Petch',sans-serif;font-size:16px;margin:0;}
+  .toolCard p{color:var(--dim);font-size:13px;line-height:1.55;margin:0;flex:1;}
+  .toolCard a.go{
+    font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.03em;
+    color:var(--cyan);text-decoration:none;align-self:flex-start;
+    border-bottom:1px solid transparent;
+  }
+  .toolCard a.go:hover{border-bottom-color:var(--cyan);}
+
+  /* ---------- embed section ---------- */
+  .embedBlock{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;}
+  .embedCode{
+    flex:1;min-width:260px;background:#020402;border:1px solid #1b2f1e;
+    padding:18px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#3ddc6a;
     position:relative;
-    cursor:pointer;
-    transition:transform .15s ease;
-    min-height:200px;
   }
-  .card img{display:block;width:100%;height:auto;}
-  .card:hover{transform:translateY(-3px);}
-  .card:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;}
-  .card.skeleton{
-    background:#0d1320;border:1px solid var(--steel);
-    display:flex;align-items:center;justify-content:center;
-    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim);
+  .embedCode .copyBtn{
+    position:absolute;top:10px;right:10px;
+    background:transparent;border:1px solid #1b2f1e;color:#3ddc6a;
+    font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 9px;border-radius:3px;cursor:pointer;
   }
-  .card.errorCard{
-    background:#0d1320;border:1px solid var(--danger);color:var(--danger);
-    font-family:'JetBrains Mono',monospace;font-size:12px;padding:16px;
-  }
+  .embedCode .copyBtn:hover{background:#1b2f1e;}
+  .embedPreview{flex:1;min-width:260px;display:flex;align-items:center;justify-content:center;padding:10px;}
+  .embedPreview img{max-width:100%;height:auto;}
 
-  #overlay{
-    position:fixed;inset:0;background:rgba(2,4,8,.86);
-    backdrop-filter:blur(3px);
-    display:none;align-items:center;justify-content:center;
-    padding:24px;z-index:50;
-  }
-  #overlay.open{display:flex;}
-  .dossier{
-    width:min(560px,100%);background:var(--panel);border:1px solid var(--rarity, var(--cyan));
-    position:relative;padding:28px 26px 26px;
-    clip-path:polygon(0 18px,18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%);
-  }
-  .dossier .scan{
-    position:absolute;inset:0;pointer-events:none;opacity:.5;
-    background:repeating-linear-gradient(0deg, rgba(0,229,255,.03) 0 1px, transparent 1px 3px);
-  }
-  .closeBtn{
-    position:absolute;top:14px;right:16px;background:none;border:none;color:var(--dim);
-    font-size:20px;cursor:pointer;line-height:1;padding:4px;
-  }
-  .closeBtn:hover{color:var(--ghost);background:none;}
-  .dLogin{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);}
-  .bio{font-size:13.5px;line-height:1.6;color:#c3cadb;margin:14px 0 18px;}
-  .statGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 18px;margin-bottom:16px;}
-  .statBox{border:1px solid var(--steel);padding:10px 12px;}
-  .statBox .k{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);}
-  .statBox .v{font-family:'Chakra Petch',sans-serif;font-size:18px;font-weight:600;margin-top:2px;}
-  .langList{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
-  .langChip{
-    font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--dim);
-    border:1px solid var(--steel);padding:4px 8px;
-  }
-  .profileLink{
-    display:inline-block;font-family:'Chakra Petch',sans-serif;font-size:13px;font-weight:600;
-    color:var(--void);background:var(--cyan);padding:9px 16px;text-decoration:none;
-    border:none;cursor:pointer;letter-spacing:.03em;margin-right:8px;
-  }
-  .profileLink.ghost{background:transparent;color:var(--dim);border:1px solid var(--steel);}
-  .profileLink.ghost:hover{background:var(--steel);color:var(--ghost);}
-  .dossierCard{display:block;margin:0 auto;max-width:100%;height:auto;}
-  .themeSelect{
-    background:var(--panel);border:1px solid var(--steel);color:var(--ghost);
-    font-family:'JetBrains Mono',monospace;font-size:13px;padding:10px 12px;border-radius:3px;
-  }
-
-  footer a{color:#5a6480;}
+  /* ---------- footer ---------- */
+  footer{max-width:1180px;margin:0 auto;padding:20px 20px 60px;color:#5a6480;font-size:12.5px;display:flex;gap:8px;align-items:center;}
+  footer a{color:#5a6480;display:inline-flex;align-items:center;gap:5px;text-decoration:none;}
+  footer a:hover{color:var(--dim);}
+  footer svg.icon{width:14px;height:14px;}
 </style>
 </head>
 <body>
 
-<header>
-  <h1>Contributor <span>Codex</span></h1>
-  <nav><a href="/profile.html">full profile →</a> <a href="/builder.html">card builder →</a></nav>
-</header>
-
-<div class="controls">
-  <input type="text" id="orgInput" class="mono" placeholder="org name" value="boy-offi9-inc">
-  <button id="loadOrgBtn">Load org</button>
-  <input type="text" id="userInput" class="mono" placeholder="add username">
-  <button id="addUserBtn" class="ghost">Add card</button>
-  <input type="password" id="tokenInput" class="mono" placeholder="GitHub token (optional)" title="Raises the rate limit from 60/hr to 5,000/hr. Stays in this tab, only sent to api.github.com.">
-  <select id="themeSelect" class="themeSelect">
-    <option value="cyberpunk">cyberpunk</option>
-    <option value="terminal">terminal</option>
-    <option value="glass">glass</option>
-    <option value="detailed">detailed</option>
-  </select>
+<div class="topnav">
+  <a class="wordmark" href="/">Contributor <span>Codex</span></a>
+  <nav>
+    <a href="/roster.html">roster</a>
+    <a href="/builder.html">card builder</a>
+    <a href="/profile.html">codex profile</a>
+  </nav>
 </div>
 
-<div id="status" class="mono"></div>
-<div class="grid" id="grid"></div>
+<div class="hero">
+  <h1>GitHub stats, rendered as sci-fi cards.</h1>
+  <p class="heroSub">Contributor Codex turns a username, an org, or a repo into a hand-drawn SVG card — no build step, no tracking pixel, just a URL you can drop into a README.</p>
 
-<div id="overlay">
-  <div class="dossier" id="dossier"></div>
+  <div class="demo">
+    <input type="text" id="demoInput" class="mono" placeholder="a GitHub username" value="octocat">
+    <button id="demoBtn">Generate card</button>
+  </div>
+  <div class="demoStage" id="demoStage"><img id="demoImg" alt="example contributor card"></div>
 </div>
+
+<section>
+  <div class="sectionHead">
+    <h2>Four kinds of card</h2>
+    <p>Each one is a live SVG, generated on request from real GitHub data — not a cached screenshot.</p>
+  </div>
+  <div class="typeGrid">
+
+    <div class="typeCard hexPanel">
+      <div class="head">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l8 4.2v11.6L12 22l-8-4.2V6.2L12 2Z"/><circle cx="12" cy="10" r="2.6"/><path d="M7.5 17c1-2.2 2.8-3.3 4.5-3.3s3.5 1.1 4.5 3.3"/></svg>
+        <h3>Contributor</h3>
+      </div>
+      <p>A profile card built from a single username — stats, top language, four themes.</p>
+      <div class="thumb"><img src="https://contributor-codex.vercel.app/api/card?username=octocat" alt="contributor card example" loading="lazy"></div>
+      <code>/api/card?username=</code>
+    </div>
+
+    <div class="typeCard hexPanel">
+      <div class="head">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="5" y1="20" x2="5" y2="13"/><line x1="12" y1="20" x2="12" y2="8"/><line x1="19" y1="20" x2="19" y2="4"/></svg>
+        <h3>Team / Leaderboard</h3>
+      </div>
+      <p>Point it at an org and every public member gets ranked by a transparent, self-referential XP formula.</p>
+      <div class="thumb"><img src="https://contributor-codex.vercel.app/api/leaderboard?org=boy-offi9-inc&limit=4" alt="leaderboard card example" loading="lazy"></div>
+      <code>/api/leaderboard?org=&limit=</code>
+    </div>
+
+    <div class="typeCard hexPanel">
+      <div class="head">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 4 5 12l4 8"/><path d="M15 4l4 8-4 8"/></svg>
+        <h3>Repository</h3>
+      </div>
+      <p>Stars, forks, license, topics, contributors, and the latest release for a single repo.</p>
+      <div class="thumb"><img src="https://contributor-codex.vercel.app/api/repo?owner=boy-offi9-inc&repo=Contributor-Codex" alt="repository card example" loading="lazy"></div>
+      <code>/api/repo?owner=&repo=</code>
+    </div>
+
+    <div class="typeCard hexPanel">
+      <div class="head">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l7 3.5v6c0 5-3 8.5-7 10.5-4-2-7-5.5-7-10.5v-6L12 2Z"/><path d="M12 8l1.2 2.4 2.6.4-1.9 1.9.5 2.6-2.4-1.3-2.4 1.3.5-2.6-1.9-1.9 2.6-.4L12 8Z"/></svg>
+        <h3>Achievements</h3>
+      </div>
+      <p>Tiered badges for stars, repos, followers, years active, languages, forks, and licensed work.</p>
+      <div class="thumb"><img src="https://contributor-codex.vercel.app/api/trophies?username=octocat&trophies=STARGAZER,BUILDER,POLYGLOT" alt="achievements card example" loading="lazy"></div>
+      <code>/api/trophies?username=&trophies=</code>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <div class="sectionHead">
+    <h2>Three ways to use it</h2>
+    <p>Cards are one URL. These pages help you find the right one without memorizing query params.</p>
+  </div>
+  <div class="toolGrid">
+
+    <div class="toolCard hexPanel">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l8 4.2v11.6L12 22l-8-4.2V6.2L12 2Z"/><circle cx="12" cy="10" r="2.6"/><path d="M7.5 17c1-2.2 2.8-3.3 4.5-3.3s3.5 1.1 4.5 3.3"/></svg>
+      <h3>Organization Roster</h3>
+      <p>Load any org and every public member's card appears in a grid. Click one for a quick-look dossier.</p>
+      <a class="go" href="/roster.html">Open roster →</a>
+    </div>
+
+    <div class="toolCard hexPanel">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="5" y1="4" x2="5" y2="20"/><circle cx="5" cy="9" r="2"/><line x1="12" y1="4" x2="12" y2="20"/><circle cx="12" cy="15" r="2"/><line x1="19" y1="4" x2="19" y2="20"/><circle cx="19" cy="7" r="2"/></svg>
+      <h3>Card Builder</h3>
+      <p>Pick a card type, fill in the fields, get a live preview plus ready-to-copy Markdown and HTML.</p>
+      <a class="go" href="/builder.html">Open builder →</a>
+    </div>
+
+    <div class="toolCard hexPanel">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="1"/><circle cx="8.5" cy="11" r="2"/><path d="M5.5 16c.7-1.6 1.9-2.4 3-2.4s2.3.8 3 2.4"/><line x1="14" y1="9" x2="18" y2="9"/><line x1="14" y1="12" x2="18" y2="12"/></svg>
+      <h3>Codex Profile</h3>
+      <p>A shareable page per contributor — the generated cards plus bio, location, and top repositories.</p>
+      <a class="go" href="/profile.html">Open profile →</a>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <div class="sectionHead">
+    <h2>Drop it in a README</h2>
+    <p>Every card is a plain image URL — no script tag, no API key required to view one.</p>
+  </div>
+  <div class="embedBlock hexPanel">
+    <div class="embedCode">
+      <button class="copyBtn" id="embedCopyBtn">copy</button>
+      <span id="embedText">![Card](https://contributor-codex.vercel.app/api/card?username=octocat)</span>
+    </div>
+    <div class="embedPreview"><img src="https://contributor-codex.vercel.app/api/card?username=octocat&theme=glass" alt="glass theme card example" loading="lazy"></div>
+  </div>
+</section>
+
+<footer class="mono">
+  <a href="https://github.com/boy-offi9-inc/Contributor-Codex" target="_blank" rel="noopener">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg>
+    source on GitHub
+  </a>
+</footer>
 
 <script>
-const grid = document.getElementById('grid');
-const statusEl = document.getElementById('status');
-const overlay = document.getElementById('overlay');
-const dossier = document.getElementById('dossier');
-const themeSelect = document.getElementById('themeSelect');
 const API_BASE = 'https://contributor-codex.vercel.app';
+const demoInput = document.getElementById('demoInput');
+const demoBtn = document.getElementById('demoBtn');
+const demoStage = document.getElementById('demoStage');
 
-function authHeaders(){
-  const token = document.getElementById('tokenInput').value.trim();
-  return token ? { Authorization: 'token ' + token } : {};
-}
-
-async function ghFetch(url){
-  const res = await fetch(url, { headers: { Accept:'application/vnd.github+json', ...authHeaders() } });
-  if (!res.ok) {
-    const err = new Error(res.status + ' ' + res.statusText);
-    err.status = res.status;
-    throw err;
-  }
-  return res.json();
-}
-
-function setStatus(msg, isErr){
-  statusEl.textContent = msg || '';
-  statusEl.classList.toggle('err', !!isErr);
-}
-
-function cardUrlFor(login, theme){
-  return `${API_BASE}/api/card?username=${encodeURIComponent(login)}&theme=${encodeURIComponent(theme)}`;
-}
-
-function renderCard(login){
-  if (document.querySelector(`.card[data-login="${login}" i]`)) return;
-  const el = document.createElement('div');
-  el.className = 'card skeleton';
-  el.dataset.login = login;
-  el.textContent = `loading @${login}…`;
-  grid.appendChild(el);
-
+function runDemo(){
+  const login = demoInput.value.trim();
+  if (!login) return;
+  demoStage.innerHTML = '<span class="msg">generating…</span>';
   const img = new Image();
   img.alt = `${login} card`;
-  img.src = cardUrlFor(login, themeSelect.value);
-  img.onload = () => {
-    el.classList.remove('skeleton');
-    el.textContent = '';
-    el.appendChild(img);
-    el.onclick = () => openDossier(login);
-  };
-  img.onerror = () => {
-    el.classList.remove('skeleton');
-    el.classList.add('errorCard');
-    el.textContent = `@${login} — failed to load card`;
-  };
+  img.onload = () => { demoStage.innerHTML = ''; demoStage.appendChild(img); };
+  img.onerror = () => { demoStage.innerHTML = `<span class="msg err">couldn't generate a card for "${login}" — check the username</span>`; };
+  img.src = `${API_BASE}/api/card?username=${encodeURIComponent(login)}&theme=cyberpunk`;
 }
 
-async function openDossier(login){
-  dossier.innerHTML = `<div class="scan"></div><button class="closeBtn" aria-label="Close">✕</button><p class="dLogin mono">loading @${login}…</p>`;
-  overlay.classList.add('open');
+demoBtn.onclick = runDemo;
+demoInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') runDemo(); });
+runDemo();
 
-  const cardUrl = cardUrlFor(login, themeSelect.value);
-  let user = null;
-  try { user = await ghFetch(`https://api.github.com/users/${login}`); } catch {}
-
-  const joined = user ? new Date(user.created_at).getFullYear() : null;
-  dossier.innerHTML = `
-    <div class="scan"></div>
-    <button class="closeBtn" aria-label="Close">✕</button>
-    <img class="dossierCard" src="${cardUrl}" alt="${login} card">
-    ${joined ? `<p class="dLogin mono" style="text-align:center;margin-top:10px;">member since ${joined}</p>` : ''}
-    ${user?.bio ? `<p class="bio">${user.bio}</p>` : ''}
-    <a class="profileLink" href="/profile.html?u=${encodeURIComponent(login)}">FULL PROFILE →</a>
-    <button class="profileLink ghost copyBtn" data-url="${cardUrl}">COPY EMBED LINK</button>
-  `;
-  dossier.querySelector('.closeBtn').onclick = closeDossier;
-  const copyBtn = dossier.querySelector('.copyBtn');
-  copyBtn.onclick = async () => {
-    try {
-      await navigator.clipboard.writeText(copyBtn.dataset.url);
-      const original = copyBtn.textContent;
-      copyBtn.textContent = 'COPIED ✓';
-      setTimeout(() => { copyBtn.textContent = original; }, 1500);
-    } catch {
-      copyBtn.textContent = 'COPY FAILED — SELECT MANUALLY';
-    }
-  };
-}
-
-function closeDossier(){ overlay.classList.remove('open'); }
-overlay.addEventListener('click', (e) => { if (e.target === overlay) closeDossier(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDossier(); });
-
-async function loadOrg(){
-  const org = document.getElementById('orgInput').value.trim();
-  if (!org) return;
-  grid.innerHTML = '';
-  setStatus(`Fetching ${org}'s member list…`);
+document.getElementById('embedCopyBtn').onclick = async (e) => {
+  const text = document.getElementById('embedText').textContent;
   try {
-    const members = await ghFetch(`https://api.github.com/orgs/${org}/members?per_page=100`);
-    if (!members.length) {
-      setStatus(`No public members returned for "${org}" — its member list may be private. Add usernames manually below instead.`, true);
-      return;
-    }
-    setStatus(`Loading ${members.length} member${members.length===1?'':'s'}…`);
-    members.forEach(m => renderCard(m.login));
-    setStatus(`${members.length} card${members.length===1?'':'s'} loaded.`);
-  } catch (err) {
-    if (err.status === 404) setStatus(`Org "${org}" not found.`, true);
-    else if (err.status === 403) setStatus('Rate limited by GitHub — add a token above and try again.', true);
-    else setStatus('Failed to load org: ' + err.message, true);
+    await navigator.clipboard.writeText(text);
+    e.target.textContent = 'copied ✓';
+    setTimeout(() => { e.target.textContent = 'copy'; }, 1500);
+  } catch {
+    e.target.textContent = 'copy failed';
   }
-}
-
-document.getElementById('loadOrgBtn').onclick = loadOrg;
-document.getElementById('addUserBtn').onclick = () => {
-  const input = document.getElementById('userInput');
-  const login = input.value.trim();
-  if (!login) return;
-  input.value = '';
-  renderCard(login);
 };
-document.getElementById('userInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') document.getElementById('addUserBtn').click();
-});
-themeSelect.addEventListener('change', () => {
-  document.querySelectorAll('.card[data-login]').forEach(el => {
-    const login = el.dataset.login;
-    el.remove();
-    renderCard(login);
-  });
-});
-
-loadOrg();
 </script>
 </body>
 </html>
