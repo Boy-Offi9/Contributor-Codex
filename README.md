@@ -38,9 +38,17 @@ All params: `theme`, `color` (hex, no `#`) on every card; `limit` (leaderboard o
 
 ## Achievements
 
-`/api/trophies` — six independent badges (STARGAZER, BUILDER, INFLUENCE, VETERAN, POLYGLOT, FORKED), each tiered INITIATE→OPERATIVE→SPECIALIST→ELITE→LEGENDARY by its own plain threshold. Filter with `?trophies=STARGAZER,POLYGLOT`.
+`/api/trophies` — seven independent badges (STARGAZER, BUILDER, INFLUENCE, VETERAN, POLYGLOT, FORKED, OPEN_SOURCE), each tiered INITIATE→OPERATIVE→SPECIALIST→ELITE→LEGENDARY by its own plain threshold. Filter with `?trophies=STARGAZER,POLYGLOT`.
 
 Unlike XP, these aren't a weighted composite — each trophy is a single "did this cross this line" check, so there's nothing to argue is unfair or arbitrarily weighted.
+
+**Custom trophy** — bolt on any metric that isn't from GitHub (a Codewars rank, a LeetCode streak, anything) using the same tiered-shield rendering:
+
+```
+?customLabel=CODEWARS&customValue=1450&customThresholds=100,500,1500,5000
+```
+
+All three params are required and `customThresholds` must be four strictly ascending numbers, or the custom trophy is silently skipped. Not exposed in the Card Builder yet — build the URL by hand.
 
 ## Scoring
 

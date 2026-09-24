@@ -17,7 +17,34 @@ const TROPHIES = [
   { key: 'VETERAN', label: 'YEARS', thresholds: [1, 3, 5, 8], value: (s, u) => Math.floor(s.years) },
   { key: 'POLYGLOT', label: 'LANGUAGES', thresholds: [3, 6, 10, 15], value: (s, u) => s.langs.length },
   { key: 'FORKED', label: 'FORKS', thresholds: [5, 25, 100, 500], value: (s, u) => s.totalForks },
+  { key: 'OPEN_SOURCE', label: 'LICENSED', thresholds: [1, 5, 15, 30], value: (s, u) => s.licensedRepos },
 ];
+
+// Optional 7th slot: a user-supplied metric (Codewars rank, LeetCode streak,
+// anything not on GitHub) rendered through the exact same tiered-shield logic
+// as the built-in trophies. Opt-in only — all three params must be present
+// and valid, so it never appears unless deliberately requested.
+function parseCustomTrophy(url) {
+  const label = (url.searchParams.get('customLabel') || '')
+    .replace(/[^a-zA-Z0-9 ]/g, '')
+    .trim()
+    .slice(0, 10)
+    .toUpperCase();
+  const rawValue = url.searchParams.get('customValue');
+  const rawThresholds = url.searchParams.get('customThresholds');
+  if (!label || rawValue === null || !rawThresholds) return null;
+
+  const value = Number(rawValue);
+  if (!Number.isFinite(value)) return null;
+
+  const thresholds = rawThresholds.split(',').map((s) => Number(s.trim()));
+  if (thresholds.length !== 4 || thresholds.some((n) => !Number.isFinite(n))) return null;
+  for (let i = 1; i < thresholds.length; i++) {
+    if (thresholds[i] <= thresholds[i - 1]) return null; // must be strictly ascending
+  }
+
+  return { key: 'CUSTOM', label, thresholds, value: () => value };
+}
 
 function shield(x, key, label, value, tier) {
   const points = `${x + 30},0 ${x + 60},15 ${x + 60},50 ${x + 30},70 ${x},50 ${x},15`;
@@ -31,8 +58,8 @@ function shield(x, key, label, value, tier) {
     <rect x="${x + 8}" y="108" width="${(44 * pct) / 100}" height="3" fill="${tier.color}"/>`;
 }
 
-function renderTrophies(user, stats, selected) {
-  const items = TROPHIES.filter((t) => !selected || selected.includes(t.key));
+function renderTrophies(user, stats, selected, trophyDefs) {
+  const items = trophyDefs.filter((t) => !selected || selected.includes(t.key));
   const width = items.length * 80 + 20;
 
   const badges = items.map((t, i) => {
@@ -72,6 +99,8 @@ module.exports.GET = async (request) => {
 
   const rawSelected = url.searchParams.get('trophies');
   const selected = rawSelected ? rawSelected.split(',').map((s) => s.trim().toUpperCase()) : null;
+  const customTrophy = parseCustomTrophy(url);
+  const trophyDefs = customTrophy ? [...TROPHIES, customTrophy] : TROPHIES;
 
   const token = process.env.GITHUB_TOKEN;
   try {
@@ -82,7 +111,9 @@ module.exports.GET = async (request) => {
     } catch {}
 
     const stats = computeStats(user, repos);
-    return svg(renderTrophies(user, stats, selected), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
+    stats.licensedRepos = repos.filter((r) => !r.fork && r.license && r.license.spdx_id && r.license.spdx_id !== 'NOASSERTION').length;
+
+    return svg(renderTrophies(user, stats, selected, trophyDefs), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
   } catch (err) {
     if (err.status === 404) return svg(errorSVG(`user "${username}" not found`), 404, 'public, s-maxage=60');
     if (err.status === 403) return svg(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=60');
