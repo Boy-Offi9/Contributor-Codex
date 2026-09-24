@@ -18,6 +18,7 @@ Live at [contributor-codex.vercel.app](https://contributor-codex.vercel.app).
 | Team / Leaderboard | `/api/leaderboard?org=&limit=` |
 | Repository | `/api/repo?owner=&repo=` |
 | Achievements | `/api/trophies?username=&trophies=` |
+| Codex Collection | `/api/codex?username=` |
 | Landing page | `/` (marketing/overview, not embeddable) |
 | Organization roster | `/roster.html` (interactive, not embeddable) |
 | Codex profile page | `/profile.html?u=` (interactive, not embeddable) |
@@ -35,6 +36,10 @@ All params: `theme`, `color` (hex, no `#`) on every card; `limit` (leaderboard o
 ## Codex Profile
 
 `/profile.html?u=USERNAME` — a shareable, linkable page per contributor. Combines the generated Contributor Card (detailed theme) and Achievements card with live-fetched extras that don't fit on a card: bio, location, company, member-since year, and a top-5-by-stars repo list. Same client-side GitHub fetch pattern as the roster page (works with or without a token, 60/hr vs 5,000/hr). Reachable from the roster's dossier modal via "FULL PROFILE →", or by sharing the URL directly.
+
+## Codex Collection
+
+`/api/codex?username=` — one embeddable image instead of four. Folds a compact header (avatar, name, level, XP), a 4-stat strip, four achievement shields (stars/repos/languages/years), and up to 5 byte-weighted top-language chips into a single SVG, so a README only needs one `<img>` for the whole dossier instead of stitching together separate card/trophies embeds. `/profile.html` covers the same ground as an interactive page; this is the one-URL version for READMEs, org pages, or anywhere only a single image is possible.
 
 ## Landing page & roster
 
@@ -72,7 +77,7 @@ Self-referential only — never compared against other users. Formula is shown o
 
 ## Rate limiting
 
-Per-IP via `@vercel/firewall`. Requires matching Firewall rules in the Vercel dashboard: `card-endpoint`, `leaderboard-endpoint`, `repo-endpoint`, `trophies-endpoint`. Leave each rule's action at default — 429s are returned as SVG from code, not Vercel's block page.
+Per-IP via `@vercel/firewall`. Requires matching Firewall rules in the Vercel dashboard: `card-endpoint`, `leaderboard-endpoint`, `repo-endpoint`, `trophies-endpoint`, `codex-endpoint`. Leave each rule's action at default — 429s are returned as SVG from code, not Vercel's block page.
 
 ## Setup
 

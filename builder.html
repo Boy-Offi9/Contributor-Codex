@@ -140,6 +140,7 @@
           <button class="typeBtn" data-type="leaderboard">Leaderboard</button>
           <button class="typeBtn" data-type="repo">Repository</button>
           <button class="typeBtn" data-type="trophies">Achievements</button>
+          <button class="typeBtn" data-type="codex">Codex Collection</button>
         </div>
       </div>
 
@@ -199,6 +200,13 @@ const TYPES = {
   card: {
     endpoint: '/api/card',
     themes: ['cyberpunk', 'terminal', 'glass', 'detailed'],
+    fields: [
+      { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
+    ],
+  },
+  codex: {
+    endpoint: '/api/codex',
+    themes: null,
     fields: [
       { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
     ],
