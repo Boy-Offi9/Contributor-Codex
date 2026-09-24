@@ -77,8 +77,8 @@ Vercel serverless functions (Web `Request`/`Response`, no Next.js) · hand-writt
 ## Limitations
 
 - Org roster requires a public member list
-- `/api/leaderboard` fetches members sequentially — risks timeout past ~20-30 members
-- Contributor Card's top language is byte-weighted across a user's 6 most-starred repos (one extra API call each). Leaderboard intentionally keeps the cheaper repo-count method instead — adding per-member byte-weighting there would multiply its existing timeout risk
+- `/api/leaderboard` fetches members through a small concurrent worker pool (4 at a time) rather than one at a time, and caps at the first 60 public members — very large orgs get a representative ranking rather than a timeout
+- Contributor Card's top language is byte-weighted across a user's 6 most-starred repos (one extra API call each). Leaderboard intentionally keeps the cheaper repo-count method instead — adding per-member byte-weighting there would multiply its existing cost
 
 ## Setup
 

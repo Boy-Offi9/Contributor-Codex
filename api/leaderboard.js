@@ -24,6 +24,37 @@ async function buildEntry(login, token) {
   return { user, avatarUri, ...stats };
 }
 
+// Ranking needs every member's stats before it can sort, so the total number
+// of GitHub calls is fixed either way — but running them one at a time was
+// the actual cause of the timeout risk the README used to call out. A small
+// worker pool keeps wall-clock time down to roughly (members / concurrency)
+// instead of (members), without hammering GitHub hard enough to trip its
+// secondary rate limits. MEMBER_CAP bounds the worst case for very large
+// orgs: past that many public members, the board still ranks a representative
+// slice rather than risking a timeout trying to rank everyone.
+const CONCURRENCY = 4;
+const MEMBER_CAP = 60;
+
+async function buildEntries(members, token) {
+  const pool = members.slice(0, MEMBER_CAP);
+  const results = new Array(pool.length);
+  let cursor = 0;
+
+  async function worker() {
+    while (cursor < pool.length) {
+      const i = cursor++;
+      try {
+        results[i] = await buildEntry(pool[i].login, token);
+      } catch {
+        // one member's profile/repos failing shouldn't sink the whole board
+      }
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, pool.length) }, worker));
+  return results.filter(Boolean);
+}
+
 function cyberpunkRow(index, entry, total) {
   const y = HEADER_H + index * ROW_H;
   const { user, avatarUri, topLang, level, xp, color } = entry;
@@ -157,10 +188,7 @@ module.exports.GET = async (request) => {
     const members = await ghFetch(`https://api.github.com/orgs/${org}/members?per_page=100`, token);
     if (!members.length) return svgResponse(errorSVG(`"${org}" has no public members`), 100);
 
-    const entries = [];
-    for (const m of members) {
-      try { entries.push(await buildEntry(m.login, token)); } catch {}
-    }
+    const entries = await buildEntries(members, token);
     entries.sort((a, b) => b.xp - a.xp);
     const top = entries.slice(0, limit);
 
