@@ -34,7 +34,7 @@ All params: `theme`, `color` (hex, no `#`) on every card; `limit` (leaderboard o
 
 `cyberpunk` (default) · `terminal` · `glass` · `detailed`
 
-`detailed` on Contributor Card adds bio, full stat grid, and language chips — no GitHub link, since links inside an `<img>`-embedded SVG don't work. On Repository Card it adds topics, watchers, default branch, last push date, and size.
+`detailed` on Contributor Card adds bio, full stat grid, and language chips — no GitHub link, since links inside an `<img>`-embedded SVG don't work. On Repository Card it adds topics, watchers, default branch, created date, size, contributor count, and latest release tag, alongside last push date.
 
 ## Achievements
 
