@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Codex Profile — Contributor Codex</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#05070c;
+    --panel:#0c111c;
+    --steel:#1b2233;
+    --cyan:#00e5ff;
+    --purple:#8b5cf6;
+    --amber:#ffb020;
+    --ghost:#e8edf5;
+    --dim:#7a8399;
+    --danger:#ff4d6d;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(0,229,255,.08), transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, rgba(139,92,246,.10), transparent 55%),
+      var(--void);
+    color:var(--ghost);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:32px 20px 80px;
+  }
+  .display{font-family:'Chakra Petch',sans-serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  header{max-width:900px;margin:0 auto 28px;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  h1{
+    font-family:'Chakra Petch',sans-serif;
+    font-weight:700;font-size:clamp(24px,4vw,34px);
+    margin:0 0 6px;letter-spacing:.01em;
+  }
+  h1 span{color:var(--dim);font-weight:500;}
+  header nav a{
+    font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);
+    text-decoration:none;border:1px solid var(--steel);padding:7px 12px;border-radius:3px;
+  }
+  header nav a:hover{color:var(--ghost);border-color:var(--cyan);}
+
+  .lookup{max-width:900px;margin:0 auto 30px;display:flex;flex-wrap:wrap;gap:10px;}
+  input[type="text"], input[type="password"]{
+    background:var(--panel);border:1px solid var(--steel);
+    color:var(--ghost);font-family:'JetBrains Mono',monospace;font-size:13.5px;
+    padding:10px 12px;border-radius:3px;outline:none;
+  }
+  input::placeholder{color:#4d5568;}
+  input:focus{border-color:var(--cyan);}
+  #userInput{width:180px;}
+  #tokenInput{width:230px;}
+  button{
+    font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:13.5px;
+    letter-spacing:.03em;
+    background:transparent;border:1px solid var(--cyan);color:var(--cyan);
+    padding:10px 16px;border-radius:3px;cursor:pointer;
+    transition:background .15s, color .15s;
+  }
+  button:hover{background:var(--cyan);color:var(--void);}
+  button.ghost{border-color:var(--steel);color:var(--dim);}
+  button.ghost:hover{background:var(--steel);color:var(--ghost);}
+
+  #status{max-width:900px;margin:0 auto 18px;color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:13px;min-height:18px;}
+  #status.err{color:var(--danger);}
+
+  #profile{max-width:900px;margin:0 auto;display:none;}
+  #profile.show{display:block;}
+
+  .hero{
+    display:flex;gap:22px;align-items:center;flex-wrap:wrap;
+    padding:24px;background:var(--panel);border:1px solid var(--steel);
+    clip-path:polygon(0 18px,18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%);
+    margin-bottom:24px;
+  }
+  .avatar{width:84px;height:84px;border-radius:50%;border:2px solid var(--cyan);object-fit:cover;flex-shrink:0;}
+  .heroInfo{flex:1;min-width:200px;}
+  .heroName{font-family:'Chakra Petch',sans-serif;font-size:22px;font-weight:700;margin:0;}
+  .heroLogin{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);margin:2px 0 10px;}
+  .heroBio{font-size:13.5px;line-height:1.6;color:#c3cadb;margin:0 0 10px;max-width:60ch;}
+  .heroMeta{display:flex;flex-wrap:wrap;gap:14px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--dim);}
+  .heroMeta svg{width:12px;height:12px;vertical-align:-1.5px;margin-right:3px;}
+  .heroActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+  .heroActions a, .heroActions button{
+    font-family:'Chakra Petch',sans-serif;font-size:12.5px;font-weight:600;letter-spacing:.03em;
+    text-decoration:none;padding:8px 14px;border-radius:3px;cursor:pointer;
+  }
+  .ghLink{background:var(--cyan);color:var(--void);border:none;}
+
+  .cardsRow{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:24px;}
+  .cardsRow > div{flex:1;min-width:260px;}
+  .cardsRow img{max-width:100%;height:auto;display:block;}
+  .sectionLabel{
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--dim);
+    letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px;
+  }
+
+  .repoList{list-style:none;margin:0;padding:0;border:1px solid var(--steel);}
+  .repoList li{
+    padding:14px 16px;border-bottom:1px solid var(--steel);
+    display:flex;justify-content:space-between;gap:16px;align-items:flex-start;
+  }
+  .repoList li:last-child{border-bottom:none;}
+  .repoName{font-family:'Chakra Petch',sans-serif;font-size:14.5px;font-weight:600;color:var(--ghost);text-decoration:none;}
+  .repoName:hover{color:var(--cyan);}
+  .repoDesc{font-size:12.5px;color:var(--dim);margin:4px 0 0;max-width:52ch;}
+  .repoMeta{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim);white-space:nowrap;text-align:right;}
+  .repoMeta .stars{color:var(--amber);}
+
+  footer{max-width:900px;margin:36px auto 0;color:#5a6480;font-size:12.5px;}
+  footer a{color:#5a6480;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Codex <span>Profile</span></h1>
+  <nav><a href="/">← roster</a> <a href="/builder.html">card builder →</a></nav>
+</header>
+
+<div class="lookup">
+  <input type="text" id="userInput" class="mono" placeholder="GitHub username">
+  <button id="loadBtn">Load profile</button>
+  <input type="password" id="tokenInput" class="mono" placeholder="GitHub token (optional)" title="Raises the rate limit from 60/hr to 5,000/hr. Stays in this tab, only sent to api.github.com.">
+</div>
+
+<div id="status" class="mono"></div>
+
+<div id="profile">
+  <div class="hero" id="hero"></div>
+
+  <div class="cardsRow">
+    <div>
+      <p class="sectionLabel mono">Contributor Card</p>
+      <img id="cardImg" alt="contributor card">
+    </div>
+    <div>
+      <p class="sectionLabel mono">Achievements</p>
+      <img id="trophyImg" alt="achievements">
+    </div>
+  </div>
+
+  <p class="sectionLabel mono">Top Repositories</p>
+  <ul class="repoList" id="repoList"></ul>
+</div>
+
+<footer class="mono">Contributor Codex — <a href="https://github.com/boy-offi9-inc/Contributor-Codex">source</a></footer>
+
+<script>
+const API_BASE = 'https://contributor-codex.vercel.app';
+const statusEl = document.getElementById('status');
+const profileEl = document.getElementById('profile');
+const hero = document.getElementById('hero');
+const cardImg = document.getElementById('cardImg');
+const trophyImg = document.getElementById('trophyImg');
+const repoList = document.getElementById('repoList');
+const userInput = document.getElementById('userInput');
+const tokenInput = document.getElementById('tokenInput');
+
+function authHeaders(){
+  const token = tokenInput.value.trim();
+  return token ? { Authorization: 'token ' + token } : {};
+}
+
+async function ghFetch(url){
+  const res = await fetch(url, { headers: { Accept: 'application/vnd.github+json', ...authHeaders() } });
+  if (!res.ok) {
+    const err = new Error(res.status + ' ' + res.statusText);
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
+}
+
+function setStatus(msg, isErr){
+  statusEl.textContent = msg || '';
+  statusEl.classList.toggle('err', !!isErr);
+}
+
+function esc(s = ''){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function loadProfile(login){
+  profileEl.classList.remove('show');
+  setStatus(`Loading @${login}…`);
+
+  let user;
+  try {
+    user = await ghFetch(`https://api.github.com/users/${encodeURIComponent(login)}`);
+  } catch (err) {
+    if (err.status === 404) setStatus(`User "${login}" not found.`, true);
+    else if (err.status === 403) setStatus('Rate limited by GitHub — add a token above and try again.', true);
+    else setStatus('Failed to load: ' + err.message, true);
+    return;
+  }
+
+  let repos = [];
+  try {
+    repos = await ghFetch(`https://api.github.com/users/${encodeURIComponent(login)}/repos?per_page=100&type=owner`);
+  } catch {}
+
+  const joined = new Date(user.created_at).getFullYear();
+  const topRepos = repos
+    .filter(r => !r.fork)
+    .sort((a, b) => b.stargazers_count - a.stargazers_count)
+    .slice(0, 5);
+
+  hero.innerHTML = `
+    <img class="avatar" src="${user.avatar_url}&s=160" alt="${esc(login)} avatar">
+    <div class="heroInfo">
+      <p class="heroName">${esc(user.name || user.login)}</p>
+      <p class="heroLogin mono">@${esc(user.login)}</p>
+      ${user.bio ? `<p class="heroBio">${esc(user.bio)}</p>` : ''}
+      <div class="heroMeta">
+        <span>member since ${joined}</span>
+        ${user.location ? `<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-7.58 7-12A7 7 0 0 0 5 9c0 4.42 7 12 7 12Z"/><circle cx="12" cy="9" r="2.4"/></svg>${esc(user.location)}</span>` : ''}
+        ${user.company ? `<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V6l6-3 6 3v15"/><path d="M4 21h16"/><path d="M10 21v-5h4v5"/></svg>${esc(user.company)}</span>` : ''}
+        <span>${user.followers} followers</span>
+        <span>${user.public_repos} public repos</span>
+      </div>
+      <div class="heroActions">
+        <a class="ghLink" href="${user.html_url}" target="_blank" rel="noopener">VIEW ON GITHUB</a>
+        <button class="ghost" id="copyLinkBtn">COPY PROFILE LINK</button>
+      </div>
+    </div>`;
+
+  document.getElementById('copyLinkBtn').onclick = async (e) => {
+    const url = `${location.origin}${location.pathname}?u=${encodeURIComponent(login)}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      e.target.textContent = 'COPIED ✓';
+      setTimeout(() => { e.target.textContent = 'COPY PROFILE LINK'; }, 1500);
+    } catch {
+      e.target.textContent = 'COPY FAILED';
+    }
+  };
+
+  cardImg.src = `${API_BASE}/api/card?username=${encodeURIComponent(login)}&theme=detailed`;
+  trophyImg.src = `${API_BASE}/api/trophies?username=${encodeURIComponent(login)}`;
+
+  repoList.innerHTML = topRepos.length ? topRepos.map(r => `
+    <li>
+      <div>
+        <a class="repoName" href="${r.html_url}" target="_blank" rel="noopener">${esc(r.name)}</a>
+        ${r.description ? `<p class="repoDesc">${esc(r.description)}</p>` : ''}
+      </div>
+      <div class="repoMeta">
+        <div class="stars">★ ${r.stargazers_count}</div>
+        ${r.language ? `<div>${esc(r.language)}</div>` : ''}
+      </div>
+    </li>`).join('') : `<li><span class="mono" style="color:var(--dim);">no public repositories</span></li>`;
+
+  profileEl.classList.add('show');
+  setStatus('');
+  history.replaceState(null, '', `${location.pathname}?u=${encodeURIComponent(login)}`);
+}
+
+document.getElementById('loadBtn').onclick = () => {
+  const login = userInput.value.trim();
+  if (login) loadProfile(login);
+};
+userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('loadBtn').click(); });
+
+const params = new URLSearchParams(location.search);
+const initial = params.get('u') || params.get('username');
+if (initial) {
+  userInput.value = initial;
+  loadProfile(initial);
+} else {
+  setStatus('Enter a GitHub username to load their Codex profile.');
+}
+</script>
+</body>
+</html>

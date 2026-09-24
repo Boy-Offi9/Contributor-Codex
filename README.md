@@ -19,6 +19,7 @@ Live at [contributor-codex.vercel.app](https://contributor-codex.vercel.app).
 | Repository | `/api/repo?owner=&repo=` |
 | Achievements | `/api/trophies?username=&trophies=` |
 | Organization roster | `/` (interactive, not embeddable) |
+| Codex profile page | `/profile.html?u=` (interactive, not embeddable) |
 
 ```md
 ![Card](https://contributor-codex.vercel.app/api/card?username=octocat)
@@ -29,6 +30,10 @@ All params: `theme`, `color` (hex, no `#`) on every card; `limit` (leaderboard o
 ## Card Builder
 
 `/builder.html` — pick a card type, fill in the fields, get a live preview plus ready-to-copy Markdown, raw URL, and `<img>` snippet. No coding or query-param guessing required. Linked from the roster page.
+
+## Codex Profile
+
+`/profile.html?u=USERNAME` — a shareable, linkable page per contributor. Combines the generated Contributor Card (detailed theme) and Achievements card with live-fetched extras that don't fit on a card: bio, location, company, member-since year, and a top-5-by-stars repo list. Same client-side GitHub fetch pattern as the roster page (works with or without a token, 60/hr vs 5,000/hr). Reachable from the roster's dossier modal via "FULL PROFILE →", or by sharing the URL directly.
 
 ## Themes
 

@@ -40,6 +40,7 @@
     margin:0 0 6px;letter-spacing:.01em;
   }
   h1 span{color:var(--dim);font-weight:500;}
+  header nav{display:flex;gap:10px;flex-wrap:wrap;}
   header nav a{
     font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);
     text-decoration:none;border:1px solid var(--steel);padding:7px 12px;border-radius:3px;
@@ -139,6 +140,8 @@
     color:var(--void);background:var(--cyan);padding:9px 16px;text-decoration:none;
     border:none;cursor:pointer;letter-spacing:.03em;margin-right:8px;
   }
+  .profileLink.ghost{background:transparent;color:var(--dim);border:1px solid var(--steel);}
+  .profileLink.ghost:hover{background:var(--steel);color:var(--ghost);}
   .dossierCard{display:block;margin:0 auto;max-width:100%;height:auto;}
   .themeSelect{
     background:var(--panel);border:1px solid var(--steel);color:var(--ghost);
@@ -152,7 +155,7 @@
 
 <header>
   <h1>Contributor <span>Codex</span></h1>
-  <nav><a href="/builder.html">card builder →</a></nav>
+  <nav><a href="/profile.html">full profile →</a> <a href="/builder.html">card builder →</a></nav>
 </header>
 
 <div class="controls">
@@ -247,7 +250,8 @@ async function openDossier(login){
     <img class="dossierCard" src="${cardUrl}" alt="${login} card">
     ${joined ? `<p class="dLogin mono" style="text-align:center;margin-top:10px;">member since ${joined}</p>` : ''}
     ${user?.bio ? `<p class="bio">${user.bio}</p>` : ''}
-    <button class="profileLink copyBtn" data-url="${cardUrl}">COPY EMBED LINK</button>
+    <a class="profileLink" href="/profile.html?u=${encodeURIComponent(login)}">FULL PROFILE →</a>
+    <button class="profileLink ghost copyBtn" data-url="${cardUrl}">COPY EMBED LINK</button>
   `;
   dossier.querySelector('.closeBtn').onclick = closeDossier;
   const copyBtn = dossier.querySelector('.copyBtn');
