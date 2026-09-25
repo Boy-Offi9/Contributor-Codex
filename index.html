@@ -127,7 +127,7 @@
   .toolCard a.go:hover{border-bottom-color:var(--cyan);}
 
   /* ---------- embed section ---------- */
-  .embedBlock{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;}
+  .embedBlock{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;}
   .embedCode{
     flex:1;min-width:260px;background:#020402;border:1px solid #1b2f1e;
     padding:18px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#3ddc6a;
@@ -204,7 +204,7 @@
         <h3>Repository</h3>
       </div>
       <p>Stars, forks, license, topics, contributors, and the latest release for a single repo.</p>
-      <div class="thumb"><img src="https://contributor-codex.vercel.app/api/repo?owner=boy-offi9-inc&repo=Contributor-Codex" alt="repository card example" loading="lazy"></div>
+      <div class="thumb"><img src="https://contributor-codex.vercel.app/api/repo?owner=Boy-Offi9&repo=Contributor-Codex" alt="repository card example" loading="lazy"></div>
       <code>/api/repo?owner=&repo=</code>
     </div>
 
@@ -267,7 +267,7 @@
 </section>
 
 <footer class="mono">
-  <a href="https://github.com/boy-offi9-inc/Contributor-Codex" target="_blank" rel="noopener">
+  <a href="https://github.com/Boy-Offi9/Contributor-Codex" target="_blank" rel="noopener">
     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg>
     source on GitHub
   </a>
@@ -298,7 +298,7 @@ document.getElementById('embedCopyBtn').onclick = async (e) => {
   const text = document.getElementById('embedText').textContent;
   try {
     await navigator.clipboard.writeText(text);
-    e.target.textContent = 'copied ✓';
+    e.target.textContent = 'copied';
     setTimeout(() => { e.target.textContent = 'copy'; }, 1500);
   } catch {
     e.target.textContent = 'copy failed';
