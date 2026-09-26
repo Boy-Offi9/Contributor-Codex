@@ -1,6 +1,6 @@
 {
   "name": "contributor-codex",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "private": true,
   "description": "Sci-fi RPG-style GitHub contributor cards, embeddable in any README",
   "engines": {
