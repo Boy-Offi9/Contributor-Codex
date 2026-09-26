@@ -30,15 +30,14 @@ function licenseOf(repo) {
   return repo.license?.spdx_id && repo.license.spdx_id !== 'NOASSERTION' ? repo.license.spdx_id : null;
 }
 
-// Lightweight, best-effort lookups for the detailed theme only. Both fail soft
-// (return null) rather than throw, so a rate limit or a repo with zero releases
-// never breaks the whole card — it just omits that one field.
+// Detailed-theme-only lookups. Both fail soft (null) rather than throw, so a
+// rate limit or a repo with no releases still renders a complete card.
 async function contributorCount(owner, repoName, token) {
   try {
     const headers = { Accept: 'application/vnd.github+json' };
     if (token) headers.Authorization = `token ${token}`;
-    // per_page=1 + reading the Link header's last page number is the standard
-    // cheap way to get a total count without paginating through everyone.
+    // per_page=1 + the Link header's last-page number gives a total count
+    // without paginating through every contributor.
     const res = await fetch(`https://api.github.com/repos/${owner}/${repoName}/contributors?per_page=1&anon=true`, { headers });
     if (!res.ok) return null;
     const link = res.headers.get('link');
@@ -166,9 +165,8 @@ function renderDetailed({ repo, color, fontFace, contributors, releaseTag }) {
   const topics = (repo.topics || []).slice(0, 6);
   const d = descLines.length * 16; // extra vertical room the description block needs
 
-  // Running layout in fixed stages, each offset from the last, so adding a
-  // field later means inserting one stage rather than re-deriving every
-  // coordinate below it.
+  // Each Y offset derives from the one before it, so a new field only
+  // requires one insertion, not re-deriving every coordinate below it.
   const row1Y = 100 + d;               // STARS / FORKS
   const row2Y = row1Y + 76;            // ISSUES / WATCHERS
   const row3Y = row2Y + 76;            // CONTRIBUTORS / RELEASE
@@ -260,9 +258,7 @@ module.exports.GET = async (request) => {
     let contributors = null;
     let releaseTag = null;
     if (requestedTheme === 'detailed') {
-      // Only the detailed theme needs these — two extra calls, run in parallel,
-      // and both fail soft so a rate limit or a repo with no releases still
-      // renders a complete card.
+      // Detailed theme only — both calls fail soft.
       [contributors, releaseTag] = await Promise.all([
         contributorCount(owner, repoName, token),
         latestReleaseTag(owner, repoName, token),

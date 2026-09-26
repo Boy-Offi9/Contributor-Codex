@@ -24,14 +24,9 @@ async function buildEntry(login, token) {
   return { user, avatarUri, ...stats };
 }
 
-// Ranking needs every member's stats before it can sort, so the total number
-// of GitHub calls is fixed either way — but running them one at a time was
-// the actual cause of the timeout risk the README used to call out. A small
-// worker pool keeps wall-clock time down to roughly (members / concurrency)
-// instead of (members), without hammering GitHub hard enough to trip its
-// secondary rate limits. MEMBER_CAP bounds the worst case for very large
-// orgs: past that many public members, the board still ranks a representative
-// slice rather than risking a timeout trying to rank everyone.
+// Ranking requires every member's stats before sorting, so total GitHub
+// calls are fixed either way — a worker pool just parallelizes them.
+// MEMBER_CAP bounds worst-case time for very large orgs.
 const CONCURRENCY = 4;
 const MEMBER_CAP = 60;
 
@@ -173,7 +168,7 @@ function svgResponse(body, status, cacheControl) {
 
 module.exports.GET = async (request) => {
   const { rateLimited } = await checkRateLimit('leaderboard-endpoint', { request });
-  if (rateLimited) return svgResponse(errorSVG('rate limited — slow down a bit'), 100);
+  if (rateLimited) return svgResponse(errorSVG('rate limited — slow down a bit'), 429, 'no-store');
 
   const url = new URL(request.url);
   const org = (url.searchParams.get('org') || '').trim();
@@ -181,12 +176,12 @@ module.exports.GET = async (request) => {
   const accent = sanitizeColor(url.searchParams.get('color')) || '#00e5ff';
   const theme = url.searchParams.get('theme');
 
-  if (!org) return svgResponse(errorSVG('missing ?org='), 100);
+  if (!org) return svgResponse(errorSVG('missing ?org='), 400);
 
   const token = process.env.GITHUB_TOKEN;
   try {
     const members = await ghFetch(`https://api.github.com/orgs/${org}/members?per_page=100`, token);
-    if (!members.length) return svgResponse(errorSVG(`"${org}" has no public members`), 100);
+    if (!members.length) return svgResponse(errorSVG(`"${org}" has no public members`), 200, 'public, s-maxage=3600');
 
     const entries = await buildEntries(members, token);
     entries.sort((a, b) => b.xp - a.xp);
@@ -200,8 +195,8 @@ module.exports.GET = async (request) => {
 
     return svgResponse(svg, 200, 'public, s-maxage=21600, stale-while-revalidate=86400');
   } catch (err) {
-    if (err.status === 404) return svgResponse(errorSVG(`org "${org}" not found`), 100, 'public, s-maxage=60');
-    if (err.status === 403) return svgResponse(errorSVG('rate limited — set GITHUB_TOKEN'), 100, 'public, s-maxage=60');
-    return svgResponse(errorSVG('failed to load'), 100, 'public, s-maxage=60');
+    if (err.status === 404) return svgResponse(errorSVG(`org "${org}" not found`), 404, 'public, s-maxage=60');
+    if (err.status === 403) return svgResponse(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=60');
+    return svgResponse(errorSVG('failed to load'), 500, 'public, s-maxage=60');
   }
 };

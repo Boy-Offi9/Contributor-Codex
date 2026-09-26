@@ -1,8 +1,8 @@
 {
   "name": "contributor-codex",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "private": true,
-  "description": "Sci-fi RPG-style GitHub contributor cards, embeddable in any README",
+  "description": "GitHub data compiled into visual cards, achievements, team leaderboards, and profiles — embeddable anywhere as server-rendered SVG",
   "engines": {
     "node": ">=18"
   },

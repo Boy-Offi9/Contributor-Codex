@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Contributor Codex — sci-fi GitHub cards</title>
-<meta name="description" content="Sci-fi RPG-style GitHub cards, rendered server-side as SVG. Point it at a username, an org, or a repo.">
+<title>Contributor Codex — GitHub data, visualized</title>
+<meta name="description" content="Contributor Codex turns a GitHub username, org, or repo into shareable cards, tiered achievements, team leaderboards, and a full visual profile — rendered server-side as SVG, no build step required.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -161,8 +161,8 @@
 </div>
 
 <div class="hero">
-  <h1>GitHub stats, rendered as sci-fi cards.</h1>
-  <p class="heroSub">Contributor Codex turns a username, an org, or a repo into a hand-drawn SVG card — no build step, no tracking pixel, just a URL you can drop into a README.</p>
+  <h1>GitHub activity, compiled into a codex.</h1>
+  <p class="heroSub">Contributor Codex turns a username, an org, or a repo into shareable cards, tiered achievements, team leaderboards, and a full visual profile — sci-fi styling included, no build step, no tracking pixel, README-ready by design.</p>
 
   <div class="demo">
     <input type="text" id="demoInput" class="mono" placeholder="a GitHub username" value="octocat">
@@ -298,7 +298,7 @@ document.getElementById('embedCopyBtn').onclick = async (e) => {
   const text = document.getElementById('embedText').textContent;
   try {
     await navigator.clipboard.writeText(text);
-    e.target.textContent = 'copied';
+    e.target.textContent = 'copied ✓';
     setTimeout(() => { e.target.textContent = 'copy'; }, 1500);
   } catch {
     e.target.textContent = 'copy failed';

@@ -20,10 +20,8 @@ const TROPHIES = [
   { key: 'OPEN_SOURCE', label: 'LICENSED', thresholds: [1, 5, 15, 30], value: (s, u) => s.licensedRepos },
 ];
 
-// Optional 7th slot: a user-supplied metric (Codewars rank, LeetCode streak,
-// anything not on GitHub) rendered through the exact same tiered-shield logic
-// as the built-in trophies. Opt-in only — all three params must be present
-// and valid, so it never appears unless deliberately requested.
+// Optional 7th slot for a user-supplied metric (e.g. a Codewars rank),
+// rendered through the same tiered-shield logic. Opt-in only.
 function parseCustomTrophy(url) {
   const label = (url.searchParams.get('customLabel') || '')
     .replace(/[^a-zA-Z0-9 ]/g, '')

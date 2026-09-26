@@ -10,10 +10,9 @@ function errorSVG(message) {
   </svg>`;
 }
 
-// Small stroke icons matching the hand-drawn set already used on the HTML
-// pages (hex/shield motifs) — 12x12, stroke=currentColor. Kept as raw path
-// fragments rather than full <svg> so they can be dropped straight into a
-// parent <g fill="none" stroke="${color}"> without a nested viewBox.
+// Small stroke icons (12x12, stroke=currentColor) as raw path fragments so
+// they drop into a parent <g fill="none" stroke="${color}"> without a nested
+// viewBox — matches the icon set used across the HTML pages.
 const ICONS = {
   repo: '<path d="M2 4l4-2 4 2v5l-4 2-4-2V4Z"/><path d="M2 4l4 2 4-2"/><path d="M6 6v5"/>',
   star: '<path d="M6 1l1.5 3.2L11 4.7l-2.5 2.4.6 3.4L6 8.9 2.9 10.5l.6-3.4L1 4.7l3.5-.5L6 1Z" stroke-linejoin="round"/>',

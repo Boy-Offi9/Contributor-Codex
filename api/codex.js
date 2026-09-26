@@ -15,11 +15,10 @@ function errorSVG(message) {
   </svg>`;
 }
 
-// A small, fixed subset of the full trophy list — Collections is meant to be
-// one glanceable dossier, not a full achievements card (that's what
-// /api/trophies is for). Same tiering logic as trophies.js, duplicated
-// rather than imported to keep each endpoint independently deployable, same
-// pattern already used for errorSVG/svg() across every card in this repo.
+// Fixed subset of the full trophy list — Collections is a glanceable
+// dossier, not a full achievements card. Tiering logic duplicated from
+// trophies.js rather than imported, keeping each endpoint independently
+// deployable.
 const COLLECTION_TROPHIES = [
   { key: 'STARGAZER', label: 'STARS', thresholds: [10, 50, 200, 1000], value: (s, u) => s.totalStars },
   { key: 'BUILDER', label: 'REPOS', thresholds: [10, 25, 50, 100], value: (s, u) => u.public_repos || 0 },
@@ -49,9 +48,8 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color }) {
   const name = esc(user.name || user.login);
   const classLabel = classFor(stats.topLang);
 
-  // Running layout, same pattern used in repo.js's detailed theme: each
-  // section's Y is derived from the one before it, so inserting a new
-  // section later doesn't require re-deriving every coordinate below it.
+  // Each section's Y offset derives from the one before it, so a new
+  // section only requires one insertion, not re-deriving every coordinate.
   const headerH = 96;
   const statsY = headerH + 14;
   const shieldsY = statsY + 68;
