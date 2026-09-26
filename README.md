@@ -149,11 +149,12 @@ Icons across all four pages are hand-drawn inline SVG in the same hex/shield mot
 
 `cyberpunk` (default) · `terminal` · `glass` · `detailed`
 
-- **`cyberpunk`** and **`detailed`** share a neon aesthetic: an `feGaussianBlur` glow filter on the border, avatar frame, level badge, and stat values; a faint circuit-grid texture; a second gradient for two-tone depth; and small stroke icons next to each stat.
-- **`terminal`** is a flat green-on-black CRT look.
-- **`glass`** is a light, frosted-panel look.
+Each theme now has its own voice rather than sharing one vocabulary:
 
-`terminal` and `glass` intentionally don't carry the glow treatment — it wouldn't fit either aesthetic.
+- **`cyberpunk`** is the RPG one — level, XP, tiered rank (INITIATE → LEGENDARY), and a language-based character class (`NETRUNNER`, `DATA MAGE`, etc). Carries the neon treatment: an `feGaussianBlur` glow filter on the border, avatar frame, level badge, and stat values; a faint circuit-grid texture; a second gradient for two-tone depth; small stroke icons next to each stat.
+- **`terminal`** is a hacker/system aesthetic, not an RPG one: a fake `scan.sh` session with an `[OK] identity verified` line, `login`/`alias`/`lang` fields, and its own clearance ladder (`SCRIPT KIDDIE → OPERATOR → GHOST → GATEKEEPER → ROOT`) mapped onto the same underlying level thresholds as cyberpunk's tiers, just relabeled — no shared vocabulary between the two.
+- **`glass`** is a casual, gamification-free profile card: no level, no XP, no class. Frosted panel over softly blurred gradient blobs (real glassmorphism), a glow ring behind the avatar, a small verified-style checkmark, the top language as a plain pill, and "Member since {year}" instead of a score.
+- **`detailed`** still shares cyberpunk's RPG vocabulary for now — under review separately.
 
 `detailed` is the information-dense variant, available on Contributor Card and Repository Card (see their sections in the [API reference](#api-reference) above for exactly what it adds to each).
 
