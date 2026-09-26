@@ -53,6 +53,8 @@ Icons across all four pages are hand-drawn inline SVG in the same hex/shield mot
 
 `detailed` on Contributor Card adds bio, full stat grid, and language chips — no GitHub link, since links inside an `<img>`-embedded SVG don't work. On Repository Card it adds topics, watchers, default branch, created date, size, contributor count, and latest release tag, alongside last push date.
 
+`cyberpunk` and `detailed` on Contributor Card carry a neon-glow treatment (SVG `feGaussianBlur` filter on the border, avatar frame, level badge, and stat values), a faint circuit-grid texture, a second purple gradient for two-tone depth, and small stroke icons next to each stat. `terminal` (CRT green) and `glass` (frosted light) are intentionally different aesthetics and were left alone — a neon glow doesn't belong on either.
+
 ## Achievements
 
 `/api/trophies` — seven independent badges (STARGAZER, BUILDER, INFLUENCE, VETERAN, POLYGLOT, FORKED, OPEN_SOURCE), each tiered INITIATE→OPERATIVE→SPECIALIST→ELITE→LEGENDARY by its own plain threshold. Filter with `?trophies=STARGAZER,POLYGLOT`.
