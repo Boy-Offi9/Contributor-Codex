@@ -24,6 +24,13 @@ function icon(name, x, y, color) {
   return `<g transform="translate(${x},${y})" fill="none" stroke="${color}" stroke-width="1.3" stroke-linecap="round">${ICONS[name]}</g>`;
 }
 
+// Terminal theme gets its own tier vocabulary instead of cyberpunk's RPG
+// class names — mapped 1:1 onto the same 5 tiers computeStats already
+// produces, so the underlying level thresholds stay a single source of truth.
+const TIER_ORDER = ['INITIATE', 'OPERATIVE', 'SPECIALIST', 'ELITE', 'LEGENDARY'];
+const HACKER_CLEARANCE = ['SCRIPT KIDDIE', 'OPERATOR', 'GHOST', 'GATEKEEPER', 'ROOT'];
+const clearanceFor = (tier) => HACKER_CLEARANCE[TIER_ORDER.indexOf(tier)] || 'SCRIPT KIDDIE';
+
 function statBar(y, label, value, max, color, iconName) {
   const pct = Math.max(4, Math.min(100, Math.round((value / max) * 100)));
   return `
@@ -117,57 +124,60 @@ function renderCyberpunk({ user, avatarUri, topLang, level, xp, totalStars, tier
 function renderTerminal({ user, topLang, level, xp, totalStars, tier }) {
   const name = esc(user.name || user.login);
   const login = esc(user.login);
-  const classLabel = `${classFor(topLang)}${topLang ? ':' + esc(topLang) : ''}`;
+  const clearance = clearanceFor(tier);
   const green = '#3ddc6a';
   const rows = [
-    `user     ${login}`,
-    `name     ${name}`,
-    `class    ${classLabel.toLowerCase()}`,
-    `rank     ${tier.toLowerCase()} (lv ${level})`,
-    `repos    ${user.public_repos || 0}`,
-    `stars    ${totalStars}`,
-    `followers ${user.followers || 0}`,
-    `xp       ${xp.toLocaleString()}`,
+    `login      ${login}`,
+    `alias      ${name.toLowerCase()}`,
+    `lang       ${topLang ? esc(topLang).toLowerCase() : 'unknown'}`,
+    `clearance  ${clearance.toLowerCase()} [lvl.${level}]`,
+    `repos      ${user.public_repos || 0}`,
+    `stars      ${totalStars}`,
+    `followers  ${user.followers || 0}`,
+    `score      ${xp.toLocaleString()}`,
   ];
+  const height = 108 + rows.length * 20;
 
-  return `<svg width="360" height="280" viewBox="0 0 360 280" xmlns="http://www.w3.org/2000/svg">
-    <title>${name} — Contributor Card (terminal theme). XP = ${XP_FORMULA}</title>
+  return `<svg width="360" height="${height}" viewBox="0 0 360 ${height}" xmlns="http://www.w3.org/2000/svg">
+    <title>${name} — Contributor Card (terminal theme). Score = ${XP_FORMULA}</title>
     <defs>
       <style>
         .term{font:400 13px 'Courier New',monospace;fill:${green};}
         .dim{fill:#2a6b3d;}
         .head{font:700 13px 'Courier New',monospace;fill:${green};}
+        .ok{font:400 12px 'Courier New',monospace;fill:#2a6b3d;}
       </style>
     </defs>
-    <rect width="360" height="280" fill="#020402"/>
-    <rect width="360" height="280" fill="none" stroke="${green}" opacity="0.5"/>
+    <rect width="360" height="${height}" fill="#020402"/>
+    <rect width="360" height="${height}" fill="none" stroke="${green}" opacity="0.5"/>
     <rect x="0" y="0" width="360" height="24" fill="#0a140a"/>
     <circle cx="14" cy="12" r="4" fill="#ff4d6d"/>
     <circle cx="30" cy="12" r="4" fill="#ffb020"/>
     <circle cx="46" cy="12" r="4" fill="${green}"/>
-    <text x="180" y="16" text-anchor="middle" class="dim" font-family="'Courier New',monospace" font-size="11">contributor.sh</text>
-    <text x="16" y="46" class="head">$ whoami --verbose</text>
-    ${rows.map((line, i) => `<text x="16" y="${68 + i * 20}" class="term">${esc(line)}</text>`).join('')}
-    <text x="16" y="${68 + rows.length * 20 + 6}" class="term">$ <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/>_</text>
+    <text x="180" y="16" text-anchor="middle" class="dim" font-family="'Courier New',monospace" font-size="11">scan.sh</text>
+    <text x="16" y="46" class="head">$ ./scan.sh --target=${login}</text>
+    <text x="16" y="66" class="ok">[OK] identity verified</text>
+    ${rows.map((line, i) => `<text x="16" y="${88 + i * 20}" class="term">${esc(line)}</text>`).join('')}
+    <text x="16" y="${88 + rows.length * 20 + 6}" class="term">$ <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/>_</text>
   </svg>`;
 }
 
-function renderGlass({ user, topLang, level, xp, totalStars, tier, color, avatarUri }) {
+function renderGlass({ user, topLang, totalStars, color, avatarUri }) {
   const name = esc(user.name || user.login);
-  const classLabel = `${classFor(topLang)}${topLang ? ' · ' + esc(topLang) : ''}`;
+  const joined = new Date(user.created_at).getFullYear();
   const avatarTag = avatarUri
     ? `<image href="${avatarUri}" x="0" y="0" width="72" height="72" preserveAspectRatio="xMidYMid slice" clip-path="url(#circle)"/>`
     : '';
 
-  return `<svg width="360" height="340" viewBox="0 0 360 340" xmlns="http://www.w3.org/2000/svg">
-    <title>${name} — Contributor Card (glass theme). XP = ${XP_FORMULA}</title>
+  return `<svg width="360" height="320" viewBox="0 0 360 320" xmlns="http://www.w3.org/2000/svg">
+    <title>${name} — Contributor Card (glass theme)</title>
     <defs>
       <style>
         .t1{font:700 16px system-ui,sans-serif;fill:#1c2333;}
         .t2{font:500 11px system-ui,sans-serif;fill:#6b7488;}
         .lbl{font:500 9px system-ui,sans-serif;fill:#8891a3;letter-spacing:.5px;}
         .cls{font:600 11px system-ui,sans-serif;fill:${color};}
-        .tag{font:700 11px system-ui,sans-serif;}
+        .foot{font:500 10px system-ui,sans-serif;fill:#9aa2b3;}
       </style>
       <clipPath id="circle"><circle cx="36" cy="36" r="36"/></clipPath>
       <linearGradient id="glassBg" x1="0" y1="0" x2="1" y2="1">
@@ -175,36 +185,50 @@ function renderGlass({ user, topLang, level, xp, totalStars, tier, color, avatar
         <stop offset="100%" stop-color="#dde3f0"/>
       </linearGradient>
       <filter id="soft"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-opacity="0.12"/></filter>
+      <filter id="blob" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="26"/></filter>
+      <filter id="avatarGlow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="6"/></filter>
     </defs>
-    <rect width="360" height="340" rx="24" fill="url(#glassBg)"/>
-    <rect x="16" y="16" width="328" height="308" rx="18" fill="#ffffff" opacity="0.6" filter="url(#soft)"/>
 
-    <g transform="translate(32,32)">${avatarTag}<circle cx="36" cy="36" r="36" fill="none" stroke="${color}" stroke-width="2"/></g>
-    <rect x="270" y="32" width="62" height="22" rx="11" fill="${color}"/>
-    <text x="301" y="47" text-anchor="middle" class="tag" fill="#ffffff">LV ${level}</text>
+    <rect width="360" height="320" rx="24" fill="url(#glassBg)"/>
+    <circle cx="30" cy="20" r="70" fill="${color}" opacity="0.22" filter="url(#blob)"/>
+    <circle cx="345" cy="60" r="60" fill="#8b5cf6" opacity="0.18" filter="url(#blob)"/>
+    <circle cx="330" cy="300" r="65" fill="${color}" opacity="0.14" filter="url(#blob)"/>
 
-    <text x="120" y="52" class="t1">${name}</text>
-    <text x="120" y="70" class="t2">@${esc(user.login)}</text>
-    <text x="32" y="128" class="cls">${esc(classLabel)}</text>
+    <rect x="16" y="16" width="328" height="288" rx="18" fill="#ffffff" opacity="0.55" filter="url(#soft)"/>
+    <rect x="16" y="16" width="328" height="1.5" rx="1" fill="#ffffff" opacity="0.8"/>
 
-    <g transform="translate(32,150)">
+    <g transform="translate(32,32)">
+      <circle cx="36" cy="36" r="38" fill="${color}" opacity="0.35" filter="url(#avatarGlow)"/>
+      ${avatarTag}
+      <circle cx="36" cy="36" r="36" fill="none" stroke="${color}" stroke-width="2"/>
+    </g>
+
+    <text x="120" y="50" class="t1">${name}</text>
+    <g transform="translate(322,42)">
+      <circle r="9" fill="${color}"/>
+      <path d="M-4 0l3 3.2L4.2 -3.4" stroke="#ffffff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <text x="120" y="68" class="t2">@${esc(user.login)}</text>
+    ${topLang ? `<rect x="120" y="82" width="${18 + esc(topLang).length * 6.5}" height="20" rx="10" fill="${color}" opacity="0.12"/><text x="${130 + esc(topLang).length * 3.25}" y="96" text-anchor="middle" class="cls">${esc(topLang)}</text>` : ''}
+
+    <g transform="translate(32,132)">
       <rect width="94" height="60" rx="12" fill="#ffffff" opacity="0.7"/>
       <text x="47" y="24" text-anchor="middle" class="lbl">REPOS</text>
       <text x="47" y="46" text-anchor="middle" class="t1">${user.public_repos || 0}</text>
     </g>
-    <g transform="translate(133,150)">
+    <g transform="translate(133,132)">
       <rect width="94" height="60" rx="12" fill="#ffffff" opacity="0.7"/>
       <text x="47" y="24" text-anchor="middle" class="lbl">STARS</text>
       <text x="47" y="46" text-anchor="middle" class="t1">${totalStars}</text>
     </g>
-    <g transform="translate(234,150)">
+    <g transform="translate(234,132)">
       <rect width="94" height="60" rx="12" fill="#ffffff" opacity="0.7"/>
       <text x="47" y="24" text-anchor="middle" class="lbl">FOLLOWERS</text>
       <text x="47" y="46" text-anchor="middle" class="t1">${user.followers || 0}</text>
     </g>
 
-    <text x="32" y="248" class="lbl">${tier}<title>${XP_FORMULA}</title></text>
-    <text x="32" y="272" class="t1" font-size="20">${xp.toLocaleString()} XP</text>
+    <line x1="32" y1="222" x2="312" y2="222" stroke="#c9d0e0" opacity="0.6"/>
+    <text x="32" y="248" class="foot">Member since ${joined}</text>
   </svg>`;
 }
 
