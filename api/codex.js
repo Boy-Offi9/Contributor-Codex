@@ -132,10 +132,11 @@ module.exports.GET = async (request) => {
     } catch {}
 
     const stats = computeStats(user, repos);
-    const [avatarUri, topLangs] = await Promise.all([
+    const [avatarUri, langStats] = await Promise.all([
       avatarDataUri(`${user.avatar_url}&s=100`),
       byteWeightedLangs(repos, token),
     ]);
+    const topLangs = langStats.map((l) => l.name);
     const color = sanitizeColor(url.searchParams.get('color')) || '#00e5ff';
 
     return svg(render({ user, stats, avatarUri, topLangs, fontFace: CHAKRA_PETCH_FONT_FACE, color }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
