@@ -102,7 +102,10 @@ async function byteWeightedLangs(repos, token) {
       }
     } catch {}
   }
-  return Object.entries(totals).sort((a, b) => b[1] - a[1]).map(([l]) => l);
+  const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0) || 1;
+  return Object.entries(totals)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, bytes]) => ({ name, bytes, pct: Math.round((bytes / grandTotal) * 100) }));
 }
 
 function computeStats(user, repos) {
