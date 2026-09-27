@@ -47,7 +47,7 @@ A single GitHub user's profile as a card: level, XP, top language, and repo/star
 ![Card](https://contributor-codex.vercel.app/api/card?username=octocat&theme=detailed&color=ff00aa)
 ```
 
-`detailed` additionally shows bio, a full stat grid, and byte-weighted top-language chips (one extra GitHub API call to compute). It omits the GitHub profile link present in other themes, since links inside an `<img>`-embedded SVG aren't clickable.
+`detailed` shows bio, a circular rank gauge, a 6-box stat grid (repos/stars/forks/followers/PRs/issues), and a proportional byte-weighted language bar — see [Themes](#themes) for the full breakdown. It costs 3 extra API calls (language bytes across up to 6 repos, plus two Search API calls for PR/issue counts) and omits the GitHub profile link present in other themes, since links inside an `<img>`-embedded SVG aren't clickable.
 
 ### `GET /api/leaderboard` — Team / Leaderboard
 
@@ -154,9 +154,9 @@ Each theme now has its own voice rather than sharing one vocabulary:
 - **`cyberpunk`** is the RPG one — level, XP, tiered rank (INITIATE → LEGENDARY), and a language-based character class (`NETRUNNER`, `DATA MAGE`, etc). Carries the neon treatment: an `feGaussianBlur` glow filter on the border, avatar frame, level badge, and stat values; a faint circuit-grid texture; a second gradient for two-tone depth; small stroke icons next to each stat.
 - **`terminal`** is a hacker/system aesthetic, not an RPG one: a fake `scan.sh` session with an `[OK] identity verified` line, `login`/`alias`/`lang` fields, and its own clearance ladder (`SCRIPT KIDDIE → OPERATOR → GHOST → GATEKEEPER → ROOT`) mapped onto the same underlying level thresholds as cyberpunk's tiers, just relabeled — no shared vocabulary between the two.
 - **`glass`** is a casual, gamification-free profile card: no level, no XP, no class. Frosted panel over softly blurred gradient blobs (real glassmorphism), a glow ring behind the avatar, a small verified-style checkmark, the top language as a plain pill, and "Member since {year}" instead of a score.
-- **`detailed`** still shares cyberpunk's RPG vocabulary for now — under review separately.
+- **`detailed`** is its own fourth identity — a data-dense dossier, not a bigger cyberpunk card. A circular rank gauge (letter grade S+ → D, see [Scoring](#scoring)) replaces the level badge; a proportional byte-weighted language bar with a percentage legend replaces language chips; the stat grid grew from 4 boxes to 6, adding pull request and issue counts (via GitHub's Search API) alongside repos/stars/forks/followers. No RPG class name, no XP.
 
-`detailed` is the information-dense variant, available on Contributor Card and Repository Card (see their sections in the [API reference](#api-reference) above for exactly what it adds to each).
+`detailed` is the information-dense variant, available on Contributor Card and Repository Card (see their sections in the [API reference](#api-reference) above for exactly what it adds to each — the Repository Card's `detailed` theme is a separate, simpler layout not yet covered by this redesign).
 
 ## Achievements
 
@@ -181,6 +181,14 @@ XP = repos × 15 + stars × 5 + followers × 10 + years × 20
 ```
 
 Self-referential only — never compared against other users, and shown on-card via a hover tooltip on the XP value so the formula is never hidden. Level is derived from XP on a square-root curve, capped at 99.
+
+**Contributor Card's `detailed` theme uses a separate rank score**, not XP — a letter grade (S+ down to D) shown as a circular gauge:
+
+```
+sqrt(stars/300)×30 + sqrt(repos/60)×20 + sqrt(followers/300)×25 + sqrt(prs/100)×15 + sqrt(issues/60)×10
+```
+
+Also self-referential, also shown via tooltip. Uses a square-root curve rather than a hard linear cap so realistic activity levels score fairly instead of everything below top-percentile numbers landing at the bottom. If GitHub's Search API is unavailable, PR/issue counts score as 0 (not excluded) — missing data can only lower the grade, never inflate it, so the same profile can't score higher just because a lookup happened to fail.
 
 ## Caching
 
