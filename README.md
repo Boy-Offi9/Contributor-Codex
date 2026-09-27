@@ -16,8 +16,22 @@ It's org-aware: point it at a GitHub org and every public member becomes a card,
 ![Card](https://contributor-codex.vercel.app/api/card?username=octocat)
 ```
 
+## Why Contributor Codex
+
+Most GitHub stats generators — `github-readme-stats`, `github-profile-trophy`, and the rest of that ecosystem — render one flat stat card in a single shared visual style: swap the username and every card still looks the same. Contributor Codex takes a different angle: GitHub data as raw material for a visual identity, not just a number badge.
+
+That shows up in a few concrete ways:
+
+- **Four genuinely different aesthetics, not four color palettes on one template.** `cyberpunk` is an RPG dossier — level, XP, a tiered rank, a language-based character class. `terminal` is a hacker session log with its own clearance vocabulary (`SCRIPT KIDDIE → ROOT`), sharing no words with cyberpunk. `glass` is a casual, gamification-free profile card — no level, no XP. `detailed` is an analytics-style dossier built around a percentile rank gauge. Picking a theme changes the card's *voice*, not just its accent color.
+- **It scales from one person to a whole org.** The same GitHub data that builds a single Contributor Card also ranks every public member of an org into a Team Leaderboard, describes a Repository Card, or folds into a one-image Codex Collection — one data pipeline, several outputs, depending what you point it at.
+- **It's a toolkit, not just an endpoint.** A no-code Card Builder, a full shareable Codex Profile page, and an org Roster tool sit alongside the raw API, for people who'd rather not hand-write query strings.
+- **Every score shows its own formula.** XP, rank, and tier are all self-referential — never a comparison against other users — and the formula is shown in an on-card tooltip rather than hidden inside an opaque algorithm.
+
+It started as a personal project exploring server-rendered SVG and the GitHub API, and is now a live, actively developed tool rather than a one-off script.
+
 ## Table of contents
 
+- [Why Contributor Codex](#why-contributor-codex)
 - [API reference](#api-reference)
 - [Frontend pages](#frontend-pages)
 - [Themes](#themes)
