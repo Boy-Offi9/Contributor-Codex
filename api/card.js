@@ -18,6 +18,9 @@ const ICONS = {
   star: '<path d="M6 1l1.5 3.2L11 4.7l-2.5 2.4.6 3.4L6 8.9 2.9 10.5l.6-3.4L1 4.7l3.5-.5L6 1Z" stroke-linejoin="round"/>',
   people: '<circle cx="4" cy="4" r="1.7"/><path d="M1 10.2c.5-2 1.8-3 3-3s2.5 1 3 3"/><circle cx="9.2" cy="4.6" r="1.3"/><path d="M8.1 10.2c.3-1.6 1-2.6 1.9-3"/>',
   bolt: '<path d="M6.6 1 2.2 7.2h2.9l-.9 3.8 4.6-6h-2.8L6.6 1Z" stroke-linejoin="round"/>',
+  fork: '<circle cx="3" cy="2.5" r="1.4"/><circle cx="9" cy="2.5" r="1.4"/><circle cx="6" cy="9.5" r="1.4"/><path d="M3 3.9v1.6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V3.9"/><path d="M6 7.5v1"/>',
+  pr: '<circle cx="3" cy="2.5" r="1.4"/><circle cx="3" cy="9.5" r="1.4"/><path d="M3 3.9v4.2"/><path d="M3 6c3.5 0 5-1 5-4.2"/><circle cx="8" cy="1.8" r="1.3"/>',
+  issue: '<circle cx="6" cy="6" r="4.6"/><path d="M6 3.6v3"/><circle cx="6" cy="8.4" r="0.45" fill="currentColor" stroke="none"/>',
 };
 
 function icon(name, x, y, color) {
@@ -232,10 +235,10 @@ function renderGlass({ user, topLang, totalStars, color, avatarUri }) {
   </svg>`;
 }
 
-function statBox(x, y, label, value, color, iconName) {
+function statBox(x, y, label, value, color, iconName, width = 178) {
   return `
-    <rect x="${x}" y="${y}" width="178" height="60" fill="none" stroke="#1b2233"/>
-    <rect x="${x}" y="${y}" width="178" height="2" fill="${color}" opacity="0.35"/>
+    <rect x="${x}" y="${y}" width="${width}" height="60" fill="none" stroke="#1b2233"/>
+    <rect x="${x}" y="${y}" width="${width}" height="2" fill="${color}" opacity="0.35"/>
     ${iconName ? icon(iconName, x + 12, y + 8, color) : ''}
     <text x="${iconName ? x + 30 : x + 12}" y="${y + 22}" font-family="'Courier New',monospace" font-size="9" fill="#7a8399" letter-spacing="1">${label}</text>
     <text x="${x + 12}" y="${y + 46}" font-family="system-ui,sans-serif" font-weight="700" font-size="18" fill="${color}" filter="url(#glow)">${value}</text>`;
@@ -257,28 +260,98 @@ function wrapBio(text, maxChars) {
   return lines.slice(0, 3);
 }
 
-function renderDetailed({ user, avatarUri, topLang, langs, level, xp, totalStars, tier, color, fontFace }) {
+// Detailed-theme-only. Uses the stable Search Issues API (not the commit
+// search preview, which is still unlaunched years after its 2017 announcement)
+// to count PRs and issues opened by a user. Fails soft — a search rate limit
+// just omits these two fields rather than breaking the card.
+async function prIssueCounts(username, token) {
+  const headers = { Accept: 'application/vnd.github+json' };
+  if (token) headers.Authorization = `token ${token}`;
+  const fetchCount = async (type) => {
+    try {
+      const res = await fetch(`https://api.github.com/search/issues?q=author:${username}+type:${type}&per_page=1`, { headers });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return typeof data.total_count === 'number' ? data.total_count : null;
+    } catch {
+      return null;
+    }
+  };
+  const [prs, issues] = await Promise.all([fetchCount('pr'), fetchCount('issue')]);
+  return { prs, issues };
+}
+
+// A transparent, soft-capped rank score — same "letter grade" idea used by
+// stats cards across the GitHub README ecosystem, but our own simple formula
+// rather than a hidden one, documented in full in the README. sqrt scaling
+// (same diminishing-returns curve the XP->level formula already uses) means
+// moderate activity still scores fairly instead of being crushed by caps
+// tuned to top-percentile numbers. Missing PR/issue data (search rate-limited)
+// just drops those two terms instead of failing.
+const RANK_CAPS = { stars: 300, repos: 60, followers: 300, prs: 100, issues: 60 };
+const RANK_WEIGHTS = { stars: 30, repos: 20, followers: 25, prs: 15, issues: 10 };
+function computeRank({ totalStars, repoCount, followers, prs, issues }) {
+  const contribution = (value, key) => {
+    if (value === null || value === undefined) return 0; // missing data scores 0, not excluded
+    return Math.min(1, Math.sqrt(value / RANK_CAPS[key])) * RANK_WEIGHTS[key];
+  };
+  const score = contribution(totalStars, 'stars') + contribution(repoCount, 'repos') + contribution(followers, 'followers')
+    + contribution(prs, 'prs') + contribution(issues, 'issues');
+  const maxPossible = Object.values(RANK_WEIGHTS).reduce((a, b) => a + b, 0);
+  const pct = Math.round((score / maxPossible) * 100);
+  let grade;
+  if (pct >= 88) grade = 'S+';
+  else if (pct >= 74) grade = 'S';
+  else if (pct >= 56) grade = 'A';
+  else if (pct >= 38) grade = 'B';
+  else if (pct >= 20) grade = 'C';
+  else grade = 'D';
+  return { pct, grade };
+}
+const RANK_FORMULA = 'sqrt(stars/300)×30 + sqrt(repos/60)×20 + sqrt(followers/300)×25 + sqrt(prs/100)×15 + sqrt(issues/60)×10, each term capped at its own weight';
+
+function renderDetailed({ user, avatarUri, langStats, totalStars, totalForks, prs, issues, color, fontFace }) {
   const name = esc(user.name || user.login);
-  const classLabel = `${classFor(topLang)}${topLang ? ' · ' + esc(topLang) : ''}`;
   const displayFont = fontFace ? "'Chakra Petch',system-ui,sans-serif" : 'system-ui,sans-serif';
   const avatarTag = avatarUri
     ? `<image href="${avatarUri}" x="-9" y="-9" width="90" height="90" preserveAspectRatio="xMidYMid slice" clip-path="url(#hex)"/>`
     : '';
   const bioLines = user.bio ? wrapBio(esc(user.bio), 52) : [];
-  const chips = langs.slice(0, 5);
-  const height = 340 + bioLines.length * 16;
+  const bioBlockH = bioLines.length * 16;
+
+  const rank = computeRank({ totalStars, repoCount: user.public_repos || 0, followers: user.followers || 0, prs, issues });
+  const rCx = 372, rCy = 60, rR = 30;
+  const circumference = 2 * Math.PI * rR;
+  const dashoffset = circumference * (1 - rank.pct / 100);
+
+  const topLangs = langStats.slice(0, 4);
+  const shareSum = topLangs.reduce((sum, l) => sum + l.pct, 0) || 1;
+  const barW = 372;
+  let cursor = 0;
+  const segments = topLangs.map((l, i) => {
+    const w = i === topLangs.length - 1 ? barW - cursor : Math.round((l.pct / shareSum) * barW);
+    const seg = { x: cursor, w, opacity: [1, 0.7, 0.5, 0.35][i] };
+    cursor += w;
+    return seg;
+  });
+
+  const statsY1 = 92 + bioBlockH + 14;
+  const statsY2 = statsY1 + 76;
+  const langBarY = statsY2 + 76;
+  const legendY = langBarY + 34;
+  const height = topLangs.length ? legendY + 6 : langBarY + 16;
 
   return `<svg width="420" height="${height}" viewBox="0 0 420 ${height}" xmlns="http://www.w3.org/2000/svg">
-    <title>${name} — Contributor Card (detailed theme). XP = ${XP_FORMULA}</title>
+    <title>${name} — Contributor Card (detailed theme). Rank = ${RANK_FORMULA}</title>
     <defs>
       ${fontFace ? `<style>${fontFace}</style>` : ''}
       <style>
         .t1{font:700 18px ${displayFont};fill:#e8edf5;}
         .t2{font:500 12px 'Courier New',monospace;fill:#7a8399;}
-        .tag{font:700 11px 'Courier New',monospace;}
-        .cls{font:600 12px ${displayFont};fill:${color};letter-spacing:1px;}
         .bio{font:400 12px system-ui,sans-serif;fill:#a8b0c2;}
-        .chip{font:600 10px 'Courier New',monospace;fill:${color};}
+        .rankLbl{font:600 8px 'Courier New',monospace;fill:#7a8399;letter-spacing:1.5px;}
+        .rankGrade{font:700 18px ${displayFont};fill:${color};}
+        .legend{font:500 9px 'Courier New',monospace;fill:#a8b0c2;}
       </style>
       <clipPath id="hex"><polygon points="36,2 68,20 68,52 36,70 4,52 4,20"/></clipPath>
       <radialGradient id="bg" cx="10%" cy="0%" r="80%">
@@ -306,18 +379,31 @@ function renderDetailed({ user, avatarUri, topLang, langs, level, xp, totalStars
     </g>
     <text x="112" y="48" class="t1">${name}</text>
     <text x="112" y="66" class="t2">@${esc(user.login)}</text>
-    <text x="112" y="86" class="cls">${esc(classLabel.toUpperCase())}</text>
-    <rect x="330" y="24" width="66" height="22" fill="${color}" filter="url(#glow)"/>
-    <text x="363" y="39" text-anchor="middle" class="tag" fill="#05070c">LV ${level}</text>
 
-    ${bioLines.map((line, i) => `<text x="24" y="${120 + i * 16}" class="bio">${line}</text>`).join('')}
+    <g transform="translate(${rCx},${rCy})">
+      <title>${RANK_FORMULA}</title>
+      <circle r="${rR}" fill="none" stroke="#1b2233" stroke-width="5"/>
+      <circle r="${rR}" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round"
+        stroke-dasharray="${circumference}" stroke-dashoffset="${dashoffset}"
+        transform="rotate(-90)" filter="url(#glow)"/>
+      <text text-anchor="middle" y="6" class="rankGrade">${rank.grade}</text>
+      <text text-anchor="middle" y="${rR + 16}" class="rankLbl">RANK</text>
+    </g>
 
-    ${statBox(24, 140 + bioLines.length * 16, 'REPOS', user.public_repos || 0, color, 'repo')}
-    ${statBox(212, 140 + bioLines.length * 16, 'STARS', totalStars, color, 'star')}
-    ${statBox(24, 216 + bioLines.length * 16, 'FOLLOWERS', user.followers || 0, color, 'people')}
-    ${statBox(212, 216 + bioLines.length * 16, 'XP', xp.toLocaleString(), color, 'bolt')}
+    ${bioLines.map((line, i) => `<text x="24" y="${92 + i * 16}" class="bio">${line}</text>`).join('')}
 
-    ${chips.map((lang, i) => `<rect x="${24 + i * 76}" y="${292 + bioLines.length * 16}" width="70" height="20" fill="none" stroke="${color}"/><text x="${59 + i * 76}" y="${306 + bioLines.length * 16}" text-anchor="middle" class="chip">${esc(lang)}</text>`).join('')}
+    ${statBox(24, statsY1, 'REPOS', user.public_repos || 0, color, 'repo', 116)}
+    ${statBox(152, statsY1, 'STARS', totalStars, color, 'star', 116)}
+    ${statBox(280, statsY1, 'FORKS', totalForks, color, 'fork', 116)}
+    ${statBox(24, statsY2, 'FOLLOWERS', user.followers || 0, color, 'people', 116)}
+    ${statBox(152, statsY2, 'PRS', prs ?? '—', color, 'pr', 116)}
+    ${statBox(280, statsY2, 'ISSUES', issues ?? '—', color, 'issue', 116)}
+
+    ${topLangs.length ? `
+      <rect x="24" y="${langBarY}" width="${barW}" height="10" rx="5" fill="#1b2233"/>
+      ${segments.map((s) => `<rect x="${24 + s.x}" y="${langBarY}" width="${s.w}" height="10" fill="${color}" opacity="${s.opacity}"/>`).join('')}
+      ${topLangs.map((l, i) => `<text x="${24 + i * 93}" y="${legendY}" class="legend">${esc(l.name)} ${l.pct}%</text>`).join('')}
+    ` : ''}
   </svg>`;
 }
 
@@ -351,15 +437,20 @@ module.exports.GET = async (request) => {
     const avatarUri = await avatarDataUri(`${user.avatar_url}&s=160`);
     const fontFace = CHAKRA_PETCH_FONT_FACE;
     const stats = computeStats(user, repos);
-    const byteLangs = await byteWeightedLangs(repos, token);
-    if (byteLangs.length) {
-      stats.langs = byteLangs;
-      stats.topLang = byteLangs[0];
+    const langStats = await byteWeightedLangs(repos, token);
+    if (langStats.length) {
+      stats.langs = langStats.map((l) => l.name);
+      stats.topLang = langStats[0].name;
     }
     const colorOverride = sanitizeColor(url.searchParams.get('color'));
     if (colorOverride) stats.color = colorOverride;
 
-    return svg(render({ user, avatarUri, fontFace, ...stats }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
+    let prs = null, issues = null;
+    if (requestedTheme === 'detailed') {
+      ({ prs, issues } = await prIssueCounts(username, token));
+    }
+
+    return svg(render({ user, avatarUri, fontFace, langStats, prs, issues, ...stats }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
   } catch (err) {
     if (err.status === 404) return svg(errorSVG(`user "${username}" not found`), 404, 'public, s-maxage=60');
     if (err.status === 403) return svg(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=60');
