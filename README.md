@@ -119,7 +119,7 @@ The three `custom*` params are all-or-nothing: unless all three are present and 
 
 ### `GET /api/codex` — Codex Collection
 
-One image instead of several: a compact header, a 4-stat strip, four achievement shields, and up to five top-language chips, folded into a single SVG.
+One image instead of several: a compact header (avatar, level, XP), a 4-stat strip with icons, four tiered achievement shields, and up to five top-language chips with per-language color dots, folded into a single SVG. Shares the cyberpunk family's glow-and-grid styling, so it reads as the same product as the Contributor Card.
 
 | Param | Required | Values | Default |
 |---|---|---|---|
@@ -167,8 +167,8 @@ Each theme now has its own voice rather than sharing one vocabulary:
 
 - **`cyberpunk`** is the RPG one — level, XP, tiered rank (INITIATE → LEGENDARY), and a language-based character class (`NETRUNNER`, `DATA MAGE`, etc). Carries the neon treatment: an `feGaussianBlur` glow filter on the border, avatar frame, level badge, and stat values; a faint circuit-grid texture; a second gradient for two-tone depth; small stroke icons next to each stat.
 - **`terminal`** is a hacker/system aesthetic, not an RPG one: a fake `scan.sh` session with an `[OK] identity verified` line, `login`/`alias`/`lang` fields, and its own clearance ladder (`SCRIPT KIDDIE → OPERATOR → GHOST → GATEKEEPER → ROOT`) mapped onto the same underlying level thresholds as cyberpunk's tiers, just relabeled — no shared vocabulary between the two.
-- **`glass`** is a casual, gamification-free profile card: no level, no XP, no class. Frosted panel over softly blurred gradient blobs (real glassmorphism), a glow ring behind the avatar, a small verified-style checkmark, the top language as a plain pill, and "Member since {year}" instead of a score.
-- **`detailed`** is its own fourth identity — a data-dense dossier, not a bigger cyberpunk card. A circular rank gauge (letter grade S+ → D, see [Scoring](#scoring)) replaces the level badge; a proportional byte-weighted language bar with a percentage legend replaces language chips; the stat grid grew from 4 boxes to 6, adding pull request and issue counts (via GitHub's Search API) alongside repos/stars/forks/followers. No RPG class name, no XP.
+- **`glass`** is a casual, gamification-free profile card: no level, no XP, no class. Frosted panel over softly blurred gradient blobs (real glassmorphism), a glow ring behind the avatar, a small verified-style checkmark, the top language as a plain pill, and a footer of small icon chips — `Joined {year}` plus location (or company, if no location is set) — under a diamond-accent divider, instead of a score.
+- **`detailed`** is its own fourth identity — a data-dense dossier, not a bigger cyberpunk card. A circular rank gauge (letter grade S+ → D, see [Scoring](#scoring)) replaces the level badge; a proportional byte-weighted language bar, colored per language using the standard GitHub linguist palette and labelled with a percentage legend, replaces language chips; the stat grid grew from 4 boxes to 6, adding pull request and issue counts (via GitHub's Search API) alongside repos/stars/forks/followers. No RPG class name, no XP.
 
 `detailed` is the information-dense variant, available on Contributor Card and Repository Card (see their sections in the [API reference](#api-reference) above for exactly what it adds to each — the Repository Card's `detailed` theme is a separate, simpler layout not yet covered by this redesign).
 
@@ -227,7 +227,7 @@ This is separate from GitHub's own rate limiting (60 requests/hour unauthenticat
 
 Vercel serverless functions using the Web `Request`/`Response` API directly (no Next.js, no framework) · hand-written SVG, no charting or image library · [`@boy-offi9-inc/reqkit`](https://github.com/boy-offi9-inc/reqkit) for GitHub API retry/dedupe · `@vercel/firewall` for per-IP rate limiting.
 
-Each endpoint file (`api/*.js`) is independently deployable and intentionally duplicates small helpers (error rendering, tiered-shield layout) rather than sharing them beyond `api/_lib/shared.js`, which holds only what's genuinely reused across every card: GitHub fetching, avatar embedding, and stat computation.
+Each endpoint file (`api/*.js`) is independently deployable and intentionally duplicates small helpers (error rendering, tiered-shield layout) rather than sharing them beyond `api/_lib/shared.js`, which holds only what's genuinely reused across cards: GitHub fetching, avatar embedding, stat computation, the shared stroke-icon set, and the language-color palette.
 
 ## Setup & development
 
@@ -251,3 +251,4 @@ Only needs re-running if the pinned font weights change — it fetches Chakra Pe
 - `/api/leaderboard` fetches members through a 4-worker concurrent pool rather than one at a time, and caps at the first 60 public members — very large orgs get a representative ranking rather than risking a timeout trying to rank everyone.
 - Contributor Card's `detailed` theme byte-weights the top language across a user's 6 most-starred repos (one extra API call each). Leaderboard intentionally keeps the cheaper repo-count method instead — per-member byte-weighting there would multiply an already more expensive request.
 - The custom trophy slot (`/api/trophies`) isn't yet exposed in the Card Builder UI.
+- Language colors come from a built-in palette of ~30 common languages (the standard linguist hex values); anything unmapped falls back to the card's accent color. Per-user color overrides aren't supported yet.
