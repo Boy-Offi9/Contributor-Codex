@@ -1,5 +1,5 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { classFor, esc, ghFetch, avatarDataUri, computeStats, CHAKRA_PETCH_FONT_FACE, sanitizeColor, XP_FORMULA, byteWeightedLangs } = require('./_lib/shared');
+const { classFor, esc, ghFetch, avatarDataUri, computeStats, CHAKRA_PETCH_FONT_FACE, sanitizeColor, XP_FORMULA, byteWeightedLangs, colorForLang, icon } = require('./_lib/shared');
 
 function errorSVG(message) {
   return `<svg width="360" height="120" viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg">
@@ -8,23 +8,6 @@ function errorSVG(message) {
     <text x="20" y="55" font-family="system-ui,sans-serif" font-weight="700" font-size="13" fill="#ff4d6d">CARD ERROR</text>
     <text x="20" y="78" font-family="'Courier New',monospace" font-size="11" fill="#7a8399">${esc(message)}</text>
   </svg>`;
-}
-
-// Small stroke icons (12x12, stroke=currentColor) as raw path fragments so
-// they drop into a parent <g fill="none" stroke="${color}"> without a nested
-// viewBox — matches the icon set used across the HTML pages.
-const ICONS = {
-  repo: '<path d="M2 4l4-2 4 2v5l-4 2-4-2V4Z"/><path d="M2 4l4 2 4-2"/><path d="M6 6v5"/>',
-  star: '<path d="M6 1l1.5 3.2L11 4.7l-2.5 2.4.6 3.4L6 8.9 2.9 10.5l.6-3.4L1 4.7l3.5-.5L6 1Z" stroke-linejoin="round"/>',
-  people: '<circle cx="4" cy="4" r="1.7"/><path d="M1 10.2c.5-2 1.8-3 3-3s2.5 1 3 3"/><circle cx="9.2" cy="4.6" r="1.3"/><path d="M8.1 10.2c.3-1.6 1-2.6 1.9-3"/>',
-  bolt: '<path d="M6.6 1 2.2 7.2h2.9l-.9 3.8 4.6-6h-2.8L6.6 1Z" stroke-linejoin="round"/>',
-  fork: '<circle cx="3" cy="2.5" r="1.4"/><circle cx="9" cy="2.5" r="1.4"/><circle cx="6" cy="9.5" r="1.4"/><path d="M3 3.9v1.6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V3.9"/><path d="M6 7.5v1"/>',
-  pr: '<circle cx="3" cy="2.5" r="1.4"/><circle cx="3" cy="9.5" r="1.4"/><path d="M3 3.9v4.2"/><path d="M3 6c3.5 0 5-1 5-4.2"/><circle cx="8" cy="1.8" r="1.3"/>',
-  issue: '<circle cx="6" cy="6" r="4.6"/><path d="M6 3.6v3"/><circle cx="6" cy="8.4" r="0.45" fill="currentColor" stroke="none"/>',
-};
-
-function icon(name, x, y, color) {
-  return `<g transform="translate(${x},${y})" fill="none" stroke="${color}" stroke-width="1.3" stroke-linecap="round">${ICONS[name]}</g>`;
 }
 
 // Terminal theme gets its own tier vocabulary instead of cyberpunk's RPG
@@ -230,8 +213,25 @@ function renderGlass({ user, topLang, totalStars, color, avatarUri }) {
       <text x="47" y="46" text-anchor="middle" class="t1">${user.followers || 0}</text>
     </g>
 
-    <line x1="32" y1="222" x2="312" y2="222" stroke="#c9d0e0" opacity="0.6"/>
-    <text x="32" y="248" class="foot">Member since ${joined}</text>
+    <line x1="32" y1="222" x2="148" y2="222" stroke="#c9d0e0" opacity="0.6"/>
+    <path d="M180 218l4 4-4 4-4-4Z" fill="${color}" opacity="0.45"/>
+    <line x1="196" y1="222" x2="312" y2="222" stroke="#c9d0e0" opacity="0.6"/>
+    ${(() => {
+      const chips = [{ ic: 'calendar', text: `Joined ${joined}` }];
+      const extra = user.location || (user.company ? user.company.replace(/^@/, '') : null);
+      if (extra) chips.push({ ic: user.location ? 'pin' : 'building', text: esc(extra) });
+      let cx = 32;
+      return chips.slice(0, 2).map((c) => {
+        const w = 26 + c.text.length * 5.6;
+        const g = `<g transform="translate(${cx},234)">
+          <rect width="${w}" height="24" rx="12" fill="#ffffff" opacity="0.6"/>
+          ${icon(c.ic, 9, 6, '#8891a3')}
+          <text x="26" y="16" class="foot">${c.text}</text>
+        </g>`;
+        cx += w + 8;
+        return g;
+      }).join('');
+    })()}
   </svg>`;
 }
 
@@ -330,12 +330,12 @@ function renderDetailed({ user, avatarUri, langStats, totalStars, totalForks, pr
   let cursor = 0;
   const segments = topLangs.map((l, i) => {
     const w = i === topLangs.length - 1 ? barW - cursor : Math.round((l.pct / shareSum) * barW);
-    const seg = { x: cursor, w, opacity: [1, 0.7, 0.5, 0.35][i] };
+    const seg = { x: cursor, w, color: colorForLang(l.name, color) };
     cursor += w;
     return seg;
   });
 
-  const statsY1 = 92 + bioBlockH + 14;
+  const statsY1 = 108 + bioBlockH + 14;
   const statsY2 = statsY1 + 76;
   const langBarY = statsY2 + 76;
   const legendY = langBarY + 34;
@@ -390,7 +390,7 @@ function renderDetailed({ user, avatarUri, langStats, totalStars, totalForks, pr
       <text text-anchor="middle" y="${rR + 16}" class="rankLbl">RANK</text>
     </g>
 
-    ${bioLines.map((line, i) => `<text x="24" y="${92 + i * 16}" class="bio">${line}</text>`).join('')}
+    ${bioLines.map((line, i) => `<text x="24" y="${108 + i * 16}" class="bio">${line}</text>`).join('')}
 
     ${statBox(24, statsY1, 'REPOS', user.public_repos || 0, color, 'repo', 116)}
     ${statBox(152, statsY1, 'STARS', totalStars, color, 'star', 116)}
@@ -401,8 +401,18 @@ function renderDetailed({ user, avatarUri, langStats, totalStars, totalForks, pr
 
     ${topLangs.length ? `
       <rect x="24" y="${langBarY}" width="${barW}" height="10" rx="5" fill="#1b2233"/>
-      ${segments.map((s) => `<rect x="${24 + s.x}" y="${langBarY}" width="${s.w}" height="10" fill="${color}" opacity="${s.opacity}"/>`).join('')}
-      ${topLangs.map((l, i) => `<text x="${24 + i * 93}" y="${legendY}" class="legend">${esc(l.name)} ${l.pct}%</text>`).join('')}
+      ${segments.map((s) => `<rect x="${24 + s.x}" y="${langBarY}" width="${s.w}" height="10" fill="${s.color}"/>`).join('')}
+      ${(() => {
+        let lx = 24;
+        return topLangs.map((l) => {
+          const label = `${esc(l.name)} ${l.pct}%`;
+          const entryW = 14 + label.length * 5.4 + 14;
+          if (lx + entryW - 14 > 24 + barW) return '';
+          const out = `<circle cx="${lx + 4}" cy="${legendY - 3}" r="3" fill="${colorForLang(l.name, color)}"/><text x="${lx + 12}" y="${legendY}" class="legend">${label}</text>`;
+          lx += entryW;
+          return out;
+        }).join('');
+      })()}
     ` : ''}
   </svg>`;
 }
