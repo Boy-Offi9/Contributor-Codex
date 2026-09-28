@@ -153,6 +153,48 @@ function sanitizeColor(input) {
   return /^[0-9a-fA-F]{6}$/.test(hex) ? `#${hex}` : null;
 }
 
+// Terminal-theme vocabulary: the same 5 tiers computeStats produces, relabeled.
+const TIER_ORDER = ['INITIATE', 'OPERATIVE', 'SPECIALIST', 'ELITE', 'LEGENDARY'];
+const HACKER_CLEARANCE = ['SCRIPT KIDDIE', 'OPERATOR', 'GHOST', 'GATEKEEPER', 'ROOT'];
+const clearanceFor = (tier) => HACKER_CLEARANCE[TIER_ORDER.indexOf(tier)] || 'SCRIPT KIDDIE';
+
+const truncate = (str, max) => (str.length > max ? `${str.slice(0, max - 1)}…` : str);
+
+// Avatar frames. Every card draws its avatar through avatarShape() so the
+// frame, the clip, and the ring gap are always geometrically consistent.
+const AVATAR_SHAPES = ['hex', 'circle', 'rounded', 'square'];
+const sanitizeShape = (input, fallback) => {
+  const value = String(input || '').toLowerCase();
+  return AVATAR_SHAPES.includes(value) ? value : fallback;
+};
+
+function shapeElement(shape, size, inset) {
+  const c = size / 2;
+  const r = c - inset;
+  const box = size - inset * 2;
+  if (shape === 'circle') return `circle cx="${c}" cy="${c}" r="${r}"`;
+  if (shape === 'rounded') return `rect x="${inset}" y="${inset}" width="${box}" height="${box}" rx="${(box * 0.3).toFixed(2)}"`;
+  if (shape === 'square') return `rect x="${inset}" y="${inset}" width="${box}" height="${box}" rx="${(box * 0.08).toFixed(2)}"`;
+  const points = [0, 1, 2, 3, 4, 5].map((k) => {
+    const a = ((-90 + 60 * k) * Math.PI) / 180;
+    return `${(c + r * Math.cos(a)).toFixed(2)},${(c + r * Math.sin(a)).toFixed(2)}`;
+  });
+  return `polygon points="${points.join(' ')}"`;
+}
+
+// Returns markup in a local 0..size box; wrap it in <g transform="translate(x,y)">.
+// `id` must be unique within the SVG (it names the clipPath).
+function avatarShape({ id, shape = 'hex', size, uri, ring, bg = '#0b1220', glow = false, ringWidth = 1.6 }) {
+  const outer = shapeElement(shape, size, 0.75);
+  const inner = shapeElement(shape, size, size * 0.06 + 1.5);
+  return `
+    <clipPath id="${id}"><${inner}/></clipPath>
+    <${outer} fill="none" stroke="${ring}" stroke-opacity="0.35" stroke-width="1" stroke-linejoin="round"/>
+    <${inner} fill="${bg}"/>
+    ${uri ? `<image href="${uri}" x="0" y="0" width="${size}" height="${size}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${id})"/>` : ''}
+    <${inner} fill="none" stroke="${ring}" stroke-width="${ringWidth}" stroke-linejoin="round"${glow ? ' filter="url(#glow)"' : ''}/>`;
+}
+
 // Small stroke icons (12x12, stroke=currentColor) as raw path fragments so
 // they drop into a parent <g fill="none" stroke="${color}"> without a nested
 // viewBox — matches the icon set used across the HTML pages.
@@ -176,4 +218,5 @@ function icon(name, x, y, color) {
 module.exports = {
   classFor, esc, ghFetch, avatarDataUri, computeStats, CHAKRA_PETCH_FONT_FACE,
   sanitizeColor, XP_FORMULA, trophyTier, byteWeightedLangs, colorForLang, ICONS, icon,
+  clearanceFor, truncate, sanitizeShape, avatarShape,
 };
