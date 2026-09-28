@@ -56,12 +56,13 @@ A single GitHub user's profile as a card: level, XP, top language, and repo/star
 | `username` | yes | any GitHub username | — |
 | `theme` | no | `cyberpunk` \| `terminal` \| `glass` \| `detailed` | `cyberpunk` |
 | `color` | no | 6-digit hex, no `#` (e.g. `ff00aa`) | theme's own accent |
+| `shape` | no | `hex` \| `circle` \| `rounded` \| `square` | theme's own default (see [Themes](#themes)) |
 
 ```md
-![Card](https://contributor-codex.vercel.app/api/card?username=octocat&theme=detailed&color=ff00aa)
+![Card](https://contributor-codex.vercel.app/api/card?username=octocat&theme=detailed&color=ff00aa&shape=rounded)
 ```
 
-`detailed` shows bio, a circular rank gauge, a 6-box stat grid (repos/stars/forks/followers/PRs/issues), and a proportional byte-weighted language bar — see [Themes](#themes) for the full breakdown. It costs 3 extra API calls (language bytes across up to 6 repos, plus two Search API calls for PR/issue counts) and omits the GitHub profile link present in other themes, since links inside an `<img>`-embedded SVG aren't clickable.
+`detailed` shows bio, a circular rank gauge, a 6-box stat grid (repos/stars/forks/followers/PRs/issues), and a proportional byte-weighted language bar — see [Themes](#themes) for the full breakdown. It costs 3 extra API calls (language bytes across up to 6 repos, plus two Search API calls for PR/issue counts) and omits the GitHub profile link present in other themes, since links inside an `<img>`-embedded SVG aren't clickable. `shape` has no effect on `terminal`, which has no avatar.
 
 ### `GET /api/leaderboard` — Team / Leaderboard
 
@@ -72,11 +73,14 @@ Ranks every public member of a GitHub org by a transparent, self-referential XP 
 | `org` | yes | any GitHub org login | — |
 | `limit` | no | integer, clamped to 1–20 | `10` |
 | `theme` | no | `cyberpunk` \| `terminal` \| `glass` | `cyberpunk` |
-| `color` | no | 6-digit hex, no `#` | theme's own accent |
+| `color` | no | 6-digit hex, no `#` | theme's own accent — also overrides every row's individual tier color on `cyberpunk` when set |
+| `shape` | no | `hex` \| `circle` \| `rounded` \| `square` | `hex` (`circle` on `glass`) |
 
 ```md
 ![Leaderboard](https://contributor-codex.vercel.app/api/leaderboard?org=vercel&limit=5)
 ```
+
+The header shows how many public members were actually ranked (`TOP 5 OF 60`), not just the slice returned. The top 3 rows get a gold/silver/bronze accent, and each row's XP bar is drawn relative to whoever's #1 — the gap to the top isn't just a number, it's visibly a bar a third the length. Long names truncate with an ellipsis rather than overlapping the XP column.
 
 No `detailed` theme here — see [Limitations](#limitations) for why per-member byte-weighting isn't worth the added cost at this endpoint.
 
@@ -166,11 +170,13 @@ Icons across all four pages are hand-drawn inline SVG in the same hex/shield mot
 Each theme now has its own voice rather than sharing one vocabulary:
 
 - **`cyberpunk`** is the RPG one — level, XP, tiered rank (INITIATE → LEGENDARY), and a language-based character class (`NETRUNNER`, `DATA MAGE`, etc). Carries the neon treatment: an `feGaussianBlur` glow filter on the border, avatar frame, level badge, and stat values; a faint circuit-grid texture; a second gradient for two-tone depth; small stroke icons next to each stat.
-- **`terminal`** is a hacker/system aesthetic, not an RPG one: a fake `scan.sh` session with an `[OK] identity verified` line, `login`/`alias`/`lang` fields, and its own clearance ladder (`SCRIPT KIDDIE → OPERATOR → GHOST → GATEKEEPER → ROOT`) mapped onto the same underlying level thresholds as cyberpunk's tiers, just relabeled — no shared vocabulary between the two.
-- **`glass`** is a casual, gamification-free profile card: no level, no XP, no class. Frosted panel over softly blurred gradient blobs (real glassmorphism), a glow ring behind the avatar, a small verified-style checkmark, the top language as a plain pill, and a footer of small icon chips — `Joined {year}` plus location (or company, if no location is set) — under a diamond-accent divider, instead of a score.
+- **`terminal`** is a hacker/system aesthetic, not an RPG one: a fake `scan.sh` session with an `[OK] identity verified` line, and its own clearance ladder (`SCRIPT KIDDIE → OPERATOR → GHOST → GATEKEEPER → ROOT`) mapped onto the same underlying level thresholds as cyberpunk's tiers, just relabeled — no shared vocabulary between the two. No level number anywhere on this theme; `clearance` is the only rank shown, and it's a rung on its own ladder, not `LV N` in a different font.
+- **`glass`** is a casual, gamification-free profile card: no level, no XP, no class. Frosted panel over softly blurred gradient blobs (real glassmorphism), a glow ring behind the avatar, a small verified-style checkmark, the top language as a plain pill. Below the stat tiles, a language donut chart (top 4 languages by byte weight plus an "Other" slice, colored with the same linguist palette `detailed` uses) replaces what used to be blank space, and the footer is a row of small icon chips — `Joined {year}` plus location (or company, if no location is set) — under a diamond-accent divider.
 - **`detailed`** is its own fourth identity — a data-dense dossier, not a bigger cyberpunk card. A circular rank gauge (letter grade S+ → D, see [Scoring](#scoring)) replaces the level badge; a proportional byte-weighted language bar, colored per language using the standard GitHub linguist palette and labelled with a percentage legend, replaces language chips; the stat grid grew from 4 boxes to 6, adding pull request and issue counts (via GitHub's Search API) alongside repos/stars/forks/followers. No RPG class name, no XP.
 
 `detailed` is the information-dense variant, available on Contributor Card and Repository Card (see their sections in the [API reference](#api-reference) above for exactly what it adds to each — the Repository Card's `detailed` theme is a separate, simpler layout not yet covered by this redesign).
+
+**Avatar shape is independent of theme.** Every avatar (Contributor Card, Leaderboard rows) draws through one shared helper, so `hex` (the cyberpunk-brand default), `circle`, `rounded`, and `square` all produce a geometrically correct frame — clip, ring, and gap always line up, regardless of shape. Set it with `?shape=`; each theme just picks a sensible default (`hex` almost everywhere, `circle` on `glass`) rather than forcing one.
 
 ## Achievements
 
@@ -227,7 +233,7 @@ This is separate from GitHub's own rate limiting (60 requests/hour unauthenticat
 
 Vercel serverless functions using the Web `Request`/`Response` API directly (no Next.js, no framework) · hand-written SVG, no charting or image library · [`@boy-offi9-inc/reqkit`](https://github.com/boy-offi9-inc/reqkit) for GitHub API retry/dedupe · `@vercel/firewall` for per-IP rate limiting.
 
-Each endpoint file (`api/*.js`) is independently deployable and intentionally duplicates small helpers (error rendering, tiered-shield layout) rather than sharing them beyond `api/_lib/shared.js`, which holds only what's genuinely reused across cards: GitHub fetching, avatar embedding, stat computation, the shared stroke-icon set, and the language-color palette.
+Each endpoint file (`api/*.js`) is independently deployable and intentionally duplicates small helpers (error rendering, tiered-shield layout) rather than sharing them beyond `api/_lib/shared.js`, which holds only what's genuinely reused across cards: GitHub fetching, avatar embedding (including the shape-agnostic `avatarShape()` used by every card and leaderboard row), stat computation, the shared stroke-icon set, the language-color palette, and terminal's clearance-ladder mapping (also used by the leaderboard).
 
 ## Setup & development
 
@@ -250,5 +256,5 @@ Only needs re-running if the pinned font weights change — it fetches Chakra Pe
 - Org roster and leaderboard both require the org to have at least one member with a **public** organization membership — GitHub's API only lists those.
 - `/api/leaderboard` fetches members through a 4-worker concurrent pool rather than one at a time, and caps at the first 60 public members — very large orgs get a representative ranking rather than risking a timeout trying to rank everyone.
 - Contributor Card's `detailed` theme byte-weights the top language across a user's 6 most-starred repos (one extra API call each). Leaderboard intentionally keeps the cheaper repo-count method instead — per-member byte-weighting there would multiply an already more expensive request.
-- The custom trophy slot (`/api/trophies`) isn't yet exposed in the Card Builder UI.
+- The custom trophy slot (`/api/trophies`) and the `shape` param (`/api/card`, `/api/leaderboard`) aren't yet exposed in the Card Builder UI — both work by hand-building the URL.
 - Language colors come from a built-in palette of ~30 common languages (the standard linguist hex values); anything unmapped falls back to the card's accent color. Per-user color overrides aren't supported yet.
