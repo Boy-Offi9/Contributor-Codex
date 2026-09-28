@@ -1,5 +1,5 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { classFor, esc, ghFetch, avatarDataUri, computeStats, CHAKRA_PETCH_FONT_FACE, sanitizeColor, XP_FORMULA, byteWeightedLangs, colorForLang, icon } = require('./_lib/shared');
+const { classFor, esc, ghFetch, avatarDataUri, computeStats, CHAKRA_PETCH_FONT_FACE, sanitizeColor, XP_FORMULA, byteWeightedLangs, colorForLang, icon, clearanceFor, avatarShape, sanitizeShape, truncate } = require('./_lib/shared');
 
 function errorSVG(message) {
   return `<svg width="360" height="120" viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg">
@@ -9,13 +9,6 @@ function errorSVG(message) {
     <text x="20" y="78" font-family="'Courier New',monospace" font-size="11" fill="#7a8399">${esc(message)}</text>
   </svg>`;
 }
-
-// Terminal theme gets its own tier vocabulary instead of cyberpunk's RPG
-// class names — mapped 1:1 onto the same 5 tiers computeStats already
-// produces, so the underlying level thresholds stay a single source of truth.
-const TIER_ORDER = ['INITIATE', 'OPERATIVE', 'SPECIALIST', 'ELITE', 'LEGENDARY'];
-const HACKER_CLEARANCE = ['SCRIPT KIDDIE', 'OPERATOR', 'GHOST', 'GATEKEEPER', 'ROOT'];
-const clearanceFor = (tier) => HACKER_CLEARANCE[TIER_ORDER.indexOf(tier)] || 'SCRIPT KIDDIE';
 
 function statBar(y, label, value, max, color, iconName) {
   const pct = Math.max(4, Math.min(100, Math.round((value / max) * 100)));
@@ -28,13 +21,10 @@ function statBar(y, label, value, max, color, iconName) {
     <rect x="28" y="${y + 6}" width="${(304 * pct) / 100}" height="1" fill="#ffffff" opacity="0.3"/>`;
 }
 
-function renderCyberpunk({ user, avatarUri, topLang, level, xp, totalStars, tier, color, fontFace }) {
+function renderCyberpunk({ user, avatarUri, shape, topLang, level, xp, totalStars, tier, color, fontFace }) {
   const name = esc(user.name || user.login);
   const classLabel = `${classFor(topLang)}${topLang ? ' · ' + esc(topLang) : ''}`;
   const displayFont = fontFace ? "'Chakra Petch',system-ui,sans-serif" : 'system-ui,sans-serif';
-  const avatarTag = avatarUri
-    ? `<image href="${avatarUri}" x="-9" y="-9" width="90" height="90" preserveAspectRatio="xMidYMid slice" clip-path="url(#hex)"/>`
-    : '';
   const shimmer = tier === 'LEGENDARY' ? `
     <g clip-path="url(#cardClip)">
       <rect x="-400" y="0" width="200" height="360" fill="#ffffff" opacity="0.08" transform="rotate(20)">
@@ -53,7 +43,6 @@ function renderCyberpunk({ user, avatarUri, topLang, level, xp, totalStars, tier
         .tag{font:700 11px 'Courier New',monospace;}
         .cls{font:600 11px ${displayFont};fill:${color};letter-spacing:1px;}
       </style>
-      <clipPath id="hex"><polygon points="36,2 68,20 68,52 36,70 4,52 4,20"/></clipPath>
       <clipPath id="cardClip"><polygon points="0,14 14,0 360,0 360,346 346,360 0,360"/></clipPath>
       <radialGradient id="bg" cx="15%" cy="0%" r="85%">
         <stop offset="0%" stop-color="${color}" stop-opacity="0.14"/>
@@ -88,8 +77,7 @@ function renderCyberpunk({ user, avatarUri, topLang, level, xp, totalStars, tier
     <text x="305" y="34" text-anchor="middle" class="tag" fill="${color}">${tier}</text>
 
     <g transform="translate(144,54)">
-      <polygon points="36,0 72,18 72,54 36,72 0,54 0,18" fill="#1b2233" stroke="${color}" filter="url(#glow)"/>
-      ${avatarTag}
+      ${avatarShape({ id: 'avatar', shape, size: 72, uri: avatarUri, ring: color, bg: '#1b2233', glow: true })}
     </g>
 
     <text x="180" y="156" text-anchor="middle" class="t1">${name}</text>
@@ -107,20 +95,19 @@ function renderCyberpunk({ user, avatarUri, topLang, level, xp, totalStars, tier
   </svg>`;
 }
 
-function renderTerminal({ user, topLang, level, xp, totalStars, tier }) {
-  const name = esc(user.name || user.login);
+function renderTerminal({ user, xp, totalStars, topLang, tier }) {
+  const name = esc(truncate(user.name || user.login, 26));
   const login = esc(user.login);
-  const clearance = clearanceFor(tier);
   const green = '#3ddc6a';
   const rows = [
-    `login      ${login}`,
-    `alias      ${name.toLowerCase()}`,
-    `lang       ${topLang ? esc(topLang).toLowerCase() : 'unknown'}`,
-    `clearance  ${clearance.toLowerCase()} [lvl.${level}]`,
-    `repos      ${user.public_repos || 0}`,
-    `stars      ${totalStars}`,
-    `followers  ${user.followers || 0}`,
-    `score      ${xp.toLocaleString()}`,
+    ['login', login],
+    ['alias', name.toLowerCase()],
+    ['lang', topLang ? esc(topLang).toLowerCase() : 'unknown'],
+    ['clearance', clearanceFor(tier).toLowerCase()],
+    ['repos', user.public_repos || 0],
+    ['stars', totalStars],
+    ['followers', user.followers || 0],
+    ['score', xp.toLocaleString()],
   ];
   const height = 108 + rows.length * 20;
 
@@ -129,6 +116,7 @@ function renderTerminal({ user, topLang, level, xp, totalStars, tier }) {
     <defs>
       <style>
         .term{font:400 13px 'Courier New',monospace;fill:${green};}
+        .key{font:400 13px 'Courier New',monospace;fill:#2a6b3d;}
         .dim{fill:#2a6b3d;}
         .head{font:700 13px 'Courier New',monospace;fill:${green};}
         .ok{font:400 12px 'Courier New',monospace;fill:#2a6b3d;}
@@ -143,19 +131,49 @@ function renderTerminal({ user, topLang, level, xp, totalStars, tier }) {
     <text x="180" y="16" text-anchor="middle" class="dim" font-family="'Courier New',monospace" font-size="11">scan.sh</text>
     <text x="16" y="46" class="head">$ ./scan.sh --target=${login}</text>
     <text x="16" y="66" class="ok">[OK] identity verified</text>
-    ${rows.map((line, i) => `<text x="16" y="${88 + i * 20}" class="term">${esc(line)}</text>`).join('')}
+    ${rows.map(([key, value], i) => `<text x="16" y="${88 + i * 20}" class="key">${key}</text><text x="112" y="${88 + i * 20}" class="term">${value}</text>`).join('')}
     <text x="16" y="${88 + rows.length * 20 + 6}" class="term">$ <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/>_</text>
   </svg>`;
 }
 
-function renderGlass({ user, topLang, totalStars, color, avatarUri }) {
+function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, color }) {
   const name = esc(user.name || user.login);
   const joined = new Date(user.created_at).getFullYear();
-  const avatarTag = avatarUri
-    ? `<image href="${avatarUri}" x="0" y="0" width="72" height="72" preserveAspectRatio="xMidYMid slice" clip-path="url(#circle)"/>`
-    : '';
 
-  return `<svg width="360" height="320" viewBox="0 0 360 320" xmlns="http://www.w3.org/2000/svg">
+  // Language donut: top 4 by bytes plus an "Other" slice for the remainder.
+  const segs = (langStats || []).slice(0, 4).map((l) => ({ name: l.name, pct: l.pct, color: colorForLang(l.name, color) }));
+  const shown = segs.reduce((sum, l) => sum + l.pct, 0);
+  if (segs.length && shown < 100) segs.push({ name: 'Other', pct: 100 - shown, color: '#c4cbdb' });
+  const segTotal = segs.reduce((sum, l) => sum + l.pct, 0) || 1;
+  const hasLangs = segs.length > 0;
+
+  const tilesY = 132;
+  const langLabelY = tilesY + 82;
+  const donutCy = langLabelY + 48;
+  const dividerY = hasLangs ? donutCy + 54 : tilesY + 90;
+  const chipsY = dividerY + 12;
+  const height = chipsY + 24 + 32;
+
+  const R = 30;
+  const C = 2 * Math.PI * R;
+  let acc = 0;
+  const arcs = segs.map((seg) => {
+    const len = (seg.pct / segTotal) * C;
+    const dash = Math.max(0, len - (segs.length > 1 ? 2.5 : 0));
+    const out = `<circle cx="70" cy="${donutCy}" r="${R}" fill="none" stroke="${seg.color}" stroke-width="11" stroke-dasharray="${dash.toFixed(2)} ${C.toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}" transform="rotate(-90 70 ${donutCy})"/>`;
+    acc += len;
+    return out;
+  }).join('');
+
+  const tile = (x, label, value, ic) => `
+    <g transform="translate(${x},${tilesY})">
+      <rect width="94" height="60" rx="12" fill="#ffffff" opacity="0.7"/>
+      ${icon(ic, 41, 9, color)}
+      <text x="47" y="31" text-anchor="middle" class="lbl">${label}</text>
+      <text x="47" y="51" text-anchor="middle" class="t1">${value}</text>
+    </g>`;
+
+  return `<svg width="360" height="${height}" viewBox="0 0 360 ${height}" xmlns="http://www.w3.org/2000/svg">
     <title>${name} — Contributor Card (glass theme)</title>
     <defs>
       <style>
@@ -164,8 +182,12 @@ function renderGlass({ user, topLang, totalStars, color, avatarUri }) {
         .lbl{font:500 9px system-ui,sans-serif;fill:#8891a3;letter-spacing:.5px;}
         .cls{font:600 11px system-ui,sans-serif;fill:${color};}
         .foot{font:500 10px system-ui,sans-serif;fill:#9aa2b3;}
+        .sec{font:600 9px system-ui,sans-serif;fill:#8891a3;letter-spacing:1px;}
+        .lg{font:500 11px system-ui,sans-serif;fill:#1c2333;}
+        .lgp{font:600 11px system-ui,sans-serif;fill:#6b7488;}
+        .big{font:700 15px system-ui,sans-serif;fill:#1c2333;}
+        .small{font:500 8px system-ui,sans-serif;fill:#8891a3;}
       </style>
-      <clipPath id="circle"><circle cx="36" cy="36" r="36"/></clipPath>
       <linearGradient id="glassBg" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0%" stop-color="#eef1f8"/>
         <stop offset="100%" stop-color="#dde3f0"/>
@@ -175,18 +197,17 @@ function renderGlass({ user, topLang, totalStars, color, avatarUri }) {
       <filter id="avatarGlow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="6"/></filter>
     </defs>
 
-    <rect width="360" height="320" rx="24" fill="url(#glassBg)"/>
+    <rect width="360" height="${height}" rx="24" fill="url(#glassBg)"/>
     <circle cx="30" cy="20" r="70" fill="${color}" opacity="0.22" filter="url(#blob)"/>
     <circle cx="345" cy="60" r="60" fill="#8b5cf6" opacity="0.18" filter="url(#blob)"/>
-    <circle cx="330" cy="300" r="65" fill="${color}" opacity="0.14" filter="url(#blob)"/>
+    <circle cx="330" cy="${height - 30}" r="65" fill="${color}" opacity="0.14" filter="url(#blob)"/>
 
-    <rect x="16" y="16" width="328" height="288" rx="18" fill="#ffffff" opacity="0.55" filter="url(#soft)"/>
+    <rect x="16" y="16" width="328" height="${height - 32}" rx="18" fill="#ffffff" opacity="0.55" filter="url(#soft)"/>
     <rect x="16" y="16" width="328" height="1.5" rx="1" fill="#ffffff" opacity="0.8"/>
 
     <g transform="translate(32,32)">
       <circle cx="36" cy="36" r="38" fill="${color}" opacity="0.35" filter="url(#avatarGlow)"/>
-      ${avatarTag}
-      <circle cx="36" cy="36" r="36" fill="none" stroke="${color}" stroke-width="2"/>
+      ${avatarShape({ id: 'avatar', shape, size: 72, uri: avatarUri, ring: color, bg: '#dde3f0', ringWidth: 2 })}
     </g>
 
     <text x="120" y="50" class="t1">${name}</text>
@@ -197,33 +218,32 @@ function renderGlass({ user, topLang, totalStars, color, avatarUri }) {
     <text x="120" y="68" class="t2">@${esc(user.login)}</text>
     ${topLang ? `<rect x="120" y="82" width="${18 + esc(topLang).length * 6.5}" height="20" rx="10" fill="${color}" opacity="0.12"/><text x="${130 + esc(topLang).length * 3.25}" y="96" text-anchor="middle" class="cls">${esc(topLang)}</text>` : ''}
 
-    <g transform="translate(32,132)">
-      <rect width="94" height="60" rx="12" fill="#ffffff" opacity="0.7"/>
-      <text x="47" y="24" text-anchor="middle" class="lbl">REPOS</text>
-      <text x="47" y="46" text-anchor="middle" class="t1">${user.public_repos || 0}</text>
-    </g>
-    <g transform="translate(133,132)">
-      <rect width="94" height="60" rx="12" fill="#ffffff" opacity="0.7"/>
-      <text x="47" y="24" text-anchor="middle" class="lbl">STARS</text>
-      <text x="47" y="46" text-anchor="middle" class="t1">${totalStars}</text>
-    </g>
-    <g transform="translate(234,132)">
-      <rect width="94" height="60" rx="12" fill="#ffffff" opacity="0.7"/>
-      <text x="47" y="24" text-anchor="middle" class="lbl">FOLLOWERS</text>
-      <text x="47" y="46" text-anchor="middle" class="t1">${user.followers || 0}</text>
-    </g>
+    ${tile(32, 'REPOS', user.public_repos || 0, 'repo')}
+    ${tile(133, 'STARS', totalStars, 'star')}
+    ${tile(234, 'FOLLOWERS', user.followers || 0, 'people')}
 
-    <line x1="32" y1="222" x2="148" y2="222" stroke="#c9d0e0" opacity="0.6"/>
-    <path d="M180 218l4 4-4 4-4-4Z" fill="${color}" opacity="0.45"/>
-    <line x1="196" y1="222" x2="312" y2="222" stroke="#c9d0e0" opacity="0.6"/>
+    ${hasLangs ? `
+    <text x="32" y="${langLabelY}" class="sec">LANGUAGES</text>
+    <circle cx="70" cy="${donutCy}" r="${R}" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="11"/>
+    ${arcs}
+    <text x="70" y="${donutCy + 3}" text-anchor="middle" class="big">${segs[0].pct}%</text>
+    <text x="70" y="${donutCy + 14}" text-anchor="middle" class="small">${esc(truncate(segs[0].name, 9))}</text>
+    ${segs.map((seg, i) => `
+      <circle cx="132" cy="${donutCy - 28 + i * 19}" r="4" fill="${seg.color}"/>
+      <text x="144" y="${donutCy - 24 + i * 19}" class="lg">${esc(truncate(seg.name, 16))}</text>
+      <text x="312" y="${donutCy - 24 + i * 19}" text-anchor="end" class="lgp">${seg.pct}%</text>`).join('')}` : ''}
+
+    <line x1="32" y1="${dividerY}" x2="148" y2="${dividerY}" stroke="#c9d0e0" opacity="0.6"/>
+    <path d="M180 ${dividerY - 4}l4 4-4 4-4-4Z" fill="${color}" opacity="0.45"/>
+    <line x1="196" y1="${dividerY}" x2="312" y2="${dividerY}" stroke="#c9d0e0" opacity="0.6"/>
     ${(() => {
       const chips = [{ ic: 'calendar', text: `Joined ${joined}` }];
       const extra = user.location || (user.company ? user.company.replace(/^@/, '') : null);
-      if (extra) chips.push({ ic: user.location ? 'pin' : 'building', text: esc(extra) });
+      if (extra) chips.push({ ic: user.location ? 'pin' : 'building', text: esc(truncate(extra, 22)) });
       let cx = 32;
       return chips.slice(0, 2).map((c) => {
         const w = 26 + c.text.length * 5.6;
-        const g = `<g transform="translate(${cx},234)">
+        const g = `<g transform="translate(${cx},${chipsY})">
           <rect width="${w}" height="24" rx="12" fill="#ffffff" opacity="0.6"/>
           ${icon(c.ic, 9, 6, '#8891a3')}
           <text x="26" y="16" class="foot">${c.text}</text>
@@ -310,12 +330,9 @@ function computeRank({ totalStars, repoCount, followers, prs, issues }) {
 }
 const RANK_FORMULA = 'sqrt(stars/300)×30 + sqrt(repos/60)×20 + sqrt(followers/300)×25 + sqrt(prs/100)×15 + sqrt(issues/60)×10, each term capped at its own weight';
 
-function renderDetailed({ user, avatarUri, langStats, totalStars, totalForks, prs, issues, color, fontFace }) {
+function renderDetailed({ user, avatarUri, shape, langStats, totalStars, totalForks, prs, issues, color, fontFace }) {
   const name = esc(user.name || user.login);
   const displayFont = fontFace ? "'Chakra Petch',system-ui,sans-serif" : 'system-ui,sans-serif';
-  const avatarTag = avatarUri
-    ? `<image href="${avatarUri}" x="-9" y="-9" width="90" height="90" preserveAspectRatio="xMidYMid slice" clip-path="url(#hex)"/>`
-    : '';
   const bioLines = user.bio ? wrapBio(esc(user.bio), 52) : [];
   const bioBlockH = bioLines.length * 16;
 
@@ -353,7 +370,6 @@ function renderDetailed({ user, avatarUri, langStats, totalStars, totalForks, pr
         .rankGrade{font:700 18px ${displayFont};fill:${color};}
         .legend{font:500 9px 'Courier New',monospace;fill:#a8b0c2;}
       </style>
-      <clipPath id="hex"><polygon points="36,2 68,20 68,52 36,70 4,52 4,20"/></clipPath>
       <radialGradient id="bg" cx="10%" cy="0%" r="80%">
         <stop offset="0%" stop-color="${color}" stop-opacity="0.10"/>
         <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
@@ -374,8 +390,7 @@ function renderDetailed({ user, avatarUri, langStats, totalStars, totalForks, pr
     <polygon points="0,14 14,0 420,0 420,${height - 14} 406,${height} 0,${height}" fill="none" stroke="${color}" opacity="0.5" filter="url(#glow)"/>
 
     <g transform="translate(24,24)">
-      <polygon points="36,0 72,18 72,54 36,72 0,54 0,18" fill="#1b2233" stroke="${color}" filter="url(#glow)"/>
-      ${avatarTag}
+      ${avatarShape({ id: 'avatar', shape, size: 72, uri: avatarUri, ring: color, bg: '#1b2233', glow: true })}
     </g>
     <text x="112" y="48" class="t1">${name}</text>
     <text x="112" y="66" class="t2">@${esc(user.login)}</text>
@@ -418,6 +433,8 @@ function renderDetailed({ user, avatarUri, langStats, totalStars, totalForks, pr
 }
 
 const THEMES = { cyberpunk: renderCyberpunk, terminal: renderTerminal, glass: renderGlass, detailed: renderDetailed };
+// Each theme's natural avatar frame; ?shape= overrides it (terminal has no avatar).
+const THEME_SHAPE = { cyberpunk: 'hex', detailed: 'rounded', glass: 'circle', terminal: 'hex' };
 
 function svg(body, status, cacheControl) {
   const headers = { 'Content-Type': 'image/svg+xml' };
@@ -434,7 +451,9 @@ module.exports.GET = async (request) => {
   if (!username) return svg(errorSVG('missing ?username='), 400);
 
   const requestedTheme = url.searchParams.get('theme');
-  const render = THEMES[requestedTheme] || THEMES.cyberpunk;
+  const themeName = THEMES[requestedTheme] ? requestedTheme : 'cyberpunk';
+  const render = THEMES[themeName];
+  const shape = sanitizeShape(url.searchParams.get('shape'), THEME_SHAPE[themeName]);
 
   const token = process.env.GITHUB_TOKEN;
   try {
@@ -460,7 +479,7 @@ module.exports.GET = async (request) => {
       ({ prs, issues } = await prIssueCounts(username, token));
     }
 
-    return svg(render({ user, avatarUri, fontFace, langStats, prs, issues, ...stats }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
+    return svg(render({ user, avatarUri, shape, fontFace, langStats, prs, issues, ...stats }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
   } catch (err) {
     if (err.status === 404) return svg(errorSVG(`user "${username}" not found`), 404, 'public, s-maxage=60');
     if (err.status === 403) return svg(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=60');
