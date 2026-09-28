@@ -17,6 +17,21 @@ const LANG_CLASS = {
 
 const classFor = (lang) => LANG_CLASS[lang] || 'WANDERER';
 
+// The color convention github-linguist popularized and most of the README
+// stats ecosystem now shares — factual hex associations, not copied code.
+// Falls back to the card's own accent color for anything unmapped, so an
+// obscure language still looks intentional rather than defaulting to gray.
+const LANG_COLORS = {
+  JavaScript: '#f1e05a', TypeScript: '#3178c6', Python: '#3572A5', Java: '#b07219',
+  'C++': '#f34b7d', C: '#555555', 'C#': '#178600', PHP: '#4F5D95', Ruby: '#701516',
+  Go: '#00ADD8', Rust: '#dea584', Swift: '#F05138', Kotlin: '#A97BFF', HTML: '#e34c26',
+  CSS: '#563d7c', Shell: '#89e051', 'Vim Script': '#199f4b', Dockerfile: '#384d54',
+  Vue: '#41b883', 'Jupyter Notebook': '#DA5B0B', Scala: '#c22d40', Dart: '#00B4AB',
+  Elixir: '#6e4a7e', Haskell: '#5e5086', Lua: '#000080', Perl: '#0298c3', R: '#198CE7',
+  'Objective-C': '#438eff', MATLAB: '#e16737', PowerShell: '#012456',
+};
+const colorForLang = (name, fallback) => LANG_COLORS[name] || fallback;
+
 const XP_WEIGHTS = { repo: 15, star: 5, follower: 10, year: 20 };
 const XP_FORMULA = `repos×${XP_WEIGHTS.repo} + stars×${XP_WEIGHTS.star} + followers×${XP_WEIGHTS.follower} + years×${XP_WEIGHTS.year}`;
 
@@ -138,7 +153,27 @@ function sanitizeColor(input) {
   return /^[0-9a-fA-F]{6}$/.test(hex) ? `#${hex}` : null;
 }
 
+// Small stroke icons (12x12, stroke=currentColor) as raw path fragments so
+// they drop into a parent <g fill="none" stroke="${color}"> without a nested
+// viewBox — matches the icon set used across the HTML pages.
+const ICONS = {
+  repo: '<path d="M2 4l4-2 4 2v5l-4 2-4-2V4Z"/><path d="M2 4l4 2 4-2"/><path d="M6 6v5"/>',
+  star: '<path d="M6 1l1.5 3.2L11 4.7l-2.5 2.4.6 3.4L6 8.9 2.9 10.5l.6-3.4L1 4.7l3.5-.5L6 1Z" stroke-linejoin="round"/>',
+  people: '<circle cx="4" cy="4" r="1.7"/><path d="M1 10.2c.5-2 1.8-3 3-3s2.5 1 3 3"/><circle cx="9.2" cy="4.6" r="1.3"/><path d="M8.1 10.2c.3-1.6 1-2.6 1.9-3"/>',
+  bolt: '<path d="M6.6 1 2.2 7.2h2.9l-.9 3.8 4.6-6h-2.8L6.6 1Z" stroke-linejoin="round"/>',
+  fork: '<circle cx="3" cy="2.5" r="1.4"/><circle cx="9" cy="2.5" r="1.4"/><circle cx="6" cy="9.5" r="1.4"/><path d="M3 3.9v1.6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V3.9"/><path d="M6 7.5v1"/>',
+  pr: '<circle cx="3" cy="2.5" r="1.4"/><circle cx="3" cy="9.5" r="1.4"/><path d="M3 3.9v4.2"/><path d="M3 6c3.5 0 5-1 5-4.2"/><circle cx="8" cy="1.8" r="1.3"/>',
+  issue: '<circle cx="6" cy="6" r="4.6"/><path d="M6 3.4v3.2"/><path d="M6 8.5v.01"/>',
+  calendar: '<rect x="1.5" y="2" width="9" height="8.5" rx="1"/><path d="M1.5 5h9"/><path d="M4 1v2"/><path d="M8 1v2"/>',
+  pin: '<path d="M6 1c-1.9 0-3.4 1.4-3.4 3.2 0 2.3 3.4 6.8 3.4 6.8s3.4-4.5 3.4-6.8C9.4 2.4 7.9 1 6 1Z"/><circle cx="6" cy="4.2" r="1.1"/>',
+  building: '<path d="M2.5 10.5V3l3-1.5 3 1.5v7.5"/><path d="M2.5 10.5h6"/><path d="M5 10.5V7.5h1.5v3"/>',
+};
+
+function icon(name, x, y, color) {
+  return `<g transform="translate(${x},${y})" fill="none" stroke="${color}" stroke-width="1.3" stroke-linecap="round">${ICONS[name]}</g>`;
+}
+
 module.exports = {
   classFor, esc, ghFetch, avatarDataUri, computeStats, CHAKRA_PETCH_FONT_FACE,
-  sanitizeColor, XP_FORMULA, trophyTier, byteWeightedLangs,
+  sanitizeColor, XP_FORMULA, trophyTier, byteWeightedLangs, colorForLang, ICONS, icon,
 };
