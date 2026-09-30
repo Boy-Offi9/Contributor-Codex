@@ -67,7 +67,7 @@ function renderCyberpunk({ user, avatarUri, shape, topLang, level, xp, totalStar
     <rect width="360" height="360" fill="url(#bg2)"/>
     ${shimmer}
     <polygon points="0,14 14,0 360,0 360,346 346,360 0,360" fill="none" stroke="#1b2233"/>
-    <polygon points="0,14 14,0 360,0 360,346 346,360 0,360" fill="none" stroke="${color}" opacity="0.5" filter="url(#glow)">
+    <polygon points="0,14 14,0 360,0 360,346 346,360 0,360" fill="none" stroke="${color}" opacity="0.5">
       <animate attributeName="opacity" values="0.4;0.85;0.4" dur="3s" repeatCount="indefinite"/>
     </polygon>
 
@@ -107,12 +107,12 @@ function renderTerminal({ user, xp, totalStars, topLang, tier }) {
     ['repos', user.public_repos || 0],
     ['stars', totalStars],
     ['followers', user.followers || 0],
-    ['score', xp.toLocaleString()],
+    ['checksum', `0x${xp.toString(16)}`],
   ];
   const height = 108 + rows.length * 20;
 
   return `<svg width="360" height="${height}" viewBox="0 0 360 ${height}" xmlns="http://www.w3.org/2000/svg">
-    <title>${name} — Contributor Card (terminal theme). Score = ${XP_FORMULA}</title>
+    <title>${name} — Contributor Card (terminal theme). checksum = hex(${XP_FORMULA})</title>
     <defs>
       <style>
         .term{font:400 13px 'Courier New',monospace;fill:${green};}
@@ -387,7 +387,7 @@ function renderDetailed({ user, avatarUri, shape, langStats, totalStars, totalFo
     <rect width="420" height="${height}" fill="#05070c"/>
     <rect width="420" height="${height}" fill="url(#bg)"/>
     <rect width="420" height="${height}" fill="url(#bg2)"/>
-    <polygon points="0,14 14,0 420,0 420,${height - 14} 406,${height} 0,${height}" fill="none" stroke="${color}" opacity="0.5" filter="url(#glow)"/>
+    <polygon points="0,14 14,0 420,0 420,${height - 14} 406,${height} 0,${height}" fill="none" stroke="${color}" opacity="0.5"/>
 
     <g transform="translate(24,24)">
       ${avatarShape({ id: 'avatar', shape, size: 72, uri: avatarUri, ring: color, bg: '#1b2233', glow: true })}
