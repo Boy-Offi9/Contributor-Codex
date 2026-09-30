@@ -78,6 +78,24 @@
   }
   #status.err{color:var(--danger);}
 
+  #lbPreview{
+    max-width:1180px;margin:18px auto 0;display:none;
+  }
+  #lbPreview.show{display:block;}
+  #lbPreview .lbHead{
+    display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:8px;
+  }
+  #lbPreview .lbLabel{
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;
+  }
+  #lbPreview img{max-width:100%;height:auto;display:block;}
+  #lbPreview button{
+    font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:12px;letter-spacing:.03em;
+    background:transparent;border:1px solid var(--steel);color:var(--dim);
+    padding:6px 12px;border-radius:3px;cursor:pointer;
+  }
+  #lbPreview button:hover{background:var(--steel);color:var(--ghost);}
+
   .grid{
     max-width:1180px;margin:18px auto 0;
     display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
@@ -173,6 +191,13 @@
 </div>
 
 <div id="status" class="mono"></div>
+<div id="lbPreview">
+  <div class="lbHead">
+    <span class="lbLabel mono">Team leaderboard</span>
+    <button id="lbCopyBtn">Copy embed</button>
+  </div>
+  <img id="lbImg" alt="team leaderboard">
+</div>
 <div class="grid" id="grid"></div>
 
 <div id="overlay">
@@ -186,6 +211,28 @@ const overlay = document.getElementById('overlay');
 const dossier = document.getElementById('dossier');
 const themeSelect = document.getElementById('themeSelect');
 const API_BASE = 'https://contributor-codex.vercel.app';
+let currentOrg = null;
+
+function showLeaderboardPreview(){
+  if (!currentOrg) return;
+  const url = leaderboardUrlFor(currentOrg, themeSelect.value);
+  document.getElementById('lbImg').src = url;
+  document.getElementById('lbCopyBtn').dataset.url = url;
+  document.getElementById('lbPreview').classList.add('show');
+}
+
+document.getElementById('lbCopyBtn').onclick = async (e) => {
+  const url = e.target.dataset.url;
+  if (!url) return;
+  try {
+    await navigator.clipboard.writeText(`![Leaderboard](${url})`);
+    const original = e.target.textContent;
+    e.target.textContent = 'Copied ✓';
+    setTimeout(() => { e.target.textContent = original; }, 1500);
+  } catch {
+    e.target.textContent = 'Copy failed';
+  }
+};
 
 function authHeaders(){
   const token = document.getElementById('tokenInput').value.trim();
@@ -209,6 +256,12 @@ function setStatus(msg, isErr){
 
 function cardUrlFor(login, theme){
   return `${API_BASE}/api/card?username=${encodeURIComponent(login)}&theme=${encodeURIComponent(theme)}`;
+}
+
+const LB_THEMES = ['cyberpunk', 'terminal', 'glass']; // /api/leaderboard has no detailed theme
+function leaderboardUrlFor(org, theme){
+  const lbTheme = LB_THEMES.includes(theme) ? theme : 'cyberpunk';
+  return `${API_BASE}/api/leaderboard?org=${encodeURIComponent(org)}&limit=10&theme=${encodeURIComponent(lbTheme)}`;
 }
 
 function renderCard(login){
@@ -275,6 +328,8 @@ async function loadOrg(){
   const org = document.getElementById('orgInput').value.trim();
   if (!org) return;
   grid.innerHTML = '';
+  currentOrg = null;
+  document.getElementById('lbPreview').classList.remove('show');
   setStatus(`Fetching ${org}'s member list…`);
   try {
     const members = await ghFetch(`https://api.github.com/orgs/${org}/members?per_page=100`);
@@ -282,6 +337,8 @@ async function loadOrg(){
       setStatus(`No public members returned for "${org}" — its member list may be private. Add usernames manually below instead.`, true);
       return;
     }
+    currentOrg = org;
+    showLeaderboardPreview();
     setStatus(`Loading ${members.length} member${members.length===1?'':'s'}…`);
     members.forEach(m => renderCard(m.login));
     setStatus(`${members.length} card${members.length===1?'':'s'} loaded.`);
@@ -309,6 +366,7 @@ themeSelect.addEventListener('change', () => {
     el.remove();
     renderCard(login);
   });
+  showLeaderboardPreview();
 });
 
 loadOrg();
