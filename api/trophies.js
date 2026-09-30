@@ -1,5 +1,5 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { esc, ghFetch, computeStats, trophyTier } = require('./_lib/shared');
+const { esc, ghFetch, computeStats, trophyTier, icon, sanitizeColor } = require('./_lib/shared');
 
 function errorSVG(message) {
   return `<svg width="420" height="120" viewBox="0 0 420 120" xmlns="http://www.w3.org/2000/svg">
@@ -44,26 +44,36 @@ function parseCustomTrophy(url) {
   return { key: 'CUSTOM', label, thresholds, value: () => value };
 }
 
+const TROPHY_ICONS = {
+  STARGAZER: 'star', BUILDER: 'repo', INFLUENCE: 'people', VETERAN: 'calendar',
+  POLYGLOT: 'globe', FORKED: 'fork', OPEN_SOURCE: 'license', CUSTOM: 'bolt',
+};
+
 function shield(x, key, label, value, tier) {
-  const points = `${x + 30},0 ${x + 60},15 ${x + 60},50 ${x + 30},70 ${x},50 ${x},15`;
+  const w = 84;
+  const points = `${x + w / 2},2 ${x + w - 2},18 ${x + w - 2},54 ${x + w / 2},70 ${x + 2},54 ${x + 2},18`;
+  const earned = tier.index > 0;
   const pct = tier.nextThreshold ? Math.min(100, Math.round((value / tier.nextThreshold) * 100)) : 100;
   return `
-    <polygon points="${points}" fill="${tier.index === 0 ? 'none' : tier.color}" fill-opacity="${tier.index === 0 ? 0 : 0.15}" stroke="${tier.color}" stroke-width="2"/>
-    <text x="${x + 30}" y="34" text-anchor="middle" class="val" fill="${tier.color}">${value}</text>
-    <text x="${x + 30}" y="88" text-anchor="middle" class="lbl">${label}</text>
-    <text x="${x + 30}" y="100" text-anchor="middle" class="tier" fill="${tier.color}">${tier.name}</text>
-    <rect x="${x + 8}" y="108" width="44" height="3" fill="#1b2233"/>
-    <rect x="${x + 8}" y="108" width="${(44 * pct) / 100}" height="3" fill="${tier.color}"/>`;
+    <polygon points="${points}" fill="${earned ? tier.color : 'none'}" fill-opacity="${earned ? 0.14 : 0}" stroke="${tier.color}" stroke-width="1.5"${earned ? ' filter="url(#glow)"' : ''}/>
+    ${icon(TROPHY_ICONS[key] || 'star', x + w / 2 - 6, 22, tier.color)}
+    <text x="${x + w / 2}" y="48" text-anchor="middle" class="val" fill="${tier.color}"${earned ? ' filter="url(#glow)"' : ''}>${value}</text>
+    <text x="${x + w / 2}" y="88" text-anchor="middle" class="lbl">${label}</text>
+    <text x="${x + w / 2}" y="99" text-anchor="middle" class="tier" fill="${tier.color}">${tier.name}</text>
+    <rect x="${x + 10}" y="106" width="${w - 20}" height="3" fill="#1b2233"/>
+    <rect x="${x + 10}" y="106" width="${((w - 20) * pct) / 100}" height="3" fill="${tier.color}"/>`;
 }
 
 function renderTrophies(user, stats, selected, trophyDefs) {
   const items = trophyDefs.filter((t) => !selected || selected.includes(t.key));
-  const width = items.length * 80 + 20;
+  const pitch = 90;
+  const width = items.length * pitch + 16;
+  const accent = stats.color || '#00e5ff';
 
   const badges = items.map((t, i) => {
     const value = t.value(stats, user);
     const tier = trophyTier(value, t.thresholds);
-    return shield(20 + i * 80, t.key, t.label, value, tier);
+    return shield(8 + i * pitch, t.key, t.label, value, tier);
   }).join('');
 
   return `<svg width="${width}" height="120" viewBox="0 0 ${width} 120" xmlns="http://www.w3.org/2000/svg">
@@ -74,8 +84,21 @@ function renderTrophies(user, stats, selected, trophyDefs) {
         .lbl{font:500 8px 'Courier New',monospace;fill:#7a8399;letter-spacing:.5px;}
         .tier{font:700 8px 'Courier New',monospace;letter-spacing:.5px;}
       </style>
+      <radialGradient id="bg" cx="10%" cy="0%" r="90%">
+        <stop offset="0%" stop-color="${accent}" stop-opacity="0.12"/>
+        <stop offset="100%" stop-color="${accent}" stop-opacity="0"/>
+      </radialGradient>
+      <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+        <path d="M24 0H0V24" fill="none" stroke="${accent}" stroke-width="0.5" opacity="0.5"/>
+      </pattern>
+      <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="2" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
     </defs>
     <rect width="${width}" height="120" fill="#05070c"/>
+    <rect width="${width}" height="120" fill="url(#grid)" opacity="0.05"/>
+    <rect width="${width}" height="120" fill="url(#bg)"/>
     <rect width="${width}" height="120" fill="none" stroke="#1b2233"/>
     ${badges}
   </svg>`;
@@ -110,6 +133,8 @@ module.exports.GET = async (request) => {
 
     const stats = computeStats(user, repos);
     stats.licensedRepos = repos.filter((r) => !r.fork && r.license && r.license.spdx_id && r.license.spdx_id !== 'NOASSERTION').length;
+    const colorOverride = sanitizeColor(url.searchParams.get('color'));
+    if (colorOverride) stats.color = colorOverride;
 
     return svg(renderTrophies(user, stats, selected, trophyDefs), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
   } catch (err) {
