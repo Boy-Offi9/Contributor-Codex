@@ -146,10 +146,10 @@ function renderTerminalBoard(org, top, ranked) {
     return `<text x="16" y="${y}" class="key">${String(i + 1).padStart(2, '0')}</text>
     <text x="56" y="${y}" class="${i === 0 ? 'head' : 'term'}">${esc(truncate(entry.user.login, 26))}</text>
     <text x="360" y="${y}" class="term">${clearanceFor(entry.tier).toLowerCase()}</text>
-    <text x="${WIDTH - 16}" y="${y}" text-anchor="end" class="term">${entry.xp.toLocaleString()}</text>`;
+    <text x="${WIDTH - 16}" y="${y}" text-anchor="end" class="term">0x${entry.xp.toString(16)}</text>`;
   }).join('\n    ');
   return `<svg width="${WIDTH}" height="${height}" viewBox="0 0 ${WIDTH} ${height}" xmlns="http://www.w3.org/2000/svg">
-    <title>${esc(org)} — Team Leaderboard (terminal theme). Score = ${XP_FORMULA}</title>
+    <title>${esc(org)} — Team Leaderboard (terminal theme). checksum = hex(${XP_FORMULA})</title>
     <defs><style>.term{font:400 13px 'Courier New',monospace;fill:${green};}.key{font:400 13px 'Courier New',monospace;fill:#2a6b3d;}.head{font:700 13px 'Courier New',monospace;fill:${green};}.ok{font:400 12px 'Courier New',monospace;fill:#2a6b3d;}</style></defs>
     <rect width="${WIDTH}" height="${height}" fill="#020402"/>
     <rect width="${WIDTH}" height="${height}" fill="none" stroke="${green}" opacity="0.5"/>
@@ -159,7 +159,7 @@ function renderTerminalBoard(org, top, ranked) {
     <text x="16" y="82" class="key">#</text>
     <text x="56" y="82" class="key">login</text>
     <text x="360" y="82" class="key">clearance</text>
-    <text x="${WIDTH - 16}" y="82" text-anchor="end" class="key">score</text>
+    <text x="${WIDTH - 16}" y="82" text-anchor="end" class="key">checksum</text>
     ${rows}
   </svg>`;
 }
