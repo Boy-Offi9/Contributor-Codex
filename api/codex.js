@@ -94,7 +94,7 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color }) {
     <rect width="${WIDTH}" height="${height}" fill="url(#grid)" opacity="0.05"/>
     <rect width="${WIDTH}" height="${height}" fill="url(#bg)"/>
     <rect width="${WIDTH}" height="${height}" fill="url(#bg2)"/>
-    <polygon points="0,14 14,0 ${WIDTH},0 ${WIDTH},${height - 14} ${WIDTH - 14},${height} 0,${height}" fill="none" stroke="${color}" opacity="0.5" filter="url(#glow)"/>
+    <polygon points="0,14 14,0 ${WIDTH},0 ${WIDTH},${height - 14} ${WIDTH - 14},${height} 0,${height}" fill="none" stroke="${color}" opacity="0.5"/>
 
     <polygon points="${hexPoints}" fill="#1b2233" stroke="${color}" filter="url(#glow)"/>
     ${avatarTag}
