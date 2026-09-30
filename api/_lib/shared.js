@@ -58,7 +58,7 @@ function tierFor(level) {
   if (level >= 16) return { color: '#ff4d6d', tier: 'ELITE' };
   if (level >= 10) return { color: '#8b5cf6', tier: 'SPECIALIST' };
   if (level >= 5)  return { color: '#00e5ff', tier: 'OPERATIVE' };
-  return { color: '#7a8399', tier: 'INITIATE' };
+  return { color: '#4ade80', tier: 'INITIATE' };
 }
 
 function esc(str = '') {
@@ -209,6 +209,8 @@ const ICONS = {
   calendar: '<rect x="1.5" y="2" width="9" height="8.5" rx="1"/><path d="M1.5 5h9"/><path d="M4 1v2"/><path d="M8 1v2"/>',
   pin: '<path d="M6 1c-1.9 0-3.4 1.4-3.4 3.2 0 2.3 3.4 6.8 3.4 6.8s3.4-4.5 3.4-6.8C9.4 2.4 7.9 1 6 1Z"/><circle cx="6" cy="4.2" r="1.1"/>',
   building: '<path d="M2.5 10.5V3l3-1.5 3 1.5v7.5"/><path d="M2.5 10.5h6"/><path d="M5 10.5V7.5h1.5v3"/>',
+  globe: '<circle cx="6" cy="6" r="4.8"/><path d="M1.2 6h9.6"/><path d="M6 1.2c1.8 1.8 1.8 8 0 9.6"/><path d="M6 1.2c-1.8 1.8-1.8 8 0 9.6"/>',
+  license: '<path d="M6 1l4 1.8v3c0 3-1.7 5-4 6.2-2.3-1.2-4-3.2-4-6.2v-3L6 1Z"/><path d="M4.2 6.2l1.2 1.2 2.4-2.6"/>',
 };
 
 function icon(name, x, y, color) {
