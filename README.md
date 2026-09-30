@@ -112,6 +112,7 @@ Seven independent tiered badges, plus an optional user-supplied custom one.
 | `customLabel` | no | up to 10 characters, letters/numbers/spaces only | — |
 | `customValue` | no | any number | — |
 | `customThresholds` | no | 4 comma-separated, strictly ascending numbers | — |
+| `color` | no | 6-digit hex, no `#` | tier-based accent (see [Scoring](#scoring)) |
 
 Trophy keys: `STARGAZER`, `BUILDER`, `INFLUENCE`, `VETERAN`, `POLYGLOT`, `FORKED`, `OPEN_SOURCE`. Each tiers INITIATE → OPERATIVE → SPECIALIST → ELITE → LEGENDARY against its own fixed thresholds — see [Achievements](#achievements) for what each one measures.
 
@@ -155,7 +156,7 @@ Four static, self-contained HTML pages (no shared JS bundle, no build step) sit 
 | Page | Path | Purpose |
 |---|---|---|
 | Landing | `/` | Overview, a live card-generator demo, and links into the three tools below |
-| Organization Roster | `/roster.html` | Load any org; every public member's card renders in a grid, with a click-through dossier |
+| Organization Roster | `/roster.html` | Load any org; the actual `/api/leaderboard` image renders at the top (with a copy-embed button), and every public member's card renders in a grid below it, with a click-through dossier |
 | Card Builder | `/builder.html` | Pick a card type, fill in fields, get a live preview plus ready-to-copy Markdown/URL/HTML |
 | Codex Profile | `/profile.html?u=USERNAME` | A shareable page per contributor — the generated cards plus bio, location, company, and top repositories |
 
@@ -170,11 +171,13 @@ Icons across all four pages are hand-drawn inline SVG in the same hex/shield mot
 Each theme now has its own voice rather than sharing one vocabulary:
 
 - **`cyberpunk`** is the RPG one — level, XP, tiered rank (INITIATE → LEGENDARY), and a language-based character class (`NETRUNNER`, `DATA MAGE`, etc). Carries the neon treatment: an `feGaussianBlur` glow filter on the border, avatar frame, level badge, and stat values; a faint circuit-grid texture; a second gradient for two-tone depth; small stroke icons next to each stat.
-- **`terminal`** is a hacker/system aesthetic, not an RPG one: a fake `scan.sh` session with an `[OK] identity verified` line, and its own clearance ladder (`SCRIPT KIDDIE → OPERATOR → GHOST → GATEKEEPER → ROOT`) mapped onto the same underlying level thresholds as cyberpunk's tiers, just relabeled — no shared vocabulary between the two. No level number anywhere on this theme; `clearance` is the only rank shown, and it's a rung on its own ladder, not `LV N` in a different font.
+- **`terminal`** is a hacker/system aesthetic, not an RPG one: a fake `scan.sh` session with an `[OK] identity verified` line, and its own clearance ladder (`SCRIPT KIDDIE → OPERATOR → GHOST → GATEKEEPER → ROOT`) mapped onto the same underlying level thresholds as cyberpunk's tiers, just relabeled — no shared vocabulary between the two. No level number anywhere on this theme; `clearance` is the only rank shown, and it's a rung on its own ladder, not `LV N` in a different font. XP is shown as a hex `checksum` (e.g. `0x37b2a`) instead of a decimal score — terminals show numbers in hex, not point totals.
 - **`glass`** is a casual, gamification-free profile card: no level, no XP, no class. Frosted panel over softly blurred gradient blobs (real glassmorphism), a glow ring behind the avatar, a small verified-style checkmark, the top language as a plain pill. Below the stat tiles, a language donut chart (top 4 languages by byte weight plus an "Other" slice, colored with the same linguist palette `detailed` uses) replaces what used to be blank space, and the footer is a row of small icon chips — `Joined {year}` plus location (or company, if no location is set) — under a diamond-accent divider.
 - **`detailed`** is its own fourth identity — a data-dense dossier, not a bigger cyberpunk card. A circular rank gauge (letter grade S+ → D, see [Scoring](#scoring)) replaces the level badge; a proportional byte-weighted language bar, colored per language using the standard GitHub linguist palette and labelled with a percentage legend, replaces language chips; the stat grid grew from 4 boxes to 6, adding pull request and issue counts (via GitHub's Search API) alongside repos/stars/forks/followers. No RPG class name, no XP.
 
 `detailed` is the information-dense variant, available on Contributor Card and Repository Card (see their sections in the [API reference](#api-reference) above for exactly what it adds to each — the Repository Card's `detailed` theme is a separate, simpler layout not yet covered by this redesign).
+
+**A note on the glow filter and sharp corners.** Every card's outer frame has a small 45°-cut corner as a sci-fi accent. Applying the glow filter to that same outline made the cut corners bloom into a bright blob — the corner segment is short (14px) next to the frame's long straight edges (300–400px), and a blur filter treats both the same way, so it piles up disproportionately on the short one. Glow now stays on contained shapes only (avatars, badges, stat values, shields, which are close to uniform in edge length), and the outer frame is a plain stroked outline.
 
 **Avatar shape is independent of theme.** Every avatar (Contributor Card, Leaderboard rows) draws through one shared helper, so `hex` (the cyberpunk-brand default), `circle`, `rounded`, and `square` all produce a geometrically correct frame — clip, ring, and gap always line up, regardless of shape. Set it with `?shape=`; each theme just picks a sensible default (`hex` almost everywhere, `circle` on `glass`) rather than forcing one.
 
@@ -194,6 +197,8 @@ Seven independent badges, each a single "did this cross this line" check against
 
 Each tiers INITIATE → OPERATIVE → SPECIALIST → ELITE → LEGENDARY. A **custom trophy** slot lets you bolt on any non-GitHub metric (a Codewars rank, a LeetCode streak) through the same tiered-shield rendering — see the `/api/trophies` params above. It isn't exposed in the Card Builder yet; build that URL by hand.
 
+Each shield now carries an icon, glow on earned tiers, and a two-tone gradient background matching the rest of the product — this was the one card that hadn't been touched since it was first built, and had visibly fallen behind everything else. `/api/trophies` also takes `?color=` now, for matching an accent across an embedded card and its achievements.
+
 ## Scoring
 
 ```
@@ -201,6 +206,18 @@ XP = repos × 15 + stars × 5 + followers × 10 + years × 20
 ```
 
 Self-referential only — never compared against other users, and shown on-card via a hover tooltip on the XP value so the formula is never hidden. Level is derived from XP on a square-root curve, capped at 99.
+
+Unless `?color=` is set, a card's whole accent color (border, badges, stat values, everything) comes from the level's tier:
+
+| Level | Tier | Color |
+|---|---|---|
+| 1–4 | INITIATE | `#4ade80` (green) |
+| 5–9 | OPERATIVE | `#00e5ff` (cyan) |
+| 10–15 | SPECIALIST | `#8b5cf6` (purple) |
+| 16–24 | ELITE | `#ff4d6d` (red) |
+| 25+ | LEGENDARY | `#ffb020` (orange) |
+
+INITIATE used to be `#7a8399`, a dim gray that was nearly unreadable against the `#05070c` background — every low-level user's card (a large share of real accounts) rendered close to unreadable. This is separate from the achievement shields' own tier colors (`trophyTier()`), which intentionally stay dim for an unearned tier — that dimming is correct there, since it signals "not yet earned" rather than being a card's only accent color.
 
 **Contributor Card's `detailed` theme uses a separate rank score**, not XP — a letter grade (S+ down to D) shown as a circular gauge:
 
