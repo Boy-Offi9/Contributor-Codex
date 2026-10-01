@@ -99,7 +99,7 @@ Stars, forks, open issues, license, and topics for a single repository.
 ![Repo](https://contributor-codex.vercel.app/api/repo?owner=vercel&repo=next.js&theme=detailed)
 ```
 
-`detailed` additionally shows the default branch, creation date, size, contributor count, and latest release tag (two extra GitHub API calls; both fail soft — a rate limit or a repo with no releases still renders a complete card, just missing that one field).
+`detailed` additionally shows the default branch, creation date, size, contributor count, and latest release tag (two extra GitHub API calls; both fail soft — a rate limit or a repo with no releases still renders a complete card, just missing that one field). Topic chips size to their own text now — they used to sit in a fixed 64px box regardless of the topic's actual length, which overlapped badly for anything longer than a couple of short words (most real topic names). A topic that would overflow the card is dropped rather than overlapping the next one.
 
 ### `GET /api/trophies` — Achievements
 
@@ -177,7 +177,7 @@ Each theme now has its own voice rather than sharing one vocabulary:
 
 `detailed` is the information-dense variant, available on Contributor Card and Repository Card (see their sections in the [API reference](#api-reference) above for exactly what it adds to each — the Repository Card's `detailed` theme is a separate, simpler layout not yet covered by this redesign).
 
-**A note on the glow filter and sharp corners.** Every card's outer frame has a small 45°-cut corner as a sci-fi accent. Applying the glow filter to that same outline made the cut corners bloom into a bright blob — the corner segment is short (14px) next to the frame's long straight edges (300–400px), and a blur filter treats both the same way, so it piles up disproportionately on the short one. Glow now stays on contained shapes only (avatars, badges, stat values, shields, which are close to uniform in edge length), and the outer frame is a plain stroked outline.
+**A note on the cut corner.** Every dark card has a 45°-cut corner as a sci-fi accent — a `<polygon>` with two of its four corners shaved off. For most of this product's life, only the polygon's *outline* was drawn; the background behind it was always a plain, unclipped rectangle. Up close, that reads as a diagonal line sitting on top of a square card, not an actual cut corner — because it was exactly that. Every background layer (base fill, gradients, grid texture) is now wrapped in a `<g clip-path="...">` using that same polygon, so the corner is genuinely absent, not just outlined. This also incidentally fixed an earlier glow-filter artifact: glow applied to that outline used to bloom into a bright blob at the corner, since the cut segment (14px) is short next to the frame's straight edges (300–400px) and a blur filter doesn't distinguish the two. Glow now stays on contained, near-uniform shapes (avatars, badges, stat values, shields) and never touches the outer frame at all.
 
 **Avatar shape is independent of theme.** Every avatar (Contributor Card, Leaderboard rows) draws through one shared helper, so `hex` (the cyberpunk-brand default), `circle`, `rounded`, and `square` all produce a geometrically correct frame — clip, ring, and gap always line up, regardless of shape. Set it with `?shape=`; each theme just picks a sensible default (`hex` almost everywhere, `circle` on `glass`) rather than forcing one.
 
