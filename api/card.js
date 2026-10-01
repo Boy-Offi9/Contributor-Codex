@@ -26,11 +26,9 @@ function renderCyberpunk({ user, avatarUri, shape, topLang, level, xp, totalStar
   const classLabel = `${classFor(topLang)}${topLang ? ' · ' + esc(topLang) : ''}`;
   const displayFont = fontFace ? "'Chakra Petch',system-ui,sans-serif" : 'system-ui,sans-serif';
   const shimmer = tier === 'LEGENDARY' ? `
-    <g clip-path="url(#cardClip)">
-      <rect x="-400" y="0" width="200" height="360" fill="#ffffff" opacity="0.08" transform="rotate(20)">
-        <animateTransform attributeName="transform" type="translate" from="-400 0" to="760 0" dur="2.4s" repeatCount="indefinite"/>
-      </rect>
-    </g>` : '';
+    <rect x="-400" y="0" width="200" height="360" fill="#ffffff" opacity="0.08" transform="rotate(20)">
+      <animateTransform attributeName="transform" type="translate" from="-400 0" to="760 0" dur="2.4s" repeatCount="indefinite"/>
+    </rect>` : '';
 
   return `<svg width="360" height="360" viewBox="0 0 360 360" xmlns="http://www.w3.org/2000/svg">
     <title>${name} — Contributor Card. XP = ${XP_FORMULA}</title>
@@ -61,11 +59,13 @@ function renderCyberpunk({ user, avatarUri, shape, topLang, level, xp, totalStar
       </filter>
     </defs>
 
-    <rect width="360" height="360" fill="#05070c"/>
-    <rect width="360" height="360" fill="url(#grid)" opacity="0.05"/>
-    <rect width="360" height="360" fill="url(#bg)"/>
-    <rect width="360" height="360" fill="url(#bg2)"/>
-    ${shimmer}
+    <g clip-path="url(#cardClip)">
+      <rect width="360" height="360" fill="#05070c"/>
+      <rect width="360" height="360" fill="url(#grid)" opacity="0.05"/>
+      <rect width="360" height="360" fill="url(#bg)"/>
+      <rect width="360" height="360" fill="url(#bg2)"/>
+      ${shimmer}
+    </g>
     <polygon points="0,14 14,0 360,0 360,346 346,360 0,360" fill="none" stroke="#1b2233"/>
     <polygon points="0,14 14,0 360,0 360,346 346,360 0,360" fill="none" stroke="${color}" opacity="0.5">
       <animate attributeName="opacity" values="0.4;0.85;0.4" dur="3s" repeatCount="indefinite"/>
@@ -382,11 +382,14 @@ function renderDetailed({ user, avatarUri, shape, langStats, totalStars, totalFo
         <feGaussianBlur stdDeviation="2.4" result="blur"/>
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
+      <clipPath id="cardClip"><polygon points="0,14 14,0 420,0 420,${height - 14} 406,${height} 0,${height}"/></clipPath>
     </defs>
 
-    <rect width="420" height="${height}" fill="#05070c"/>
-    <rect width="420" height="${height}" fill="url(#bg)"/>
-    <rect width="420" height="${height}" fill="url(#bg2)"/>
+    <g clip-path="url(#cardClip)">
+      <rect width="420" height="${height}" fill="#05070c"/>
+      <rect width="420" height="${height}" fill="url(#bg)"/>
+      <rect width="420" height="${height}" fill="url(#bg2)"/>
+    </g>
     <polygon points="0,14 14,0 420,0 420,${height - 14} 406,${height} 0,${height}" fill="none" stroke="${color}" opacity="0.5"/>
 
     <g transform="translate(24,24)">
