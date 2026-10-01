@@ -85,9 +85,12 @@ function renderCyberpunk({ repo, color, fontFace }) {
         <stop offset="0%" stop-color="${color}" stop-opacity="0.14"/>
         <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
       </radialGradient>
+      <clipPath id="cardClip"><polygon points="0,14 14,0 420,0 420,186 406,200 0,200"/></clipPath>
     </defs>
-    <rect width="420" height="200" fill="#05070c"/>
-    <rect width="420" height="200" fill="url(#bg)"/>
+    <g clip-path="url(#cardClip)">
+      <rect width="420" height="200" fill="#05070c"/>
+      <rect width="420" height="200" fill="url(#bg)"/>
+    </g>
     <polygon points="0,14 14,0 420,0 420,186 406,200 0,200" fill="none" stroke="${color}" opacity="0.5"/>
     <text x="24" y="36" class="name">${esc(repo.name)}</text>
     <text x="24" y="52" class="desc" fill="#7a8399">${esc(repo.owner.login)}</text>
@@ -190,8 +193,11 @@ function renderDetailed({ repo, color, fontFace, contributors, releaseTag }) {
         .chip{font:600 10px 'Courier New',monospace;fill:${color};}
         .topic{font:600 10px 'Courier New',monospace;fill:#05070c;}
       </style>
+      <clipPath id="cardClip"><polygon points="0,14 14,0 440,0 440,${height - 14} 426,${height} 0,${height}"/></clipPath>
     </defs>
-    <rect width="440" height="${height}" fill="#05070c"/>
+    <g clip-path="url(#cardClip)">
+      <rect width="440" height="${height}" fill="#05070c"/>
+    </g>
     <polygon points="0,14 14,0 440,0 440,${height - 14} 426,${height} 0,${height}" fill="none" stroke="${color}" opacity="0.5"/>
 
     <text x="24" y="40" class="name">${esc(repo.name)}</text>
@@ -215,7 +221,17 @@ function renderDetailed({ repo, color, fontFace, contributors, releaseTag }) {
     <text x="150" y="${meta2Y}" class="lbl">SIZE</text>
     <text x="150" y="${meta2ValY}" class="desc">${formatSize(repo.size)}</text>
 
-    ${topics.map((topic, i) => `<rect x="${24 + i * 70}" y="${topicsY}" width="64" height="20" fill="none" stroke="${color}"/><text x="${56 + i * 70}" y="${topicsY + 14}" text-anchor="middle" class="chip">${esc(topic)}</text>`).join('')}
+    ${(() => {
+      let tx = 24;
+      return topics.map((topic) => {
+        const label = esc(topic);
+        const w = 16 + label.length * 6.2;
+        if (tx + w > 416) return '';
+        const out = `<rect x="${tx}" y="${topicsY}" width="${w.toFixed(1)}" height="20" fill="none" stroke="${color}"/><text x="${(tx + w / 2).toFixed(1)}" y="${topicsY + 14}" text-anchor="middle" class="chip">${label}</text>`;
+        tx += w + 8;
+        return out;
+      }).join('');
+    })()}
 
     ${repo.language ? `<rect x="24" y="${langY}" width="${16 + repo.language.length * 7}" height="20" fill="${color}"/><text x="32" y="${langY + 14}" class="topic">${esc(repo.language)}</text>` : ''}
     ${license ? `<rect x="${(repo.language ? 40 + repo.language.length * 7 : 24)}" y="${langY}" width="${16 + license.length * 7}" height="20" fill="none" stroke="#1b2233"/><text x="${(repo.language ? 48 + repo.language.length * 7 : 32)}" y="${langY + 14}" class="chip" fill="#7a8399">${esc(license)}</text>` : ''}
