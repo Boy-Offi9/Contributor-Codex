@@ -1,6 +1,6 @@
 {
   "name": "contributor-codex",
-  "version": "0.13.1",
+  "version": "0.13.2",
   "private": true,
   "description": "GitHub data compiled into visual cards, achievements, team leaderboards, and profiles — embeddable anywhere as server-rendered SVG",
   "engines": {
