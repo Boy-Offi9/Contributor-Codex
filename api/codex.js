@@ -89,11 +89,14 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color }) {
         <feGaussianBlur stdDeviation="2.4" result="blur"/>
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
+      <clipPath id="cardClip"><polygon points="0,14 14,0 ${WIDTH},0 ${WIDTH},${height - 14} ${WIDTH - 14},${height} 0,${height}"/></clipPath>
     </defs>
-    <rect width="${WIDTH}" height="${height}" fill="#05070c"/>
-    <rect width="${WIDTH}" height="${height}" fill="url(#grid)" opacity="0.05"/>
-    <rect width="${WIDTH}" height="${height}" fill="url(#bg)"/>
-    <rect width="${WIDTH}" height="${height}" fill="url(#bg2)"/>
+    <g clip-path="url(#cardClip)">
+      <rect width="${WIDTH}" height="${height}" fill="#05070c"/>
+      <rect width="${WIDTH}" height="${height}" fill="url(#grid)" opacity="0.05"/>
+      <rect width="${WIDTH}" height="${height}" fill="url(#bg)"/>
+      <rect width="${WIDTH}" height="${height}" fill="url(#bg2)"/>
+    </g>
     <polygon points="0,14 14,0 ${WIDTH},0 ${WIDTH},${height - 14} ${WIDTH - 14},${height} 0,${height}" fill="none" stroke="${color}" opacity="0.5"/>
 
     <polygon points="${hexPoints}" fill="#1b2233" stroke="${color}" filter="url(#glow)"/>
