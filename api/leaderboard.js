@@ -124,10 +124,13 @@ function renderCyberpunkBoard(org, top, ranked, accent, shape, override) {
         <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.09"/>
         <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
       </radialGradient>${medalDefs}
+      <clipPath id="cardClip"><polygon points="0,14 14,0 ${WIDTH},0 ${WIDTH},${height - 14} ${WIDTH - 14},${height} 0,${height}"/></clipPath>
     </defs>
-    <rect width="${WIDTH}" height="${height}" fill="#05070c"/>
-    <rect width="${WIDTH}" height="${height}" fill="url(#bg)"/>
-    <rect width="${WIDTH}" height="${height}" fill="url(#bg2)"/>
+    <g clip-path="url(#cardClip)">
+      <rect width="${WIDTH}" height="${height}" fill="#05070c"/>
+      <rect width="${WIDTH}" height="${height}" fill="url(#bg)"/>
+      <rect width="${WIDTH}" height="${height}" fill="url(#bg2)"/>
+    </g>
     <polygon points="0,14 14,0 ${WIDTH},0 ${WIDTH},${height - 14} ${WIDTH - 14},${height} 0,${height}" fill="none" stroke="${accent}" opacity="0.45"/>
     <rect x="16" y="16" width="3" height="20" fill="${accent}"/>
     <text x="28" y="32" class="title">${esc(truncate(org.toUpperCase(), 28))} // LEADERBOARD</text>
