@@ -157,7 +157,7 @@ Four static, self-contained HTML pages (no shared JS bundle, no build step) sit 
 |---|---|---|
 | Landing | `/` | Overview, a live card-generator demo, and links into the three tools below |
 | Organization Roster | `/roster.html` | Load any org; the actual `/api/leaderboard` image renders at the top (with a copy-embed button), and every public member's card renders in a grid below it, with a click-through dossier |
-| Card Builder | `/builder.html` | Pick a card type, fill in fields, get a live preview plus ready-to-copy Markdown/URL/HTML |
+| Card Builder | `/builder.html` | Pick a card type, fill in fields (including avatar shape and the custom trophy slot where applicable), get a live preview plus ready-to-copy Markdown/URL/HTML |
 | Codex Profile | `/profile.html?u=USERNAME` | A shareable page per contributor — the generated cards plus bio, location, company, and top repositories |
 
 The roster and profile pages fetch GitHub client-side (in the visitor's browser), with an optional personal-access-token field to raise the rate limit from 60/hr to 5,000/hr — that token never leaves the browser tab. The API endpoints above are separate: they run server-side and use the deployment's own `GITHUB_TOKEN`.
@@ -179,7 +179,7 @@ Each theme now has its own voice rather than sharing one vocabulary:
 
 **A note on the cut corner.** Every dark card has a 45°-cut corner as a sci-fi accent — a `<polygon>` with two of its four corners shaved off. For most of this product's life, only the polygon's *outline* was drawn; the background behind it was always a plain, unclipped rectangle. Up close, that reads as a diagonal line sitting on top of a square card, not an actual cut corner — because it was exactly that. Every background layer (base fill, gradients, grid texture) is now wrapped in a `<g clip-path="...">` using that same polygon, so the corner is genuinely absent, not just outlined. This also incidentally fixed an earlier glow-filter artifact: glow applied to that outline used to bloom into a bright blob at the corner, since the cut segment (14px) is short next to the frame's straight edges (300–400px) and a blur filter doesn't distinguish the two. Glow now stays on contained, near-uniform shapes (avatars, badges, stat values, shields) and never touches the outer frame at all.
 
-**Avatar shape is independent of theme.** Every avatar (Contributor Card, Leaderboard rows) draws through one shared helper, so `hex` (the cyberpunk-brand default), `circle`, `rounded`, and `square` all produce a geometrically correct frame — clip, ring, and gap always line up, regardless of shape. Set it with `?shape=`; each theme just picks a sensible default (`hex` almost everywhere, `circle` on `glass`) rather than forcing one.
+**Avatar shape is independent of theme.** Every avatar (Contributor Card, Leaderboard rows) draws through one shared helper, so `hex` (the cyberpunk-brand default), `circle`, `rounded`, and `square` all produce a geometrically correct frame — clip, ring, and gap always line up, regardless of shape. Set it with `?shape=`, or pick it from the dropdown in the [Card Builder](#frontend-pages); each theme just picks a sensible default (`hex` almost everywhere, `circle` on `glass`) rather than forcing one.
 
 ## Achievements
 
@@ -195,7 +195,7 @@ Seven independent badges, each a single "did this cross this line" check against
 | `FORKED` | total forks across owned repos | 5 / 25 / 100 / 500 |
 | `OPEN_SOURCE` | owned repos with a real SPDX license | 1 / 5 / 15 / 30 |
 
-Each tiers INITIATE → OPERATIVE → SPECIALIST → ELITE → LEGENDARY. A **custom trophy** slot lets you bolt on any non-GitHub metric (a Codewars rank, a LeetCode streak) through the same tiered-shield rendering — see the `/api/trophies` params above. It isn't exposed in the Card Builder yet; build that URL by hand.
+Each tiers INITIATE → OPERATIVE → SPECIALIST → ELITE → LEGENDARY. A **custom trophy** slot lets you bolt on any non-GitHub metric (a Codewars rank, a LeetCode streak) through the same tiered-shield rendering — see the `/api/trophies` params above, or fill in the three fields under the trophy checklist in the [Card Builder](#frontend-pages).
 
 Each shield now carries an icon, glow on earned tiers, and a two-tone gradient background matching the rest of the product — this was the one card that hadn't been touched since it was first built, and had visibly fallen behind everything else. `/api/trophies` also takes `?color=` now, for matching an accent across an embedded card and its achievements.
 
@@ -273,5 +273,4 @@ Only needs re-running if the pinned font weights change — it fetches Chakra Pe
 - Org roster and leaderboard both require the org to have at least one member with a **public** organization membership — GitHub's API only lists those.
 - `/api/leaderboard` fetches members through a 4-worker concurrent pool rather than one at a time, and caps at the first 60 public members — very large orgs get a representative ranking rather than risking a timeout trying to rank everyone.
 - Contributor Card's `detailed` theme byte-weights the top language across a user's 6 most-starred repos (one extra API call each). Leaderboard intentionally keeps the cheaper repo-count method instead — per-member byte-weighting there would multiply an already more expensive request.
-- The custom trophy slot (`/api/trophies`) and the `shape` param (`/api/card`, `/api/leaderboard`) aren't yet exposed in the Card Builder UI — both work by hand-building the URL.
 - Language colors come from a built-in palette of ~30 common languages (the standard linguist hex values); anything unmapped falls back to the card's accent color. Per-user color overrides aren't supported yet.
