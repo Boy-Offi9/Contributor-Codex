@@ -151,6 +151,17 @@
         <select id="themeSelect"></select>
       </div>
 
+      <div class="field" id="shapeField">
+        <label>Avatar shape</label>
+        <select id="shapeSelect">
+          <option value="">theme default</option>
+          <option value="hex">hex</option>
+          <option value="circle">circle</option>
+          <option value="rounded">rounded</option>
+          <option value="square">square</option>
+        </select>
+      </div>
+
       <div class="field" id="colorFieldWrap">
         <label>Accent color</label>
         <div class="colorField">
@@ -200,6 +211,7 @@ const TYPES = {
   card: {
     endpoint: '/api/card',
     themes: ['cyberpunk', 'terminal', 'glass', 'detailed'],
+    shapeSupport: true,
     fields: [
       { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
     ],
@@ -214,6 +226,7 @@ const TYPES = {
   leaderboard: {
     endpoint: '/api/leaderboard',
     themes: ['cyberpunk', 'terminal', 'glass'],
+    shapeSupport: true,
     fields: [
       { key: 'org', label: 'Organization', placeholder: 'boy-offi9-inc', required: true },
       { key: 'limit', label: 'Member limit (1-20)', placeholder: '10', type: 'number', min: 1, max: 20 },
@@ -244,6 +257,8 @@ const state = {};
 const dynamicFields = document.getElementById('dynamicFields');
 const themeField = document.getElementById('themeField');
 const themeSelect = document.getElementById('themeSelect');
+const shapeField = document.getElementById('shapeField');
+const shapeSelect = document.getElementById('shapeSelect');
 const colorFieldWrap = document.getElementById('colorFieldWrap');
 const colorPicker = document.getElementById('colorPicker');
 const colorText = document.getElementById('colorText');
@@ -271,6 +286,13 @@ function renderFields(){
             <label class="trophyChip"><input type="checkbox" value="${t}" ${state.trophies?.includes(t) ? 'checked' : ''}> ${t}</label>
           `).join('')}
         </div>
+      </div>
+      <div class="field">
+        <label>Custom trophy (optional) — for anything that isn't from GitHub</label>
+        <input type="text" id="f_customLabel" class="mono" placeholder="Label, e.g. CODEWARS (max 10 chars)" value="${state.customLabel || ''}" maxlength="10" style="margin-bottom:8px;">
+        <input type="text" id="f_customValue" class="mono" placeholder="Current value, e.g. 1450" value="${state.customValue || ''}" style="margin-bottom:8px;">
+        <input type="text" id="f_customThresholds" class="mono" placeholder="4 ascending thresholds, e.g. 100,500,1500,5000" value="${state.customThresholds || ''}">
+        <p class="hint">All three fields are required together, or the custom trophy is silently skipped.</p>
       </div>`;
   }
 
@@ -288,6 +310,12 @@ function renderFields(){
         update();
       });
     });
+    ['customLabel', 'customValue', 'customThresholds'].forEach(key => {
+      document.getElementById(`f_${key}`).addEventListener('input', (e) => {
+        state[key] = e.target.value;
+        update();
+      });
+    });
   }
 
   if (def.themes) {
@@ -299,6 +327,13 @@ function renderFields(){
     themeField.style.display = 'none';
   }
   colorFieldWrap.style.display = currentType === 'trophies' ? 'none' : '';
+
+  if (def.shapeSupport) {
+    shapeField.style.display = '';
+    shapeSelect.value = state.shape || '';
+  } else {
+    shapeField.style.display = 'none';
+  }
 }
 
 function buildUrl(){
@@ -315,7 +350,18 @@ function buildUrl(){
   if (def.trophyPicker && state.trophies && state.trophies.length) {
     params.set('trophies', state.trophies.join(','));
   }
+  if (def.trophyPicker) {
+    const label = (state.customLabel || '').trim();
+    const value = (state.customValue || '').trim();
+    const thresholds = (state.customThresholds || '').trim();
+    if (label && value && thresholds) {
+      params.set('customLabel', label);
+      params.set('customValue', value);
+      params.set('customThresholds', thresholds);
+    }
+  }
   if (def.themes && state.theme) params.set('theme', state.theme);
+  if (def.shapeSupport && state.shape) params.set('shape', state.shape);
   if (currentType !== 'trophies') {
     const color = (colorText.value || '').trim().replace(/^#/, '');
     if (/^[0-9a-fA-F]{6}$/.test(color)) params.set('color', color);
@@ -358,6 +404,7 @@ document.getElementById('typeGrid').addEventListener('click', (e) => {
 });
 
 themeSelect.addEventListener('change', () => { state.theme = themeSelect.value; update(); });
+shapeSelect.addEventListener('change', () => { state.shape = shapeSelect.value; update(); });
 colorPicker.addEventListener('input', () => { colorText.value = colorPicker.value.replace(/^#/, ''); update(); });
 colorText.addEventListener('input', update);
 
