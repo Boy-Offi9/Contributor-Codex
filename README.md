@@ -9,6 +9,7 @@
   <a href="https://contributor-codex.vercel.app"><img src="https://img.shields.io/badge/demo-live-0EA5E9?style=for-the-badge&logo=vercel&logoColor=white" alt="Live demo"></a>
   <img src="https://img.shields.io/badge/node-%3E%3D18-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node >= 18">
   <img src="https://img.shields.io/badge/no%20database-required-7B2FF7?style=for-the-badge" alt="No database required">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-F59E0B?style=for-the-badge" alt="MIT license"></a>
 </p>
 
 <p align="center">
@@ -94,6 +95,12 @@ Tiers, grades, and every trophy threshold are listed in [Scoring and tiers](docs
 - **[API reference](docs/API.md)** — endpoints, parameters, errors, caching, rate limits, scoring.
 - **[Deployment](docs/DEPLOYMENT.md)** — run your own: Vercel setup, environment, rate-limit rules, architecture, GitHub API budget, known limits.
 - **[Design notes](docs/DESIGN.md)** — the theme voices, avatar shapes, and the visual system behind them.
+
+## License
+
+Contributor Codex is released under the [MIT License](LICENSE): use it, fork it, and build on it without asking. The license asks one thing in return — copies keep the copyright notice.
+
+The embedded Chakra Petch font is the work of its own authors, under the SIL Open Font License; its notice is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ---
 
