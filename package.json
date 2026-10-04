@@ -1,7 +1,8 @@
 {
   "name": "contributor-codex",
-  "version": "0.13.4",
+  "version": "0.13.5",
   "private": true,
+  "license": "MIT",
   "description": "GitHub data compiled into visual cards, achievements, team leaderboards, and profiles — embeddable anywhere as server-rendered SVG",
   "engines": {
     "node": ">=18"
