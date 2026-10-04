@@ -62,6 +62,7 @@ The pages are written against the production domain, so a deployment elsewhere n
   ```
 
 - **Source links.** The footers link to `github.com/Boy-Offi9/Contributor-Codex`; point them at your fork.
+- **License notices.** The MIT license requires copies to keep the copyright notice and license text, and the embedded font carries its own notice. Keep [`LICENSE`](../LICENSE) and [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) in your fork.
 - **Example org and user.** The roster defaults to the `vercel` org and the landing demo to `octocat`. Change them if you want different first impressions.
 
 ## Fonts
@@ -72,7 +73,7 @@ Chakra Petch is embedded in the cards from a committed file, `api/_lib/font-data
 npm run build-font
 ```
 
-This fetches the font from the network and rewrites `api/_lib/font-data.js`.
+This fetches the font from the network and rewrites `api/_lib/font-data.js`. Chakra Petch is licensed under the SIL Open Font License, and its notice must stay with the embedded file — see [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md).
 
 ## Project layout
 
@@ -93,6 +94,8 @@ roster.html          organization roster
 builder.html         Card Builder
 profile.html         Codex Profile
 docs/                API reference, deployment, design notes
+LICENSE              MIT
+THIRD_PARTY_NOTICES.md   embedded font notice (SIL OFL 1.1)
 ```
 
 ## Architecture
