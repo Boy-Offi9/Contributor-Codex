@@ -303,7 +303,7 @@ async function prIssueCounts(username, token) {
 
 // A transparent, soft-capped rank score — same "letter grade" idea used by
 // stats cards across the GitHub README ecosystem, but our own simple formula
-// rather than a hidden one, documented in full in the README. sqrt scaling
+// rather than a hidden one, documented in full in docs/API.md. sqrt scaling
 // (same diminishing-returns curve the XP->level formula already uses) means
 // moderate activity still scores fairly instead of being crushed by caps
 // tuned to top-percentile numbers. Missing PR/issue data (search rate-limited)
