@@ -211,14 +211,62 @@ const ICONS = {
   building: '<path d="M2.5 10.5V3l3-1.5 3 1.5v7.5"/><path d="M2.5 10.5h6"/><path d="M5 10.5V7.5h1.5v3"/>',
   globe: '<circle cx="6" cy="6" r="4.8"/><path d="M1.2 6h9.6"/><path d="M6 1.2c1.8 1.8 1.8 8 0 9.6"/><path d="M6 1.2c-1.8 1.8-1.8 8 0 9.6"/>',
   license: '<path d="M6 1l4 1.8v3c0 3-1.7 5-4 6.2-2.3-1.2-4-3.2-4-6.2v-3L6 1Z"/><path d="M4.2 6.2l1.2 1.2 2.4-2.6"/>',
+  code: '<path d="M4.2 3 1.4 6l2.8 3"/><path d="M7.8 3 10.6 6 7.8 9"/><path d="M6.8 2.2 5.2 9.8"/>',
+  pulse: '<path d="M1 6.4h2.2L4.6 3l2.2 6.2L8 6.4h3" stroke-linejoin="round"/>',
+  tag: '<path d="M1.6 6.2V1.8h4.4l4.4 4.4-4.4 4.4-4.4-4.4Z" stroke-linejoin="round"/><circle cx="4" cy="4" r=".7"/>',
+  trophy: '<path d="M3.4 1.6h5.2v3a2.6 2.6 0 0 1-5.2 0v-3Z" stroke-linejoin="round"/><path d="M3.4 2.6H1.7c0 1.5.6 2.4 1.9 2.7"/><path d="M8.6 2.6h1.7c0 1.5-.6 2.4-1.9 2.7"/><path d="M6 7.2v2"/><path d="M4.2 10.4h3.6"/>',
 };
 
-function icon(name, x, y, color) {
-  return `<g transform="translate(${x},${y})" fill="none" stroke="${color}" stroke-width="1.3" stroke-linecap="round">${ICONS[name]}</g>`;
+function icon(name, x, y, color, scale = 1) {
+  const sw = (1.3 / scale).toFixed(2);
+  const t = scale === 1 ? `translate(${x},${y})` : `translate(${x},${y}) scale(${scale})`;
+  return `<g transform="${t}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round">${ICONS[name]}</g>`;
+}
+
+// Achievement badge frames. Same idea as avatarShape: one function owns the
+// geometry, so every card that draws a badge stays consistent.
+const BADGE_SHAPES = ['hex', 'shield', 'diamond', 'octagon', 'circle', 'square'];
+const sanitizeBadge = (input, fallback) => {
+  const value = String(input || '').toLowerCase();
+  return BADGE_SHAPES.includes(value) ? value : fallback;
+};
+
+function badgeElement(shape, cx, cy, size) {
+  const r = size / 2;
+  const f = (n) => n.toFixed(2);
+  const ring = (count, offsetDeg, rad) => Array.from({ length: count }, (_, k) => {
+    const a = ((offsetDeg + (360 / count) * k) * Math.PI) / 180;
+    return `${f(cx + rad * Math.cos(a))},${f(cy + rad * Math.sin(a))}`;
+  }).join(' ');
+  if (shape === 'circle') return `circle cx="${cx}" cy="${cy}" r="${f(r)}"`;
+  if (shape === 'square') return `rect x="${f(cx - r * 0.86)}" y="${f(cy - r * 0.86)}" width="${f(r * 1.72)}" height="${f(r * 1.72)}" rx="${f(r * 0.28)}"`;
+  if (shape === 'diamond') return `polygon points="${ring(4, -90, r * 1.08)}"`;
+  if (shape === 'octagon') return `polygon points="${ring(8, -67.5, r * 1.04)}"`;
+  if (shape === 'shield') {
+    const pts = [[0, -1], [0.88, -0.58], [0.88, 0.3], [0, 1.08], [-0.88, 0.3], [-0.88, -0.58]];
+    return `polygon points="${pts.map(([px, py]) => `${f(cx + px * r)},${f(cy + py * r)}`).join(' ')}"`;
+  }
+  return `polygon points="${ring(6, -90, r * 1.04)}"`; // hex
+}
+
+// Frame + centered icon. Earned badges glow in the tier color; locked ones
+// are a dashed outline so they read as "not yet" rather than "broken".
+// Needs a <filter id="glow"> in the host SVG.
+function badge({ shape = 'hex', cx, cy, size = 46, tier, iconName = 'star' }) {
+  const earned = tier.index > 0;
+  const el = badgeElement(shape, cx, cy, size);
+  const inner = badgeElement(shape, cx, cy, size - 8);
+  const iconScale = size / 30;
+  const ic = icon(iconName, cx - 6 * iconScale, cy - 6 * iconScale, earned ? tier.color : '#5b6477', iconScale);
+  return earned
+    ? `<${el} fill="${tier.color}" fill-opacity="0.16" stroke="${tier.color}" stroke-width="1.8" stroke-linejoin="round" filter="url(#glow)"/>
+    <${inner} fill="none" stroke="${tier.color}" stroke-opacity="0.35" stroke-width="1" stroke-linejoin="round"/>${ic}`
+    : `<${el} fill="none" stroke="${tier.color}" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round" opacity="0.75"/>${ic}`;
 }
 
 module.exports = {
   classFor, esc, ghFetch, avatarDataUri, computeStats, CHAKRA_PETCH_FONT_FACE,
   sanitizeColor, XP_FORMULA, trophyTier, byteWeightedLangs, colorForLang, ICONS, icon,
   clearanceFor, truncate, sanitizeShape, avatarShape,
+  BADGE_SHAPES, sanitizeBadge, badge,
 };

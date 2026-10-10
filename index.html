@@ -106,6 +106,11 @@
   .typeCard p{color:var(--dim);font-size:13px;line-height:1.55;margin:0;}
   .typeCard .thumb{border:1px solid var(--steel);padding:10px;background:var(--void);overflow:auto;}
   .typeCard .thumb img{max-width:100%;height:auto;display:block;}
+  .lazyBox{display:flex;align-items:center;justify-content:center;min-height:120px;}
+  .loadBtn{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--cyan,#00e5ff);background:none;border:1px dashed currentColor;padding:10px 14px;cursor:pointer;}
+  .loadBtn:active{opacity:.6;}
+  .lazyBox .msg{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);}
+  .lazyBox .msg.err{color:var(--danger);}
   .typeCard code{
     font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);
     background:var(--void);border:1px solid var(--steel);padding:6px 8px;border-radius:3px;
@@ -168,7 +173,7 @@
     <input type="text" id="demoInput" class="mono" placeholder="a GitHub username" value="octocat">
     <button id="demoBtn">Generate card</button>
   </div>
-  <div class="demoStage" id="demoStage"><img id="demoImg" alt="example contributor card"></div>
+  <div class="demoStage" id="demoStage"><span class="msg">type a username and tap “Generate card”</span></div>
 </div>
 
 <section>
@@ -184,7 +189,7 @@
         <h3>Contributor</h3>
       </div>
       <p>A profile card built from a single username — stats, top language, four themes.</p>
-      <div class="thumb"><img src="https://contributor-codex.vercel.app/api/card?username=octocat" alt="contributor card example" loading="lazy"></div>
+      <div class="thumb lazyBox" data-src="https://contributor-codex.vercel.app/api/card?username=octocat" data-alt="contributor card example"><button class="loadBtn" type="button">▶ load live preview</button></div>
       <code>/api/card?username=</code>
     </div>
 
@@ -194,7 +199,7 @@
         <h3>Team / Leaderboard</h3>
       </div>
       <p>Point it at an org and every public member gets ranked by a transparent, self-referential XP formula.</p>
-      <div class="thumb"><img src="https://contributor-codex.vercel.app/api/leaderboard?org=boy-offi9-inc&limit=4" alt="leaderboard card example" loading="lazy"></div>
+      <div class="thumb lazyBox" data-src="https://contributor-codex.vercel.app/api/leaderboard?org=boy-offi9-inc&limit=4" data-alt="leaderboard card example"><button class="loadBtn" type="button">▶ load live preview</button></div>
       <code>/api/leaderboard?org=&limit=</code>
     </div>
 
@@ -204,7 +209,7 @@
         <h3>Repository</h3>
       </div>
       <p>Stars, forks, license, topics, contributors, and the latest release for a single repo.</p>
-      <div class="thumb"><img src="https://contributor-codex.vercel.app/api/repo?owner=Boy-Offi9&repo=Contributor-Codex" alt="repository card example" loading="lazy"></div>
+      <div class="thumb lazyBox" data-src="https://contributor-codex.vercel.app/api/repo?owner=Boy-Offi9&repo=Contributor-Codex" data-alt="repository card example"><button class="loadBtn" type="button">▶ load live preview</button></div>
       <code>/api/repo?owner=&repo=</code>
     </div>
 
@@ -214,7 +219,7 @@
         <h3>Achievements</h3>
       </div>
       <p>Tiered badges for stars, repos, followers, years active, languages, forks, and licensed work.</p>
-      <div class="thumb"><img src="https://contributor-codex.vercel.app/api/trophies?username=octocat&trophies=STARGAZER,BUILDER,POLYGLOT" alt="achievements card example" loading="lazy"></div>
+      <div class="thumb lazyBox" data-src="https://contributor-codex.vercel.app/api/trophies?username=octocat&trophies=STARGAZER,BUILDER,POLYGLOT" data-alt="achievements card example"><button class="loadBtn" type="button">▶ load live preview</button></div>
       <code>/api/trophies?username=&trophies=</code>
     </div>
 
@@ -262,7 +267,7 @@
       <button class="copyBtn" id="embedCopyBtn">copy</button>
       <span id="embedText">![Card](https://contributor-codex.vercel.app/api/card?username=octocat)</span>
     </div>
-    <div class="embedPreview"><img src="https://contributor-codex.vercel.app/api/card?username=octocat&theme=glass" alt="glass theme card example" loading="lazy"></div>
+    <div class="embedPreview lazyBox" data-src="https://contributor-codex.vercel.app/api/card?username=octocat&theme=glass" data-alt="glass theme card example"><button class="loadBtn" type="button">▶ load live preview</button></div>
   </div>
 </section>
 
@@ -292,7 +297,20 @@ function runDemo(){
 
 demoBtn.onclick = runDemo;
 demoInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') runDemo(); });
-runDemo();
+// Nothing on this page calls the API until the visitor asks for it — every
+// card is a live GitHub-backed request, and auto-loading all of them on each
+// visit was burning through the GITHUB_TOKEN rate limit.
+
+document.querySelectorAll('.lazyBox[data-src]').forEach((box) => {
+  box.querySelector('.loadBtn').onclick = () => {
+    box.innerHTML = '<span class="msg">generating…</span>';
+    const img = new Image();
+    img.alt = box.dataset.alt || 'card example';
+    img.onload = () => { box.innerHTML = ''; box.appendChild(img); };
+    img.onerror = () => { box.innerHTML = '<span class="msg err">couldn\'t load this preview — try again in a minute</span>'; };
+    img.src = box.dataset.src;
+  };
+});
 
 document.getElementById('embedCopyBtn').onclick = async (e) => {
   const text = document.getElementById('embedText').textContent;

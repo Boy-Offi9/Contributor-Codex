@@ -1,12 +1,12 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { esc, ghFetch, computeStats, trophyTier, icon, sanitizeColor } = require('./_lib/shared');
+const { esc, ghFetch, computeStats, trophyTier, sanitizeColor, badge, sanitizeBadge } = require('./_lib/shared');
 
 function errorSVG(message) {
   return `<svg width="420" height="120" viewBox="0 0 420 120" xmlns="http://www.w3.org/2000/svg">
     <rect width="420" height="120" fill="#05070c"/>
     <rect width="420" height="120" fill="none" stroke="#ff4d6d"/>
     <text x="20" y="55" font-family="system-ui,sans-serif" font-weight="700" font-size="13" fill="#ff4d6d">TROPHY ERROR</text>
-    <text x="20" y="78" font-family="'Courier New',monospace" font-size="11" fill="#7a8399">${esc(message)}</text>
+    <text x="20" y="78" font-family="system-ui,sans-serif" font-size="12" fill="#8a94ab">${esc(message)}</text>
   </svg>`;
 }
 
@@ -18,6 +18,12 @@ const TROPHIES = [
   { key: 'POLYGLOT', label: 'LANGUAGES', thresholds: [3, 6, 10, 15], value: (s, u) => s.langs.length },
   { key: 'FORKED', label: 'FORKS', thresholds: [5, 25, 100, 500], value: (s, u) => s.totalForks },
   { key: 'OPEN_SOURCE', label: 'LICENSED', thresholds: [1, 5, 15, 30], value: (s, u) => s.licensedRepos },
+  // Added in 0.14 — all derived from data the two existing requests already return.
+  { key: 'NETWORKER', label: 'FOLLOWING', thresholds: [10, 50, 200, 500], value: (s, u) => u.following || 0 },
+  { key: 'SNIPPETS', label: 'GISTS', thresholds: [3, 10, 30, 100], value: (s, u) => u.public_gists || 0 },
+  { key: 'ACTIVE', label: 'ACTIVE 90D', thresholds: [1, 3, 6, 12], value: (s, u) => s.activeRepos },
+  { key: 'HEADLINER', label: 'TOP REPO', thresholds: [5, 25, 100, 500], value: (s, u) => s.topRepoStars },
+  { key: 'CURATOR', label: 'TOPICS', thresholds: [3, 8, 15, 30], value: (s, u) => s.topicRepos },
 ];
 
 // Optional 7th slot for a user-supplied metric (e.g. a Codewars rank),
@@ -47,42 +53,46 @@ function parseCustomTrophy(url) {
 const TROPHY_ICONS = {
   STARGAZER: 'star', BUILDER: 'repo', INFLUENCE: 'people', VETERAN: 'calendar',
   POLYGLOT: 'globe', FORKED: 'fork', OPEN_SOURCE: 'license', CUSTOM: 'bolt',
+  NETWORKER: 'people', SNIPPETS: 'code', ACTIVE: 'pulse', HEADLINER: 'trophy', CURATOR: 'tag',
 };
 
-function shield(x, key, label, value, tier) {
-  const w = 84;
-  const points = `${x + w / 2},2 ${x + w - 2},18 ${x + w - 2},54 ${x + w / 2},70 ${x + 2},54 ${x + 2},18`;
-  const earned = tier.index > 0;
+// system-ui, not the embedded display font: trophy strips are stacked in
+// READMEs and ~90 KB of base64 per strip isn't worth it. 'Courier New' is
+// gone because Android substitutes a thin serif face for it.
+const SANS = "system-ui,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif";
+
+function shield(x, key, label, value, tier, shape, pitch) {
+  const cx = x + pitch / 2;
   const pct = tier.nextThreshold ? Math.min(100, Math.round((value / tier.nextThreshold) * 100)) : 100;
+  const barW = 56;
   return `
-    <polygon points="${points}" fill="${earned ? tier.color : 'none'}" fill-opacity="${earned ? 0.14 : 0}" stroke="${tier.color}" stroke-width="1.5"${earned ? ' filter="url(#glow)"' : ''}/>
-    ${icon(TROPHY_ICONS[key] || 'star', x + w / 2 - 6, 22, tier.color)}
-    <text x="${x + w / 2}" y="48" text-anchor="middle" class="val" fill="${tier.color}"${earned ? ' filter="url(#glow)"' : ''}>${value}</text>
-    <text x="${x + w / 2}" y="88" text-anchor="middle" class="lbl">${label}</text>
-    <text x="${x + w / 2}" y="99" text-anchor="middle" class="tier" fill="${tier.color}">${tier.name}</text>
-    <rect x="${x + 10}" y="106" width="${w - 20}" height="3" fill="#1b2233"/>
-    <rect x="${x + 10}" y="106" width="${((w - 20) * pct) / 100}" height="3" fill="${tier.color}"/>`;
+    ${badge({ shape, cx, cy: 30, size: 46, tier, iconName: TROPHY_ICONS[key] || 'star' })}
+    <text x="${cx}" y="72" text-anchor="middle" class="val" fill="${tier.color}">${value}</text>
+    <text x="${cx}" y="85" text-anchor="middle" class="lbl">${label}</text>
+    <text x="${cx}" y="97" text-anchor="middle" class="tier" fill="${tier.color}">${tier.name}</text>
+    <rect x="${cx - barW / 2}" y="104" width="${barW}" height="3" fill="#1b2233"/>
+    <rect x="${cx - barW / 2}" y="104" width="${(barW * pct) / 100}" height="3" fill="${tier.color}"/>`;
 }
 
-function renderTrophies(user, stats, selected, trophyDefs) {
+function renderTrophies(user, stats, selected, trophyDefs, shape) {
   const items = trophyDefs.filter((t) => !selected || selected.includes(t.key));
-  const pitch = 90;
+  const pitch = 100;
   const width = items.length * pitch + 16;
   const accent = stats.color || '#00e5ff';
 
   const badges = items.map((t, i) => {
     const value = t.value(stats, user);
     const tier = trophyTier(value, t.thresholds);
-    return shield(8 + i * pitch, t.key, t.label, value, tier);
+    return shield(8 + i * pitch, t.key, t.label, value, tier, shape, pitch);
   }).join('');
 
   return `<svg width="${width}" height="120" viewBox="0 0 ${width} 120" xmlns="http://www.w3.org/2000/svg">
     <title>${esc(user.login)} — Achievements</title>
     <defs>
       <style>
-        .val{font:700 16px system-ui,sans-serif;}
-        .lbl{font:500 8px 'Courier New',monospace;fill:#7a8399;letter-spacing:.5px;}
-        .tier{font:700 8px 'Courier New',monospace;letter-spacing:.5px;}
+        .val{font:700 16px ${SANS};}
+        .lbl{font:600 10px ${SANS};fill:#8a94ab;letter-spacing:.6px;}
+        .tier{font:700 10px ${SANS};letter-spacing:.5px;}
       </style>
       <radialGradient id="bg" cx="10%" cy="0%" r="90%">
         <stop offset="0%" stop-color="${accent}" stop-opacity="0.12"/>
@@ -133,10 +143,15 @@ module.exports.GET = async (request) => {
 
     const stats = computeStats(user, repos);
     stats.licensedRepos = repos.filter((r) => !r.fork && r.license && r.license.spdx_id && r.license.spdx_id !== 'NOASSERTION').length;
+    const own = repos.filter((r) => !r.fork);
+    const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
+    stats.activeRepos = own.filter((r) => r.pushed_at && new Date(r.pushed_at).getTime() >= ninetyDaysAgo).length;
+    stats.topRepoStars = own.reduce((max, r) => Math.max(max, r.stargazers_count || 0), 0);
+    stats.topicRepos = own.filter((r) => Array.isArray(r.topics) && r.topics.length > 0).length;
     const colorOverride = sanitizeColor(url.searchParams.get('color'));
     if (colorOverride) stats.color = colorOverride;
 
-    return svg(renderTrophies(user, stats, selected, trophyDefs), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
+    return svg(renderTrophies(user, stats, selected, trophyDefs, sanitizeBadge(url.searchParams.get('badge'), 'shield')), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
   } catch (err) {
     if (err.status === 404) return svg(errorSVG(`user "${username}" not found`), 404, 'public, s-maxage=60');
     if (err.status === 403) return svg(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=60');

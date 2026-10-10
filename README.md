@@ -64,7 +64,7 @@ Then make it yours:
 | [`/api/card`](docs/API.md#contributor-card) | A user's profile as a card, in four themes |
 | [`/api/leaderboard`](docs/API.md#team-leaderboard) | An organization's public members, ranked |
 | [`/api/repo`](docs/API.md#repository-card) | A repository's vital signs |
-| [`/api/trophies`](docs/API.md#achievements) | Seven tiered achievements, plus an optional custom one |
+| [`/api/trophies`](docs/API.md#achievements) | Twelve tiered achievements in six badge shapes, plus an optional custom one |
 | [`/api/codex`](docs/API.md#codex-collection) | A compact dossier in a single image |
 
 Full parameters, defaults, errors, and caching are in the **[API reference](docs/API.md)**.

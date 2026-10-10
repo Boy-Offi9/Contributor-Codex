@@ -89,12 +89,13 @@ Ranks the public members of a GitHub organization by XP.
 
 `GET /api/trophies`
 
-Seven tiered badges plus an optional custom one.
+Twelve tiered badges plus an optional custom one.
 
 | Param | Required | Values | Default |
 |---|---|---|---|
 | `username` | yes | any GitHub username | — |
-| `trophies` | no | comma-separated subset of the [trophy keys](#trophy-keys-and-thresholds) | all seven |
+| `trophies` | no | comma-separated subset of the [trophy keys](#trophy-keys-and-thresholds) | all twelve |
+| `badge` | no | `hex` \| `shield` \| `diamond` \| `octagon` \| `circle` \| `square` | `shield` |
 | `customLabel` | no | up to 10 characters, letters, numbers, and spaces only | — |
 | `customValue` | no | any number | — |
 | `customThresholds` | no | 4 comma-separated, strictly ascending numbers | — |
@@ -116,18 +117,19 @@ There is no `theme` or `shape` param; the card is a single fixed layout.
 
 `GET /api/codex`
 
-A compact dossier in one image: a header (avatar, level, XP), a four-stat strip, four tiered shields (stars, repos, languages, years), and up to five top-language chips.
+A compact dossier in one image: a header (avatar, level, XP), a four-stat strip, four tiered badges (stars, repos, languages, years) with a progress bar toward the next tier, and up to five top-language chips.
 
 | Param | Required | Values | Default |
 |---|---|---|---|
 | `username` | yes | any GitHub username | — |
 | `color` | no | 6-digit hex, no `#` | `#00e5ff` |
+| `badge` | no | `hex` \| `shield` \| `diamond` \| `octagon` \| `circle` \| `square` | `hex` |
 
 ```md
 ![Codex](https://contributor-codex.vercel.app/api/codex?username=octocat)
 ```
 
-There is no `theme` or `shape` param. For a fuller view (bio, location, top repositories), use the Codex Profile page, `/profile.html?u=USERNAME`.
+There is no `theme` or avatar `shape` param. For a fuller view (bio, location, top repositories), use the Codex Profile page, `/profile.html?u=USERNAME`.
 
 ## Errors
 
@@ -172,8 +174,13 @@ Each trophy is a single check against its own thresholds. There is no weighted c
 | `POLYGLOT` | distinct primary languages across owned, non-fork repos | 3 / 6 / 10 / 15 |
 | `FORKED` | total forks across owned, non-fork repos | 5 / 25 / 100 / 500 |
 | `OPEN_SOURCE` | owned, non-fork repos with a recognized SPDX license | 1 / 5 / 15 / 30 |
+| `NETWORKER` | accounts the user follows | 10 / 50 / 200 / 500 |
+| `SNIPPETS` | public gists | 3 / 10 / 30 / 100 |
+| `ACTIVE` | owned, non-fork repos pushed to in the last 90 days | 1 / 3 / 6 / 12 |
+| `HEADLINER` | stars on the single most-starred owned repo | 5 / 25 / 100 / 500 |
+| `CURATOR` | owned, non-fork repos with at least one topic | 3 / 8 / 15 / 30 |
 
-An unearned (INITIATE) shield is drawn dim and unfilled on purpose: it signals "not earned yet".
+An unearned (INITIATE) badge is drawn as a dashed, unfilled outline on purpose: it signals "not earned yet". The five newest keys need no extra GitHub requests — they're read from the two calls every trophy card already makes.
 
 ## Scoring and tiers
 

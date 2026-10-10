@@ -151,6 +151,19 @@
         <select id="themeSelect"></select>
       </div>
 
+      <div class="field" id="badgeField">
+        <label>Badge shape</label>
+        <select id="badgeSelect">
+          <option value="">default</option>
+          <option value="hex">hex</option>
+          <option value="shield">shield</option>
+          <option value="diamond">diamond</option>
+          <option value="octagon">octagon</option>
+          <option value="circle">circle</option>
+          <option value="square">square</option>
+        </select>
+      </div>
+
       <div class="field" id="shapeField">
         <label>Avatar shape</label>
         <select id="shapeSelect">
@@ -219,6 +232,7 @@ const TYPES = {
   codex: {
     endpoint: '/api/codex',
     themes: null,
+    badgeSupport: true,
     fields: [
       { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
     ],
@@ -243,13 +257,14 @@ const TYPES = {
   trophies: {
     endpoint: '/api/trophies',
     themes: null,
+    badgeSupport: true,
     fields: [
       { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
     ],
     trophyPicker: true,
   },
 };
-const ALL_TROPHIES = ['STARGAZER', 'BUILDER', 'INFLUENCE', 'VETERAN', 'POLYGLOT', 'FORKED', 'OPEN_SOURCE'];
+const ALL_TROPHIES = ['STARGAZER', 'BUILDER', 'INFLUENCE', 'VETERAN', 'POLYGLOT', 'FORKED', 'OPEN_SOURCE', 'NETWORKER', 'SNIPPETS', 'ACTIVE', 'HEADLINER', 'CURATOR'];
 
 let currentType = 'card';
 const state = {};
@@ -259,6 +274,8 @@ const themeField = document.getElementById('themeField');
 const themeSelect = document.getElementById('themeSelect');
 const shapeField = document.getElementById('shapeField');
 const shapeSelect = document.getElementById('shapeSelect');
+const badgeField = document.getElementById('badgeField');
+const badgeSelect = document.getElementById('badgeSelect');
 const colorFieldWrap = document.getElementById('colorFieldWrap');
 const colorPicker = document.getElementById('colorPicker');
 const colorText = document.getElementById('colorText');
@@ -334,6 +351,13 @@ function renderFields(){
   } else {
     shapeField.style.display = 'none';
   }
+
+  if (def.badgeSupport) {
+    badgeField.style.display = '';
+    badgeSelect.value = state.badge || '';
+  } else {
+    badgeField.style.display = 'none';
+  }
 }
 
 function buildUrl(){
@@ -362,6 +386,7 @@ function buildUrl(){
   }
   if (def.themes && state.theme) params.set('theme', state.theme);
   if (def.shapeSupport && state.shape) params.set('shape', state.shape);
+  if (def.badgeSupport && state.badge) params.set('badge', state.badge);
   if (currentType !== 'trophies') {
     const color = (colorText.value || '').trim().replace(/^#/, '');
     if (/^[0-9a-fA-F]{6}$/.test(color)) params.set('color', color);
@@ -390,7 +415,7 @@ function update(){
     img.onload = () => { previewBox.innerHTML = ''; previewBox.appendChild(img); };
     img.onerror = () => { previewBox.innerHTML = '<span class="msg err">failed to load — check the fields above</span>'; };
     img.src = url;
-  }, 400);
+  }, 900);
 }
 
 document.getElementById('typeGrid').addEventListener('click', (e) => {
@@ -405,6 +430,7 @@ document.getElementById('typeGrid').addEventListener('click', (e) => {
 
 themeSelect.addEventListener('change', () => { state.theme = themeSelect.value; update(); });
 shapeSelect.addEventListener('change', () => { state.shape = shapeSelect.value; update(); });
+badgeSelect.addEventListener('change', () => { state.badge = badgeSelect.value; update(); });
 colorPicker.addEventListener('input', () => { colorText.value = colorPicker.value.replace(/^#/, ''); update(); });
 colorText.addEventListener('input', update);
 
