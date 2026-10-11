@@ -214,6 +214,7 @@ const ICONS = {
   code: '<path d="M4.2 3 1.4 6l2.8 3"/><path d="M7.8 3 10.6 6 7.8 9"/><path d="M6.8 2.2 5.2 9.8"/>',
   pulse: '<path d="M1 6.4h2.2L4.6 3l2.2 6.2L8 6.4h3" stroke-linejoin="round"/>',
   tag: '<path d="M1.6 6.2V1.8h4.4l4.4 4.4-4.4 4.4-4.4-4.4Z" stroke-linejoin="round"/><circle cx="4" cy="4" r=".7"/>',
+  flame: '<path d="M6.2 1c.3 2.1-1.9 3-1.9 5.1 0 .9.7 1.7 1.7 1.7s1.8-.8 1.8-1.8c0-.5-.2-.9-.4-1.2 1.2.7 2 1.9 2 3.3A3.5 3.5 0 0 1 6 10.6a3.5 3.5 0 0 1-3.5-3.5C2.5 4 5.4 3.3 6.2 1Z" stroke-linejoin="round"/>',
   trophy: '<path d="M3.4 1.6h5.2v3a2.6 2.6 0 0 1-5.2 0v-3Z" stroke-linejoin="round"/><path d="M3.4 2.6H1.7c0 1.5.6 2.4 1.9 2.7"/><path d="M8.6 2.6h1.7c0 1.5-.6 2.4-1.9 2.7"/><path d="M6 7.2v2"/><path d="M4.2 10.4h3.6"/>',
 };
 
