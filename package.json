@@ -1,6 +1,6 @@
 {
   "name": "contributor-codex",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "private": true,
   "license": "MIT",
   "description": "GitHub data compiled into visual cards, achievements, team leaderboards, and profiles — embeddable anywhere as server-rendered SVG",
@@ -8,10 +8,12 @@
     "node": ">=18"
   },
   "scripts": {
-    "build-font": "node scripts/build-font.js"
+    "build-font": "node scripts/build-font.js",
+    "test": "node --test"
   },
   "dependencies": {
+    "@boy-offi9-inc/reqkit": "^0.1.7",
     "@vercel/firewall": "^1.2.1",
-    "@boy-offi9-inc/reqkit": "^0.1.7"
+    "package-lock.json": "^1.0.0"
   }
 }
