@@ -131,6 +131,58 @@ A compact dossier in one image: a header (avatar, level, XP), a four-stat strip,
 
 There is no `theme` or avatar `shape` param. For a fuller view (bio, location, top repositories), use the Codex Profile page, `/profile.html?u=USERNAME`.
 
+## Streak Card
+
+`GET /api/streak`
+
+Total contributions, the current streak (with a progress ring relative to your personal best), and the longest streak — each with its date range.
+
+| Param | Required | Values | Default |
+|---|---|---|---|
+| `username` | yes | any GitHub username | — |
+| `theme` | no | `cyberpunk` \| `glass` \| `terminal` | `cyberpunk` |
+| `color` | no | 6-digit hex, no `#` | `#00e5ff` |
+
+```md
+![Streak](https://contributor-codex.vercel.app/api/streak?username=octocat)
+```
+
+- Counts GitHub's own contribution calendar (the green squares), in UTC days, across every year the account has been active.
+- A streak that was alive yesterday still counts as current while today is empty, so the card doesn't reset to 0 every morning.
+- Needs `GITHUB_TOKEN` on the server: the contribution calendar only exists in GitHub's GraphQL API, which has no anonymous access. Without it the card renders a `503` message.
+- Cached for 6 hours (24 hours stale-while-revalidate).
+
+## Activity Graph
+
+`GET /api/activity`
+
+A smooth area graph of contributions with a labelled peak.
+
+| Param | Required | Values | Default |
+|---|---|---|---|
+| `username` | yes | any GitHub username | — |
+| `days` | no | `30` \| `90` \| `180` \| `365` | `90` |
+| `theme` | no | `cyberpunk` \| `glass` \| `terminal` | `cyberpunk` |
+| `color` | no | 6-digit hex, no `#` | `#00e5ff` |
+
+- 30 and 90 days plot one point per day; 180 and 365 sum into weeks so the line stays readable.
+- Same data source, token requirement and caching as the streak card.
+
+## Top Languages
+
+`GET /api/langs`
+
+A stacked bar plus legend of the languages you write the most.
+
+| Param | Required | Values | Default |
+|---|---|---|---|
+| `username` | yes | any GitHub username | — |
+| `limit` | no | integer `2`–`8` | `6` |
+| `theme` | no | `cyberpunk` \| `glass` \| `terminal` | `cyberpunk` |
+| `color` | no | 6-digit hex, no `#` (used for languages with no known colour) | `#00e5ff` |
+
+- Percentages are by bytes of code across the six most-starred owned, non-fork repositories — the same sample `/api/card` uses.
+
 ## Errors
 
 Errors are returned as a rendered SVG, so a broken `<img>` shows a readable message instead of a blank box, together with a matching HTTP status:
@@ -150,6 +202,7 @@ Responses are cached at Vercel's edge via `Cache-Control`:
 | Response | Fresh for | Stale-while-revalidate |
 |---|---|---|
 | `/api/card`, `/api/repo`, `/api/trophies`, `/api/codex` | 1 hour | 24 hours |
+| `/api/streak`, `/api/activity`, `/api/langs` | 6 hours | 24 hours |
 | `/api/leaderboard` | 6 hours | 24 hours |
 | Leaderboard for an org with no public members | 1 hour | — |
 | Errors (`404`, `503`, `500`) | 1 minute | — |

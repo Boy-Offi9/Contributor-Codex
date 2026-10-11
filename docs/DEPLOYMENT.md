@@ -25,7 +25,7 @@ Contributor Codex is a set of Vercel serverless functions plus four static pages
 1. Fork or clone the repository.
 2. Import it into Vercel as a new project. There is no build command and no output directory; leave the framework preset on **Other**.
 3. Add the `GITHUB_TOKEN` [environment variable](#environment-variables) and redeploy.
-4. Create the five [rate-limit rules](#rate-limit-rules) in the Vercel Firewall.
+4. Create the eight [rate-limit rules](#rate-limit-rules) in the Vercel Firewall.
 5. If you are not deploying to `contributor-codex.vercel.app`, work through the [self-hosting checklist](#self-hosting-checklist).
 6. Open `/` — the landing page's live demo should render a card.
 
@@ -48,6 +48,9 @@ Each endpoint checks a per-IP rate limit through `@vercel/firewall`, looked up b
 | `repo-endpoint` | `/api/repo` |
 | `trophies-endpoint` | `/api/trophies` |
 | `codex-endpoint` | `/api/codex` |
+| `streak-endpoint` | `/api/streak` |
+| `activity-endpoint` | `/api/activity` |
+| `langs-endpoint` | `/api/langs` |
 
 The thresholds are yours to choose. Leave each rule's action at its default: when a request is limited, the endpoint renders a `429` message card from application code rather than showing Vercel's block page.
 
@@ -108,7 +111,7 @@ The four pages are single self-contained HTML files with no shared bundle. The r
 
 ## GitHub API budget
 
-GitHub requests made for one **uncached** render. Edge caching (1 hour, 6 for the leaderboard — see [Caching](API.md#caching)) means most requests cost nothing.
+GitHub requests made for one **uncached** render. Edge caching (1 hour, 6 for the leaderboard, streak, activity and languages cards — see [Caching](API.md#caching)) means most requests cost nothing.
 
 | Endpoint | GitHub requests |
 |---|---|
@@ -119,6 +122,8 @@ GitHub requests made for one **uncached** render. Edge caching (1 hour, 6 for th
 | `/api/repo` | 1 |
 | `/api/repo` with `theme=detailed` | 1 + 2 (contributor count, latest release) |
 | `/api/leaderboard` | 1 (member list) + 2 per ranked member, so up to 121 |
+| `/api/streak`, `/api/activity` | 2 GraphQL requests (active years, then every year's calendar in one aliased query). Requires `GITHUB_TOKEN`. |
+| `/api/langs` | 1 (repo list) + up to 6 (language bytes) |
 
 Avatar images come from GitHub's avatar host and are not counted against the API limit. The Search API has its own, lower limit; pull request and issue counts fail soft when it is exhausted.
 
