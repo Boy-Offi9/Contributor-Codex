@@ -1,5 +1,5 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { sanitizeColor, icon, esc } = require('./_lib/shared');
+const { sanitizeColor, icon, esc, isGhName } = require('./_lib/shared');
 const { fetchCalendar, computeStreaks, fmtRange, fmtDate } = require('./_lib/contrib');
 const { FONT, PALETTE, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
 
@@ -66,6 +66,7 @@ module.exports.GET = async (request) => {
   const url = new URL(request.url);
   const username = (url.searchParams.get('username') || '').trim();
   if (!username) return svgResponse(errorCard('missing ?username='), 400);
+  if (!isGhName(username)) return svgResponse(errorCard('invalid username'), 400);
 
   try {
     const cal = await fetchCalendar(username, process.env.GITHUB_TOKEN);

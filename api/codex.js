@@ -1,8 +1,7 @@
 const { checkRateLimit } = require('@vercel/firewall');
 const {
   esc, ghFetch, avatarDataUri, computeStats, classFor, trophyTier, sanitizeColor,
-  CHAKRA_PETCH_FONT_FACE, byteWeightedLangs, colorForLang, icon, badge, sanitizeBadge, avatarShape, sanitizeShape,
-} = require('./_lib/shared');
+  CHAKRA_PETCH_FONT_FACE, byteWeightedLangs, colorForLang, icon, badge, sanitizeBadge, avatarShape, sanitizeShape, DISPLAY, isGhName } = require('./_lib/shared');
 
 const WIDTH = 480;
 
@@ -26,10 +25,7 @@ const COLLECTION_TROPHIES = [
   { key: 'VETERAN', label: 'YEARS', icon: 'calendar', thresholds: [1, 3, 5, 8], value: (s, u) => Math.floor(s.years) },
 ];
 
-// Android swaps 'Courier New' for a thin serif face and downscaled README
-// embeds shrink everything ~40%, so every label uses the embedded display
-// font (system sans as fallback) and nothing is drawn below 10px.
-const LABEL_FONT = "'Chakra Petch',system-ui,'Segoe UI',Roboto,sans-serif";
+const LABEL_FONT = DISPLAY;
 
 function statBox(x, y, w, label, value, color, iconName) {
   return `
@@ -155,6 +151,7 @@ module.exports.GET = async (request) => {
   const url = new URL(request.url);
   const username = (url.searchParams.get('username') || '').trim();
   if (!username) return svg(errorSVG('missing ?username='), 400);
+  if (!isGhName(username)) return svg(errorSVG('invalid username'), 400);
 
   const token = process.env.GITHUB_TOKEN;
   try {

@@ -1,5 +1,5 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { esc, ghFetch, sanitizeColor, byteWeightedLangs, colorForLang } = require('./_lib/shared');
+const { esc, ghFetch, sanitizeColor, byteWeightedLangs, colorForLang, isGhName } = require('./_lib/shared');
 const { FONT, PALETTE, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
 
 const WIDTH = 480;
@@ -50,6 +50,7 @@ module.exports.GET = async (request) => {
   const url = new URL(request.url);
   const username = (url.searchParams.get('username') || '').trim();
   if (!username) return svgResponse(errorCard('missing ?username='), 400);
+  if (!isGhName(username)) return svgResponse(errorCard('invalid username'), 400);
   const asked = Number(url.searchParams.get('limit'));
   const limit = Number.isInteger(asked) && asked >= 2 && asked <= 8 ? asked : 6;
 

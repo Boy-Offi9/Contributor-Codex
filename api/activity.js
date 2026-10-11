@@ -1,5 +1,5 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { sanitizeColor, esc } = require('./_lib/shared');
+const { sanitizeColor, esc, isGhName } = require('./_lib/shared');
 const { fetchCalendar, fmtDate } = require('./_lib/contrib');
 const { FONT, PALETTE, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
 
@@ -112,6 +112,7 @@ module.exports.GET = async (request) => {
   const url = new URL(request.url);
   const username = (url.searchParams.get('username') || '').trim();
   if (!username) return svgResponse(errorCard('missing ?username='), 400);
+  if (!isGhName(username)) return svgResponse(errorCard('invalid username'), 400);
   const asked = Number(url.searchParams.get('days'));
   const range = RANGES.includes(asked) ? asked : 90;
 

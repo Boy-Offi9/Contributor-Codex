@@ -1,12 +1,12 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { classFor, esc, ghFetch, avatarDataUri, computeStats, CHAKRA_PETCH_FONT_FACE, sanitizeColor, XP_FORMULA, byteWeightedLangs, colorForLang, icon, clearanceFor, avatarShape, sanitizeShape, truncate } = require('./_lib/shared');
+const { classFor, esc, ghFetch, avatarDataUri, computeStats, CHAKRA_PETCH_FONT_FACE, sanitizeColor, XP_FORMULA, byteWeightedLangs, colorForLang, icon, clearanceFor, avatarShape, sanitizeShape, truncate, MONO, isGhName } = require('./_lib/shared');
 
 function errorSVG(message) {
   return `<svg width="360" height="120" viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg">
     <rect width="360" height="120" fill="#05070c"/>
     <rect width="360" height="120" fill="none" stroke="#ff4d6d"/>
     <text x="20" y="55" font-family="system-ui,sans-serif" font-weight="700" font-size="13" fill="#ff4d6d">CARD ERROR</text>
-    <text x="20" y="78" font-family="'Courier New',monospace" font-size="11" fill="#7a8399">${esc(message)}</text>
+    <text x="20" y="78" font-family="${MONO}" font-size="11" fill="#7a8399">${esc(message)}</text>
   </svg>`;
 }
 
@@ -36,9 +36,9 @@ function renderCyberpunk({ user, avatarUri, shape, topLang, level, xp, totalStar
       ${fontFace ? `<style>${fontFace}</style>` : ''}
       <style>
         .t1{font:700 16px ${displayFont};fill:#e8edf5;}
-        .t2{font:500 11px 'Courier New',monospace;fill:#7a8399;}
-        .lbl{font:500 9px 'Courier New',monospace;fill:#7a8399;letter-spacing:1px;}
-        .tag{font:700 11px 'Courier New',monospace;}
+        .t2{font:500 11px ${MONO};fill:#7a8399;}
+        .lbl{font:500 10px ${MONO};fill:#7a8399;letter-spacing:1px;}
+        .tag{font:700 11px ${MONO};}
         .cls{font:600 11px ${displayFont};fill:${color};letter-spacing:1px;}
       </style>
       <clipPath id="cardClip"><polygon points="0,14 14,0 360,0 360,346 346,360 0,360"/></clipPath>
@@ -115,11 +115,11 @@ function renderTerminal({ user, xp, totalStars, topLang, tier }) {
     <title>${name} — Contributor Card (terminal theme). checksum = hex(${XP_FORMULA})</title>
     <defs>
       <style>
-        .term{font:400 13px 'Courier New',monospace;fill:${green};}
-        .key{font:400 13px 'Courier New',monospace;fill:#2a6b3d;}
+        .term{font:400 13px ${MONO};fill:${green};}
+        .key{font:400 13px ${MONO};fill:#2a6b3d;}
         .dim{fill:#2a6b3d;}
-        .head{font:700 13px 'Courier New',monospace;fill:${green};}
-        .ok{font:400 12px 'Courier New',monospace;fill:#2a6b3d;}
+        .head{font:700 13px ${MONO};fill:${green};}
+        .ok{font:400 12px ${MONO};fill:#2a6b3d;}
       </style>
     </defs>
     <rect width="360" height="${height}" fill="#020402"/>
@@ -128,7 +128,7 @@ function renderTerminal({ user, xp, totalStars, topLang, tier }) {
     <circle cx="14" cy="12" r="4" fill="#ff4d6d"/>
     <circle cx="30" cy="12" r="4" fill="#ffb020"/>
     <circle cx="46" cy="12" r="4" fill="${green}"/>
-    <text x="180" y="16" text-anchor="middle" class="dim" font-family="'Courier New',monospace" font-size="11">scan.sh</text>
+    <text x="180" y="16" text-anchor="middle" class="dim" font-family="${MONO}" font-size="11">scan.sh</text>
     <text x="16" y="46" class="head">$ ./scan.sh --target=${login}</text>
     <text x="16" y="66" class="ok">[OK] identity verified</text>
     ${rows.map(([key, value], i) => `<text x="16" y="${88 + i * 20}" class="key">${key}</text><text x="112" y="${88 + i * 20}" class="term">${value}</text>`).join('')}
@@ -260,7 +260,7 @@ function statBox(x, y, label, value, color, iconName, width = 178) {
     <rect x="${x}" y="${y}" width="${width}" height="60" fill="none" stroke="#1b2233"/>
     <rect x="${x}" y="${y}" width="${width}" height="2" fill="${color}" opacity="0.35"/>
     ${iconName ? icon(iconName, x + 12, y + 8, color) : ''}
-    <text x="${iconName ? x + 30 : x + 12}" y="${y + 22}" font-family="'Courier New',monospace" font-size="9" fill="#7a8399" letter-spacing="1">${label}</text>
+    <text x="${iconName ? x + 30 : x + 12}" y="${y + 22}" font-family="${MONO}" font-size="10" fill="#7a8399" letter-spacing=".6">${label}</text>
     <text x="${x + 12}" y="${y + 46}" font-family="system-ui,sans-serif" font-weight="700" font-size="18" fill="${color}" filter="url(#glow)">${value}</text>`;
 }
 
@@ -356,7 +356,7 @@ function renderDetailed({ user, avatarUri, shape, langStats, totalStars, totalFo
   const statsY2 = statsY1 + 76;
   const langBarY = statsY2 + 76;
   const legendY = langBarY + 34;
-  const height = topLangs.length ? legendY + 6 : langBarY + 16;
+  const height = topLangs.length ? legendY + 12 : langBarY + 16;
 
   return `<svg width="420" height="${height}" viewBox="0 0 420 ${height}" xmlns="http://www.w3.org/2000/svg">
     <title>${name} — Contributor Card (detailed theme). Rank = ${RANK_FORMULA}</title>
@@ -364,11 +364,11 @@ function renderDetailed({ user, avatarUri, shape, langStats, totalStars, totalFo
       ${fontFace ? `<style>${fontFace}</style>` : ''}
       <style>
         .t1{font:700 18px ${displayFont};fill:#e8edf5;}
-        .t2{font:500 12px 'Courier New',monospace;fill:#7a8399;}
+        .t2{font:500 12px ${MONO};fill:#7a8399;}
         .bio{font:400 12px system-ui,sans-serif;fill:#a8b0c2;}
-        .rankLbl{font:600 8px 'Courier New',monospace;fill:#7a8399;letter-spacing:1.5px;}
+        .rankLbl{font:600 10px ${MONO};fill:#7a8399;letter-spacing:1px;}
         .rankGrade{font:700 18px ${displayFont};fill:${color};}
-        .legend{font:500 9px 'Courier New',monospace;fill:#a8b0c2;}
+        .legend{font:500 10px ${MONO};fill:#a8b0c2;}
       </style>
       <radialGradient id="bg" cx="10%" cy="0%" r="80%">
         <stop offset="0%" stop-color="${color}" stop-opacity="0.10"/>
@@ -452,6 +452,7 @@ module.exports.GET = async (request) => {
   const url = new URL(request.url);
   const username = (url.searchParams.get('username') || '').trim();
   if (!username) return svg(errorSVG('missing ?username='), 400);
+  if (!isGhName(username)) return svg(errorSVG('invalid username'), 400);
 
   const requestedTheme = url.searchParams.get('theme');
   const themeName = THEMES[requestedTheme] ? requestedTheme : 'cyberpunk';

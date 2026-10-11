@@ -1,8 +1,7 @@
 const { checkRateLimit } = require('@vercel/firewall');
 const {
   classFor, esc, ghFetch, avatarDataUri, computeStats, sanitizeColor, XP_FORMULA,
-  clearanceFor, truncate, avatarShape, sanitizeShape, icon, colorForLang,
-} = require('./_lib/shared');
+  clearanceFor, truncate, avatarShape, sanitizeShape, icon, colorForLang, MONO, isGhName } = require('./_lib/shared');
 
 const ROW_H = 56;
 const WIDTH = 640;
@@ -12,7 +11,7 @@ function errorSVG(message, height = 100) {
   return `<svg width="${WIDTH}" height="${height}" viewBox="0 0 ${WIDTH} ${height}" xmlns="http://www.w3.org/2000/svg">
     <rect width="${WIDTH}" height="${height}" fill="#05070c"/>
     <rect width="${WIDTH}" height="${height}" fill="none" stroke="#ff4d6d"/>
-    <text x="20" y="${height / 2 + 5}" font-family="'Courier New',monospace" font-size="12" fill="#ff4d6d">${esc(message)}</text>
+    <text x="20" y="${height / 2 + 5}" font-family="${MONO}" font-size="12" fill="#ff4d6d">${esc(message)}</text>
   </svg>`;
 }
 
@@ -108,12 +107,12 @@ function renderCyberpunkBoard(org, top, ranked, accent, shape, override) {
     <defs>
       <style>
         .title{font:700 15px system-ui,sans-serif;fill:#e8edf5;letter-spacing:1px;}
-        .meta{font:500 10px 'Courier New',monospace;fill:#7a8399;letter-spacing:1px;}
-        .rankNum{font:700 12px 'Courier New',monospace;}
-        .rankDim{font:700 12px 'Courier New',monospace;fill:#5a6480;}
+        .meta{font:500 10px ${MONO};fill:#7a8399;letter-spacing:1px;}
+        .rankNum{font:700 12px ${MONO};}
+        .rankDim{font:700 12px ${MONO};fill:#5a6480;}
         .name{font:600 13.5px system-ui,sans-serif;fill:#e8edf5;}
         .cls{font:600 9px system-ui,sans-serif;letter-spacing:.5px;}
-        .tag{font:700 10px 'Courier New',monospace;}
+        .tag{font:700 10px ${MONO};}
         .xp{font:700 12px system-ui,sans-serif;fill:#e8edf5;}
       </style>
       <radialGradient id="bg" cx="10%" cy="0%" r="90%">
@@ -153,7 +152,7 @@ function renderTerminalBoard(org, top, ranked) {
   }).join('\n    ');
   return `<svg width="${WIDTH}" height="${height}" viewBox="0 0 ${WIDTH} ${height}" xmlns="http://www.w3.org/2000/svg">
     <title>${esc(org)} — Team Leaderboard (terminal theme). checksum = hex(${XP_FORMULA})</title>
-    <defs><style>.term{font:400 13px 'Courier New',monospace;fill:${green};}.key{font:400 13px 'Courier New',monospace;fill:#2a6b3d;}.head{font:700 13px 'Courier New',monospace;fill:${green};}.ok{font:400 12px 'Courier New',monospace;fill:#2a6b3d;}</style></defs>
+    <defs><style>.term{font:400 13px ${MONO};fill:${green};}.key{font:400 13px ${MONO};fill:#2a6b3d;}.head{font:700 13px ${MONO};fill:${green};}.ok{font:400 12px ${MONO};fill:#2a6b3d;}</style></defs>
     <rect width="${WIDTH}" height="${height}" fill="#020402"/>
     <rect width="${WIDTH}" height="${height}" fill="none" stroke="${green}" opacity="0.5"/>
     <text x="16" y="28" class="head">$ ./leaderboard.sh --org=${esc(truncate(org, 30))}</text>
@@ -242,6 +241,7 @@ module.exports.GET = async (request) => {
   const shape = sanitizeShape(url.searchParams.get('shape'), theme === 'glass' ? 'circle' : 'hex');
 
   if (!org) return svgResponse(errorSVG('missing ?org='), 400);
+  if (!isGhName(org)) return svgResponse(errorSVG('invalid org'), 400);
 
   const token = process.env.GITHUB_TOKEN;
   try {

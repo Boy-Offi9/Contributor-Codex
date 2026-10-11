@@ -1,5 +1,5 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { esc, ghFetch, computeStats, trophyTier, sanitizeColor, badge, sanitizeBadge } = require('./_lib/shared');
+const { esc, ghFetch, computeStats, trophyTier, sanitizeColor, badge, sanitizeBadge, SANS, isGhName } = require('./_lib/shared');
 
 function errorSVG(message) {
   return `<svg width="420" height="120" viewBox="0 0 420 120" xmlns="http://www.w3.org/2000/svg">
@@ -56,10 +56,6 @@ const TROPHY_ICONS = {
   NETWORKER: 'people', SNIPPETS: 'code', ACTIVE: 'pulse', HEADLINER: 'trophy', CURATOR: 'tag',
 };
 
-// system-ui, not the embedded display font: trophy strips are stacked in
-// READMEs and ~90 KB of base64 per strip isn't worth it. 'Courier New' is
-// gone because Android substitutes a thin serif face for it.
-const SANS = "system-ui,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif";
 
 function shield(x, key, label, value, tier, shape, pitch) {
   const cx = x + pitch / 2;
@@ -127,6 +123,7 @@ module.exports.GET = async (request) => {
   const url = new URL(request.url);
   const username = (url.searchParams.get('username') || '').trim();
   if (!username) return svg(errorSVG('missing ?username='), 400);
+  if (!isGhName(username)) return svg(errorSVG('invalid username'), 400);
 
   const rawSelected = url.searchParams.get('trophies');
   const selected = rawSelected ? rawSelected.split(',').map((s) => s.trim().toUpperCase()) : null;

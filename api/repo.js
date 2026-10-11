@@ -1,12 +1,12 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { esc, ghFetch, CHAKRA_PETCH_FONT_FACE, sanitizeColor } = require('./_lib/shared');
+const { esc, ghFetch, CHAKRA_PETCH_FONT_FACE, sanitizeColor, MONO, isGhName, isGhRepo } = require('./_lib/shared');
 
 function errorSVG(message) {
   return `<svg width="420" height="120" viewBox="0 0 420 120" xmlns="http://www.w3.org/2000/svg">
     <rect width="420" height="120" fill="#05070c"/>
     <rect width="420" height="120" fill="none" stroke="#ff4d6d"/>
     <text x="20" y="55" font-family="system-ui,sans-serif" font-weight="700" font-size="13" fill="#ff4d6d">CARD ERROR</text>
-    <text x="20" y="78" font-family="'Courier New',monospace" font-size="11" fill="#7a8399">${esc(message)}</text>
+    <text x="20" y="78" font-family="${MONO}" font-size="11" fill="#7a8399">${esc(message)}</text>
   </svg>`;
 }
 
@@ -77,9 +77,9 @@ function renderCyberpunk({ repo, color, fontFace }) {
       <style>
         .name{font:700 17px ${displayFont};fill:#e8edf5;}
         .desc{font:400 12px system-ui,sans-serif;fill:#a8b0c2;}
-        .lbl{font:500 9px 'Courier New',monospace;fill:#7a8399;letter-spacing:1px;}
+        .lbl{font:500 10px ${MONO};fill:#7a8399;letter-spacing:1px;}
         .statVal{font:700 18px ${displayFont};}
-        .chip{font:600 10px 'Courier New',monospace;fill:#05070c;}
+        .chip{font:600 10px ${MONO};fill:#05070c;}
       </style>
       <radialGradient id="bg" cx="90%" cy="0%" r="90%">
         <stop offset="0%" stop-color="${color}" stop-opacity="0.14"/>
@@ -116,7 +116,7 @@ function renderTerminal({ repo }) {
   ];
   return `<svg width="420" height="220" viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg">
     <title>${esc(repo.full_name)} — Repository Card (terminal theme)</title>
-    <defs><style>.term{font:400 13px 'Courier New',monospace;fill:${green};}.head{font:700 13px 'Courier New',monospace;fill:${green};}</style></defs>
+    <defs><style>.term{font:400 13px ${MONO};fill:${green};}.head{font:700 13px ${MONO};fill:${green};}</style></defs>
     <rect width="420" height="220" fill="#020402"/>
     <rect width="420" height="220" fill="none" stroke="${green}" opacity="0.5"/>
     <text x="16" y="30" class="head">$ git remote show origin</text>
@@ -188,10 +188,10 @@ function renderDetailed({ repo, color, fontFace, contributors, releaseTag }) {
       <style>
         .name{font:700 19px ${displayFont};fill:#e8edf5;}
         .desc{font:400 12px system-ui,sans-serif;fill:#a8b0c2;}
-        .lbl{font:500 9px 'Courier New',monospace;fill:#7a8399;letter-spacing:1px;}
+        .lbl{font:500 10px ${MONO};fill:#7a8399;letter-spacing:1px;}
         .statVal{font:700 17px ${displayFont};}
-        .chip{font:600 10px 'Courier New',monospace;fill:${color};}
-        .topic{font:600 10px 'Courier New',monospace;fill:#05070c;}
+        .chip{font:600 10px ${MONO};fill:${color};}
+        .topic{font:600 10px ${MONO};fill:#05070c;}
       </style>
       <clipPath id="cardClip"><polygon points="0,14 14,0 440,0 440,${height - 14} 426,${height} 0,${height}"/></clipPath>
     </defs>
@@ -241,7 +241,7 @@ function renderDetailed({ repo, color, fontFace, contributors, releaseTag }) {
 function statBox(x, y, label, value, color) {
   return `
     <rect x="${x}" y="${y}" width="204" height="60" fill="none" stroke="#1b2233"/>
-    <text x="${x + 12}" y="${y + 22}" font-family="'Courier New',monospace" font-size="9" fill="#7a8399" letter-spacing="1">${label}</text>
+    <text x="${x + 12}" y="${y + 22}" font-family="${MONO}" font-size="10" fill="#7a8399" letter-spacing=".6">${label}</text>
     <text x="${x + 12}" y="${y + 46}" font-family="system-ui,sans-serif" font-weight="700" font-size="18" fill="${color}">${value}</text>`;
 }
 
@@ -261,6 +261,7 @@ module.exports.GET = async (request) => {
   const owner = (url.searchParams.get('owner') || '').trim();
   const repoName = (url.searchParams.get('repo') || '').trim();
   if (!owner || !repoName) return svg(errorSVG('missing ?owner= or ?repo='), 400);
+  if (!isGhName(owner) || !isGhRepo(repoName)) return svg(errorSVG('invalid owner or repo'), 400);
 
   const requestedTheme = url.searchParams.get('theme');
   const render = THEMES[requestedTheme] || THEMES.cyberpunk;
