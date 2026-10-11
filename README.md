@@ -66,6 +66,9 @@ Then make it yours:
 | [`/api/repo`](docs/API.md#repository-card) | A repository's vital signs |
 | [`/api/trophies`](docs/API.md#achievements) | Twelve tiered achievements in six badge shapes, plus an optional custom one |
 | [`/api/codex`](docs/API.md#codex-collection) | A compact dossier in a single image |
+| [`/api/streak`](docs/API.md#streak-card) | Total contributions, current streak, longest streak |
+| [`/api/activity`](docs/API.md#activity-graph) | A contribution-activity graph with a labelled peak |
+| [`/api/langs`](docs/API.md#top-languages) | Most-used languages as a stacked bar |
 
 Full parameters, defaults, errors, and caching are in the **[API reference](docs/API.md)**.
 

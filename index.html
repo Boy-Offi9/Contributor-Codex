@@ -218,9 +218,39 @@
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l7 3.5v6c0 5-3 8.5-7 10.5-4-2-7-5.5-7-10.5v-6L12 2Z"/><path d="M12 8l1.2 2.4 2.6.4-1.9 1.9.5 2.6-2.4-1.3-2.4 1.3.5-2.6-1.9-1.9 2.6-.4L12 8Z"/></svg>
         <h3>Achievements</h3>
       </div>
-      <p>Tiered badges for stars, repos, followers, years active, languages, forks, and licensed work.</p>
+      <p>Twelve tiered badges in six shapes — stars, repos, followers, years, languages, forks, licenses, gists, activity and more.</p>
       <div class="thumb lazyBox" data-src="https://contributor-codex.vercel.app/api/trophies?username=octocat&trophies=STARGAZER,BUILDER,POLYGLOT" data-alt="achievements card example"><button class="loadBtn" type="button">▶ load live preview</button></div>
       <code>/api/trophies?username=&trophies=</code>
+    </div>
+
+    <div class="typeCard hexPanel">
+      <div class="head">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3c.5 3-2.6 4.3-2.6 7.4a2.6 2.6 0 0 0 5.2 0c0-.8-.3-1.4-.6-1.8 1.8 1 3 2.8 3 5A5 5 0 0 1 12 19a5 5 0 0 1-5-5.4C7 8.800 11 7.500 12 3Z"/></svg>
+        <h3>Streak</h3>
+      </div>
+      <p>Total contributions, current streak and longest streak with date ranges. Needs the server token.</p>
+      <div class="thumb lazyBox" data-src="https://contributor-codex.vercel.app/api/streak?username=octocat" data-alt="streak card example"><button class="loadBtn" type="button">▶ load live preview</button></div>
+      <code>/api/streak?username=</code>
+    </div>
+
+    <div class="typeCard hexPanel">
+      <div class="head">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 17l5-6 4 3 5-8 4 5"/><line x1="3" y1="21" x2="21" y2="21"/></svg>
+        <h3>Activity graph</h3>
+      </div>
+      <p>A smooth contribution graph over 30, 90, 180 or 365 days with a labelled peak.</p>
+      <div class="thumb lazyBox" data-src="https://contributor-codex.vercel.app/api/activity?username=octocat&days=90" data-alt="activity graph example"><button class="loadBtn" type="button">▶ load live preview</button></div>
+      <code>/api/activity?username=&days=</code>
+    </div>
+
+    <div class="typeCard hexPanel">
+      <div class="head">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="9" width="18" height="6" rx="3"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="16" y1="19" x2="16" y2="21"/></svg>
+        <h3>Top languages</h3>
+      </div>
+      <p>Your most-used languages as a stacked bar with percentages.</p>
+      <div class="thumb lazyBox" data-src="https://contributor-codex.vercel.app/api/langs?username=octocat" data-alt="top languages example"><button class="loadBtn" type="button">▶ load live preview</button></div>
+      <code>/api/langs?username=</code>
     </div>
 
   </div>

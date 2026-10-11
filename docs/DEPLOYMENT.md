@@ -85,10 +85,18 @@ api/
   card.js            Contributor Card          (4 themes)
   leaderboard.js     Team Leaderboard          (3 themes)
   repo.js            Repository Card           (4 themes)
-  trophies.js        Achievements
+  trophies.js        Achievements              (12 badges, 6 badge shapes)
   codex.js           Codex Collection
+  streak.js          Streak Card               (3 themes)
+  activity.js        Contribution activity graph
+  langs.js           Most-used languages
   _lib/
-    shared.js        GitHub fetching, stats, scoring, avatars, icons, language colors
+    shared.js        facade: re-exports game.js + github.js + svg.js
+    game.js          XP, levels, tiers, language classes (pure functions)
+    github.js        api.github.com access, avatar fetch, name validation
+    svg.js           escaping, colours, font stacks, avatar frames, icons, badges
+    frame.js         shared chrome for streak / activity / langs (background, border, glow)
+    contrib.js       GraphQL contribution calendar + streak maths
     font-data.js     embedded Chakra Petch (generated)
 scripts/
   build-font.js      regenerates font-data.js
@@ -105,7 +113,9 @@ THIRD_PARTY_NOTICES.md   embedded font notice (SIL OFL 1.1)
 
 Vercel serverless functions using the Web `Request` / `Response` API directly — no Next.js, no framework. Cards are hand-written SVG strings, with no charting or image library. [`@boy-offi9-inc/reqkit`](https://github.com/boy-offi9-inc/reqkit) handles retry and de-duplication for GitHub requests, and `@vercel/firewall` provides per-IP rate limiting.
 
-Each endpoint file is independently deployable. Small helpers (error cards, tiered-shield layout) are intentionally duplicated per endpoint rather than shared. `api/_lib/shared.js` holds only what several cards genuinely reuse: GitHub fetching, avatar embedding and the shape-agnostic `avatarShape()`, stat computation, the stroke-icon set, the language-color palette, and the terminal clearance ladder.
+Each endpoint file is independently deployable. The original five cards keep their own error cards and layout code; the three calendar cards (streak, activity, languages) share `_lib/frame.js`. `_lib/` holds only what several cards genuinely reuse, split by concern: `game.js` (rules), `github.js` (network and input validation) and `svg.js` (drawing). Endpoints import through `shared.js`, so a helper can move between those files without touching any endpoint.
+
+Every name that reaches a GitHub URL (`username`, `org`, `owner`, `repo`) is validated with `isGhName` / `isGhRepo` first, because those requests carry the server's token. Anything that isn't a plain GitHub name returns a 400 card.
 
 The four pages are single self-contained HTML files with no shared bundle. The roster and profile pages call GitHub directly from the visitor's browser, with an optional token field that raises that visitor's limit from 60 to 5,000 requests per hour. That token is sent only to `api.github.com` and never leaves the browser tab.
 
