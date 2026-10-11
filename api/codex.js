@@ -1,7 +1,7 @@
 const { checkRateLimit } = require('@vercel/firewall');
 const {
   esc, ghFetch, avatarDataUri, computeStats, classFor, trophyTier, sanitizeColor,
-  CHAKRA_PETCH_FONT_FACE, byteWeightedLangs, colorForLang, icon, badge, sanitizeBadge,
+  CHAKRA_PETCH_FONT_FACE, byteWeightedLangs, colorForLang, icon, badge, sanitizeBadge, avatarShape, sanitizeShape,
 } = require('./_lib/shared');
 
 const WIDTH = 480;
@@ -55,7 +55,7 @@ function achievement(x, y, cellW, def, value, tier, shape) {
     <rect x="${cx - barW / 2}" y="${y + 99}" width="${(barW * pct) / 100}" height="3" fill="${tier.color}"/>`;
 }
 
-function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape }) {
+function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape, avatarFrame }) {
   const displayFont = LABEL_FONT;
   const name = esc(user.name || user.login);
   const classLabel = classFor(stats.topLang);
@@ -69,10 +69,8 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape 
   const langChips = topLangs.slice(0, 5);
   const height = langChips.length ? langsY + 56 : langsY + 4;
 
-  const hexPoints = '30,18 70,18 78,48 70,78 30,78 22,48';
-  const avatarTag = avatarUri
-    ? `<image href="${avatarUri}" x="20" y="18" width="60" height="60" clip-path="url(#hexAvatar)" preserveAspectRatio="xMidYMid slice"/>`
-    : `<polygon points="${hexPoints}" fill="#1b2233"/>`;
+  const avatarX = 20;
+  const textX = 104;
 
   const xpLabel = `${stats.xp.toLocaleString()} XP`;
   const boxW = 104;
@@ -82,7 +80,6 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape 
     <title>${esc(user.login)} — Codex Collection</title>
     <defs>
       ${fontFace ? `<style>${fontFace}</style>` : ''}
-      <clipPath id="hexAvatar"><polygon points="${hexPoints}"/></clipPath>
       <radialGradient id="bg" cx="90%" cy="0%" r="90%">
         <stop offset="0%" stop-color="${color}" stop-opacity="0.14"/>
         <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
@@ -108,11 +105,10 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape 
     </g>
     <polygon points="0,14 14,0 ${WIDTH},0 ${WIDTH},${height - 14} ${WIDTH - 14},${height} 0,${height}" fill="none" stroke="${color}" opacity="0.5"/>
 
-    <polygon points="${hexPoints}" fill="#1b2233" stroke="${color}" filter="url(#glow)"/>
-    ${avatarTag}
-    <text x="94" y="36" font-family="${displayFont}" font-weight="700" font-size="19" fill="#e8edf5">${name}</text>
-    <text x="94" y="54" font-family="${LABEL_FONT}" font-weight="600" font-size="12" fill="#8a94ab">@${esc(user.login)}</text>
-    <text x="94" y="74" font-family="${LABEL_FONT}" font-weight="700" font-size="11" fill="${color}" letter-spacing=".6">${esc(classLabel.toUpperCase())}${stats.topLang ? ' · ' + esc(stats.topLang) : ''}</text>
+    <g transform="translate(${avatarX},14)">${avatarShape({ id: 'avatar', shape: avatarFrame, size: 68, uri: avatarUri, ring: color, bg: '#1b2233', glow: true })}</g>
+    <text x="${textX}" y="36" font-family="${displayFont}" font-weight="700" font-size="19" fill="#e8edf5">${name}</text>
+    <text x="${textX}" y="54" font-family="${LABEL_FONT}" font-weight="600" font-size="12" fill="#8a94ab">@${esc(user.login)}</text>
+    <text x="${textX}" y="74" font-family="${LABEL_FONT}" font-weight="700" font-size="11" fill="${color}" letter-spacing=".6">${esc(classLabel.toUpperCase())}${stats.topLang ? ' · ' + esc(stats.topLang) : ''}</text>
     <rect x="${WIDTH - 78}" y="22" width="58" height="20" fill="${color}" filter="url(#glow)"/>
     <text x="${WIDTH - 49}" y="36" text-anchor="middle" font-family="${LABEL_FONT}" font-weight="700" font-size="12" fill="#05070c">LV ${stats.level}</text>
     ${icon('bolt', WIDTH - 20 - xpLabel.length * 6.6 - 16, 47, color)}
@@ -170,14 +166,15 @@ module.exports.GET = async (request) => {
 
     const stats = computeStats(user, repos);
     const [avatarUri, langStats] = await Promise.all([
-      avatarDataUri(`${user.avatar_url}&s=100`),
+      avatarDataUri(`${user.avatar_url}&s=160`),
       byteWeightedLangs(repos, token),
     ]);
     const topLangs = langStats.map((l) => l.name);
     const color = sanitizeColor(url.searchParams.get('color')) || '#00e5ff';
+    const avatarFrame = sanitizeShape(url.searchParams.get('shape'), 'hex');
     const badgeShape = sanitizeBadge(url.searchParams.get('badge'), 'hex');
 
-    return svg(render({ user, stats, avatarUri, topLangs, fontFace: CHAKRA_PETCH_FONT_FACE, color, badgeShape }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
+    return svg(render({ user, stats, avatarUri, topLangs, fontFace: CHAKRA_PETCH_FONT_FACE, color, badgeShape, avatarFrame }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
   } catch (err) {
     if (err.status === 404) return svg(errorSVG(`user "${username}" not found`), 404, 'public, s-maxage=60');
     if (err.status === 403) return svg(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=60');
