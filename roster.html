@@ -196,7 +196,8 @@
     <span class="lbLabel mono">Team leaderboard</span>
     <button id="lbCopyBtn">Copy embed</button>
   </div>
-  <img id="lbImg" alt="team leaderboard">
+  <button id="lbLoadBtn" type="button">▶ Load leaderboard (ranks every member — uses the most API calls)</button>
+  <img id="lbImg" alt="team leaderboard" style="display:none">
 </div>
 <div class="grid" id="grid"></div>
 
@@ -213,13 +214,28 @@ const themeSelect = document.getElementById('themeSelect');
 const API_BASE = 'https://contributor-codex.vercel.app';
 let currentOrg = null;
 
+// The leaderboard ranks every member, so it is by far the costliest request
+// on this page. It only loads after an explicit tap; once the user has asked
+// for it, a theme change refreshes it.
+let lbRequested = false;
 function showLeaderboardPreview(){
   if (!currentOrg) return;
   const url = leaderboardUrlFor(currentOrg, themeSelect.value);
-  document.getElementById('lbImg').src = url;
+  const img = document.getElementById('lbImg');
+  const btn = document.getElementById('lbLoadBtn');
   document.getElementById('lbCopyBtn').dataset.url = url;
   document.getElementById('lbPreview').classList.add('show');
+  if (lbRequested) {
+    img.style.display = '';
+    btn.style.display = 'none';
+    img.src = url;
+  } else {
+    img.style.display = 'none';
+    img.removeAttribute('src');
+    btn.style.display = '';
+  }
 }
+document.getElementById('lbLoadBtn').onclick = () => { lbRequested = true; showLeaderboardPreview(); };
 
 document.getElementById('lbCopyBtn').onclick = async (e) => {
   const url = e.target.dataset.url;
@@ -264,6 +280,14 @@ function leaderboardUrlFor(org, theme){
   return `${API_BASE}/api/leaderboard?org=${encodeURIComponent(org)}&limit=10&theme=${encodeURIComponent(lbTheme)}`;
 }
 
+const cardObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (!entry.isIntersecting) return;
+    cardObserver.unobserve(entry.target);
+    if (entry.target._start) entry.target._start();
+  });
+}, { rootMargin: '150px' });
+
 function renderCard(login){
   if (document.querySelector(`.card[data-login="${login}" i]`)) return;
   const el = document.createElement('div');
@@ -272,6 +296,9 @@ function renderCard(login){
   el.textContent = `loading @${login}…`;
   grid.appendChild(el);
 
+  // Only request the card once its placeholder is near the viewport, so a
+  // 100-member org doesn't fire 100 API requests the moment it's loaded.
+  el._start = () => {
   const img = new Image();
   img.alt = `${login} card`;
   img.src = cardUrlFor(login, themeSelect.value);
@@ -286,6 +313,8 @@ function renderCard(login){
     el.classList.add('errorCard');
     el.textContent = `@${login} — failed to load card`;
   };
+  };
+  cardObserver.observe(el);
 }
 
 async function openDossier(login){
@@ -330,6 +359,7 @@ async function loadOrg(){
   grid.innerHTML = '';
   currentOrg = null;
   document.getElementById('lbPreview').classList.remove('show');
+  lbRequested = false;
   setStatus(`Fetching ${org}'s member list…`);
   try {
     const members = await ghFetch(`https://api.github.com/orgs/${org}/members?per_page=100`);
@@ -341,7 +371,7 @@ async function loadOrg(){
     showLeaderboardPreview();
     setStatus(`Loading ${members.length} member${members.length===1?'':'s'}…`);
     members.forEach(m => renderCard(m.login));
-    setStatus(`${members.length} card${members.length===1?'':'s'} loaded.`);
+    setStatus(`${members.length} member${members.length===1?'':'s'} found — cards load as you scroll.`);
   } catch (err) {
     if (err.status === 404) setStatus(`Org "${org}" not found.`, true);
     else if (err.status === 403) setStatus('Rate limited by GitHub — add a token above and try again.', true);
@@ -369,7 +399,7 @@ themeSelect.addEventListener('change', () => {
   showLeaderboardPreview();
 });
 
-loadOrg();
+setStatus('Enter an org and tap Load — nothing is fetched until you do.');
 </script>
 </body>
 </html>
