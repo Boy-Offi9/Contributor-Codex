@@ -97,6 +97,9 @@
   .previewBox img{max-width:100%;height:auto;display:block;}
   .previewBox .msg{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);text-align:center;}
   .previewBox .msg.err{color:var(--danger);}
+  .previewBox{flex-direction:column;gap:12px;}
+  .loadBtn{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--cyan,#00e5ff);background:none;border:1px dashed currentColor;padding:10px 14px;cursor:pointer;}
+  .loadBtn:active{opacity:.6;}
 
   .outRow{margin-bottom:14px;}
   .outRow label{margin-bottom:8px;}
@@ -141,6 +144,9 @@
           <button class="typeBtn" data-type="repo">Repository</button>
           <button class="typeBtn" data-type="trophies">Achievements</button>
           <button class="typeBtn" data-type="codex">Codex Collection</button>
+          <button class="typeBtn" data-type="streak">Streak</button>
+          <button class="typeBtn" data-type="activity">Activity graph</button>
+          <button class="typeBtn" data-type="langs">Top languages</button>
         </div>
       </div>
 
@@ -264,6 +270,28 @@ const TYPES = {
     trophyPicker: true,
   },
 };
+const CAL_THEMES = ['cyberpunk', 'glass', 'terminal'];
+TYPES.streak = {
+  endpoint: '/api/streak',
+  themes: CAL_THEMES,
+  fields: [{ key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true }],
+};
+TYPES.activity = {
+  endpoint: '/api/activity',
+  themes: CAL_THEMES,
+  fields: [
+    { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
+    { key: 'days', label: 'Range', type: 'select', options: ['30', '90', '180', '365'] },
+  ],
+};
+TYPES.langs = {
+  endpoint: '/api/langs',
+  themes: CAL_THEMES,
+  fields: [
+    { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
+    { key: 'limit', label: 'Languages shown (2-8)', placeholder: '6', type: 'number', min: 2, max: 8 },
+  ],
+};
 const ALL_TROPHIES = ['STARGAZER', 'BUILDER', 'INFLUENCE', 'VETERAN', 'POLYGLOT', 'FORKED', 'OPEN_SOURCE', 'NETWORKER', 'SNIPPETS', 'ACTIVE', 'HEADLINER', 'CURATOR'];
 
 let currentType = 'card';
@@ -289,9 +317,14 @@ function renderFields(){
   dynamicFields.innerHTML = def.fields.map(f => `
     <div class="field">
       <label>${f.label}</label>
-      <input type="${f.type || 'text'}" id="f_${f.key}" class="mono" placeholder="${f.placeholder || ''}"
+      ${f.type === 'select'
+        ? `<select id="f_${f.key}">
+            <option value="">default</option>
+            ${f.options.map(o => `<option value="${o}" ${state[f.key] === o ? 'selected' : ''}>${o}</option>`).join('')}
+          </select>`
+        : `<input type="${f.type || 'text'}" id="f_${f.key}" class="mono" placeholder="${f.placeholder || ''}"
         ${f.min !== undefined ? `min="${f.min}"` : ''} ${f.max !== undefined ? `max="${f.max}"` : ''}
-        value="${state[f.key] || ''}">
+        value="${state[f.key] || ''}">`}
     </div>`).join('');
 
   if (def.trophyPicker) {
@@ -395,27 +428,45 @@ function buildUrl(){
   return { url: `${API_BASE}${def.endpoint}?${params.toString()}`, missing };
 }
 
+// Editing a field only rebuilds the copyable URL / Markdown / HTML text — no
+// network. The live card is requested only when the user taps "Generate
+// preview", so typing a username or flipping a dropdown never spends GitHub
+// API calls.
 let debounceTimer;
+let pendingUrl = null;
+
+function showPreviewPrompt(text, withButton){
+  previewBox.innerHTML = `<span class="msg">${text}</span>` + (withButton ? '<button class="loadBtn" id="previewBtn" type="button">▶ Generate preview</button>' : '');
+  if (withButton) document.getElementById('previewBtn').onclick = loadPreview;
+}
+
+function loadPreview(){
+  if (!pendingUrl) return;
+  const url = pendingUrl;
+  previewBox.innerHTML = '<span class="msg">loading…</span>';
+  const img = new Image();
+  img.alt = 'card preview';
+  img.onload = () => { if (url === pendingUrl) { previewBox.innerHTML = ''; previewBox.appendChild(img); } };
+  img.onerror = () => { previewBox.innerHTML = '<span class="msg err">failed to load — check the fields above</span>'; };
+  img.src = url;
+}
+
 function update(){
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
     const { url, missing } = buildUrl();
     if (missing) {
-      previewBox.innerHTML = '<span class="msg">fill in the required fields to preview</span>';
+      pendingUrl = null;
+      showPreviewPrompt('fill in the required fields to preview', false);
       mdOut.value = ''; urlOut.value = ''; htmlOut.value = '';
       return;
     }
+    pendingUrl = url;
     mdOut.value = `![Card](${url})`;
     urlOut.value = url;
     htmlOut.value = `<img src="${url}" alt="card">`;
-
-    previewBox.innerHTML = '<span class="msg">loading…</span>';
-    const img = new Image();
-    img.alt = 'card preview';
-    img.onload = () => { previewBox.innerHTML = ''; previewBox.appendChild(img); };
-    img.onerror = () => { previewBox.innerHTML = '<span class="msg err">failed to load — check the fields above</span>'; };
-    img.src = url;
-  }, 900);
+    showPreviewPrompt('ready — tap to render the live card', true);
+  }, 250);
 }
 
 document.getElementById('typeGrid').addEventListener('click', (e) => {
