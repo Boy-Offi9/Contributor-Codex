@@ -1,8 +1,8 @@
 // Shared SVG chrome for the streak / activity / languages cards: background,
 // border, glow filter, embedded font. The card body is drawn by the caller.
-const { esc, CHAKRA_PETCH_FONT_FACE } = require('./shared');
+const { esc, CHAKRA_PETCH_FONT_FACE, DISPLAY } = require('./shared');
 
-const FONT = "'Chakra Petch',system-ui,'Segoe UI',Roboto,sans-serif";
+const FONT = DISPLAY;
 const THEMES = ['cyberpunk', 'glass', 'terminal'];
 const sanitizeTheme = (input, fallback = 'cyberpunk') => {
   const v = String(input || '').toLowerCase();
