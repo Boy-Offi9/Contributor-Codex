@@ -140,14 +140,14 @@ Total contributions, the current streak (with a progress ring relative to your p
 | Param | Required | Values | Default |
 |---|---|---|---|
 | `username` | yes | any GitHub username | — |
-| `theme` | no | `cyberpunk` \| `glass` \| `terminal` | `cyberpunk` |
+| `theme` | no | `cyberpunk` \| `glass` (light frosted, matches the Contributor card) \| `terminal` | `cyberpunk` |
 | `color` | no | 6-digit hex, no `#` | `#00e5ff` |
 
 ```md
 ![Streak](https://contributor-codex.vercel.app/api/streak?username=octocat)
 ```
 
-- Counts GitHub's own contribution calendar (the green squares), in UTC days, across every year the account has been active.
+- Counts GitHub's own contribution calendar (the green squares), in UTC days, across every year the account has been active. The total's date range starts on the account's join date ("since day one"), not on its first contribution.
 - A streak that was alive yesterday still counts as current while today is empty, so the card doesn't reset to 0 every morning.
 - Needs `GITHUB_TOKEN` on the server: the contribution calendar only exists in GitHub's GraphQL API, which has no anonymous access. Without it the card renders a `503` message.
 - Cached for 6 hours (24 hours stale-while-revalidate).
