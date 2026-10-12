@@ -37,7 +37,7 @@ async function fetchCalendar(username, token) {
     throw err;
   }
   const head = await gql(
-    'query($login:String!){user(login:$login){login name createdAt contributionsCollection{contributionYears}}}',
+    'query($login:String!){user(login:$login){login name createdAt}}',
     { login: username },
     token,
   );
@@ -47,9 +47,14 @@ async function fetchCalendar(username, token) {
     err.status = 404;
     throw err;
   }
-  const years = (user.contributionsCollection.contributionYears || []).slice().sort((a, b) => a - b);
+  // Every calendar year from the join year to now. GitHub's own
+  // `contributionYears` list is deliberately NOT trusted to be complete: a year
+  // missing from it silently drops that year's streaks (and the longest streak
+  // with it), so we ask for each year and let empty ones come back as zeros.
   const nowYear = new Date().getUTCFullYear();
-  const wanted = years.length ? years : [nowYear];
+  const joinYear = Math.min(nowYear, Math.max(2008, new Date(user.createdAt).getUTCFullYear() || nowYear));
+  const wanted = [];
+  for (let y = joinYear; y <= nowYear; y++) wanted.push(y);
 
   const fields = wanted.map((y) => {
     const to = y === nowYear ? new Date().toISOString() : `${y}-12-31T23:59:59Z`;
@@ -72,35 +77,41 @@ async function fetchCalendar(username, token) {
 
 const dayNum = (iso) => Math.floor(Date.parse(`${iso}T00:00:00Z`) / 86400000);
 
+// Every run of consecutive contribution days, oldest first.
+function listStreaks(days) {
+  const runs = [];
+  let run = null;
+  for (const d of days) {
+    if (d.count > 0) {
+      if (run && dayNum(d.date) === dayNum(run.end) + 1) {
+        run.end = d.date;
+        run.length += 1;
+      } else {
+        run = { start: d.date, end: d.date, length: 1 };
+        runs.push(run);
+      }
+    } else {
+      run = null;
+    }
+  }
+  return runs;
+}
+
 // Streak maths. Dates are GitHub's own UTC calendar days. A streak that was
 // alive yesterday still counts as current while today is empty — otherwise
 // every card would reset to 0 each morning until the first commit.
 function computeStreaks(days, todayIso = new Date().toISOString().slice(0, 10)) {
   const total = days.reduce((a, d) => a + d.count, 0);
   const firstActive = days.find((d) => d.count > 0);
+  const runs = listStreaks(days);
 
-  let longest = { length: 0, start: null, end: null };
-  let run = null;
-  for (const d of days) {
-    if (d.count > 0) {
-      if (run && dayNum(d.date) === dayNum(run.end) + 1) { run.end = d.date; run.length += 1; }
-      else run = { start: d.date, end: d.date, length: 1 };
-      if (run.length > longest.length) longest = { ...run };
-    } else if (d.date !== todayIso) {
-      run = null;
-    }
-  }
+  const none = { length: 0, start: null, end: null };
+  const longest = runs.reduce((best, r) => (r.length > best.length ? { ...r } : best), none);
 
-  // current: walk back from today (or yesterday if today is still empty)
-  const map = new Map(days.map((d) => [d.date, d.count]));
-  let cursor = dayNum(todayIso);
-  const isoOf = (n) => new Date(n * 86400000).toISOString().slice(0, 10);
-  if (!(map.get(isoOf(cursor)) > 0)) cursor -= 1;
-  let current = { length: 0, start: null, end: null };
-  while (map.get(isoOf(cursor)) > 0) {
-    current = { length: current.length + 1, start: isoOf(cursor), end: current.end || isoOf(cursor) };
-    cursor -= 1;
-  }
+  const yesterday = new Date(dayNum(todayIso) * 86400000 - 86400000).toISOString().slice(0, 10);
+  const last = runs[runs.length - 1];
+  const current = last && (last.end === todayIso || last.end === yesterday) ? { ...last } : none;
+
   return { total, since: firstActive ? firstActive.date : null, current, longest };
 }
 
@@ -119,4 +130,4 @@ function fmtRange(start, end, todayIso = new Date().toISOString().slice(0, 10), 
   return `${left} – ${right}`;
 }
 
-module.exports = { fetchCalendar, computeStreaks, fmtRange, fmtDate };
+module.exports = { fetchCalendar, computeStreaks, listStreaks, fmtRange, fmtDate };

@@ -1,6 +1,6 @@
 const { checkRateLimit } = require('@vercel/firewall');
 const { sanitizeColor, icon, esc, isGhName } = require('./_lib/shared');
-const { fetchCalendar, computeStreaks, fmtRange, fmtDate } = require('./_lib/contrib');
+const { fetchCalendar, computeStreaks, listStreaks, fmtRange, fmtDate } = require('./_lib/contrib');
 const { FONT, PALETTE, ink, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
 
 const WIDTH = 480;
@@ -62,6 +62,33 @@ function render({ user, streaks, color, theme }) {
   return frame({ width: WIDTH, height: HEIGHT, color, theme, title: `${user.login} — Contribution streak`, body });
 }
 
+// ?debug=1 — what the card was computed from. Use it when a number looks
+// wrong: it shows which years GitHub returned, how many days and contributions
+// each held, and the five longest streaks it found.
+function debugResponse(cal, streaks, runs) {
+  const perYear = {};
+  for (const d of cal.days) {
+    const y = d.date.slice(0, 4);
+    perYear[y] = perYear[y] || { days: 0, activeDays: 0, contributions: 0 };
+    perYear[y].days += 1;
+    perYear[y].contributions += d.count;
+    if (d.count > 0) perYear[y].activeDays += 1;
+  }
+  const body = {
+    login: cal.login,
+    createdAt: cal.createdAt,
+    firstDay: cal.days[0] && cal.days[0].date,
+    lastDay: cal.days[cal.days.length - 1] && cal.days[cal.days.length - 1].date,
+    perYear,
+    total: streaks.total,
+    current: streaks.current,
+    longest: streaks.longest,
+    topStreaks: runs.slice().sort((a, b) => b.length - a.length).slice(0, 5),
+    note: 'Only contributions GitHub exposes to the server token are counted. Private-repo activity appears only if the profile setting "Include private contributions" is on.',
+  };
+  return new Response(JSON.stringify(body, null, 2), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, s-maxage=300' } });
+}
+
 module.exports.GET = async (request) => {
   const { rateLimited } = await checkRateLimit('streak-endpoint', { request });
   if (rateLimited) return svgResponse(errorCard('rate limited — slow down a bit'), 429, 'no-store');
@@ -76,6 +103,7 @@ module.exports.GET = async (request) => {
     const color = sanitizeColor(url.searchParams.get('color')) || '#00e5ff';
     const theme = sanitizeTheme(url.searchParams.get('theme'));
     const streaks = computeStreaks(cal.days);
+    if (url.searchParams.get('debug') === '1') return debugResponse(cal, streaks, listStreaks(cal.days));
     return svgResponse(render({ user: cal, streaks, color, theme }), 200, CACHE_OK);
   } catch (err) {
     if (err.status === 404) return svgResponse(errorCard(`user "${username}" not found`), 404, CACHE_ERR);
