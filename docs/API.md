@@ -124,12 +124,13 @@ A compact dossier in one image: a header (avatar, level, XP), a four-stat strip,
 | `username` | yes | any GitHub username | — |
 | `color` | no | 6-digit hex, no `#` | `#00e5ff` |
 | `badge` | no | `hex` \| `shield` \| `diamond` \| `octagon` \| `circle` \| `square` | `hex` |
+| `streak` | no | `1` adds a strip with current streak, longest streak and total contributions | off |
 
 ```md
 ![Codex](https://contributor-codex.vercel.app/api/codex?username=octocat)
 ```
 
-There is no `theme` or avatar `shape` param. For a fuller view (bio, location, top repositories), use the Codex Profile page, `/profile.html?u=USERNAME`.
+`streak=1` costs two extra GraphQL calls and needs `GITHUB_TOKEN` on the server; if that fails the strip is simply left out and the rest of the card still renders. There is no `theme` param; `shape` sets the avatar frame. For a fuller view (bio, location, top repositories), use the Codex Profile page, `/profile.html?u=USERNAME`.
 
 ## Streak Card
 
@@ -151,6 +152,8 @@ Total contributions, the current streak (with a progress ring relative to your p
 - A streak that was alive yesterday still counts as current while today is empty, so the card doesn't reset to 0 every morning.
 - Needs `GITHUB_TOKEN` on the server: the contribution calendar only exists in GitHub's GraphQL API, which has no anonymous access. Without it the card renders a `503` message.
 - Cached for 6 hours (24 hours stale-while-revalidate).
+- Every calendar year from the account's join year to now is requested, so an old streak can't be dropped because GitHub's own year list omitted that year.
+- **Number looks wrong?** Add `&debug=1` to the URL. It returns JSON (no card) showing the first and last day seen, days and contributions per year, and the five longest streaks found. If a streak you remember is missing there, GitHub isn't exposing those days to the server token — usually private-repo activity with "Include private contributions on my profile" turned off.
 
 ## Activity Graph
 
