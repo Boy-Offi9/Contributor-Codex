@@ -150,9 +150,11 @@ function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, c
   const tilesY = 132;
   const langLabelY = tilesY + 82;
   const donutCy = langLabelY + 48;
-  const dividerY = hasLangs ? donutCy + 54 : tilesY + 90;
-  const chipsY = dividerY + 12;
-  const height = chipsY + 24 + 32;
+  // The Joined / location chips sit *inside* the divider (line — chips — line),
+  // 18px clear of the content above and 18px above the panel edge below.
+  const dividerY = hasLangs ? donutCy + 66 : tilesY + 60 + 30;
+  const chipsY = dividerY - 12;
+  const height = dividerY + 12 + 18 + 16;
 
   const R = 30;
   const C = 2 * Math.PI * R;
@@ -182,11 +184,11 @@ function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, c
         .lbl{font:500 9px system-ui,sans-serif;fill:#8891a3;letter-spacing:.5px;}
         .cls{font:600 11px system-ui,sans-serif;fill:${color};}
         .foot{font:500 10px system-ui,sans-serif;fill:#9aa2b3;}
-        .sec{font:600 9px system-ui,sans-serif;fill:#8891a3;letter-spacing:1px;}
+        .sec{font:600 10px system-ui,sans-serif;fill:#8891a3;letter-spacing:1px;}
         .lg{font:500 11px system-ui,sans-serif;fill:#1c2333;}
         .lgp{font:600 11px system-ui,sans-serif;fill:#6b7488;}
         .big{font:700 15px system-ui,sans-serif;fill:#1c2333;}
-        .small{font:500 8px system-ui,sans-serif;fill:#8891a3;}
+        .small{font:500 9px system-ui,sans-serif;fill:#8891a3;}
       </style>
       <linearGradient id="glassBg" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0%" stop-color="#eef1f8"/>
@@ -227,30 +229,37 @@ function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, c
     <circle cx="70" cy="${donutCy}" r="${R}" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="11"/>
     ${arcs}
     <text x="70" y="${donutCy + 3}" text-anchor="middle" class="big">${segs[0].pct}%</text>
-    <text x="70" y="${donutCy + 14}" text-anchor="middle" class="small">${esc(truncate(segs[0].name, 9))}</text>
+    <text x="70" y="${donutCy + 14}" text-anchor="middle" class="small">${esc(truncate(segs[0].name, 8))}</text>
     ${segs.map((seg, i) => `
       <circle cx="132" cy="${donutCy - 28 + i * 19}" r="4" fill="${seg.color}"/>
       <text x="144" y="${donutCy - 24 + i * 19}" class="lg">${esc(truncate(seg.name, 16))}</text>
       <text x="312" y="${donutCy - 24 + i * 19}" text-anchor="end" class="lgp">${seg.pct}%</text>`).join('')}` : ''}
 
-    <line x1="32" y1="${dividerY}" x2="148" y2="${dividerY}" stroke="#c9d0e0" opacity="0.6"/>
-    <path d="M180 ${dividerY - 4}l4 4-4 4-4-4Z" fill="${color}" opacity="0.45"/>
-    <line x1="196" y1="${dividerY}" x2="312" y2="${dividerY}" stroke="#c9d0e0" opacity="0.6"/>
     ${(() => {
       const chips = [{ ic: 'calendar', text: `Joined ${joined}` }];
       const extra = user.location || (user.company ? user.company.replace(/^@/, '') : null);
-      if (extra) chips.push({ ic: user.location ? 'pin' : 'building', text: esc(truncate(extra, 22)) });
-      let cx = 32;
-      return chips.slice(0, 2).map((c) => {
-        const w = 26 + c.text.length * 5.6;
-        const g = `<g transform="translate(${cx},${chipsY})">
-          <rect width="${w}" height="24" rx="12" fill="#ffffff" opacity="0.6"/>
+      if (extra) chips.push({ ic: user.location ? 'pin' : 'building', text: esc(truncate(extra, 16)) });
+      const gap = 8;
+      const widths = chips.map((c) => 30 + c.text.length * 6.1);
+      const total = widths.reduce((a, b) => a + b, 0) + gap * (chips.length - 1);
+      const left = 180 - total / 2;
+      const right = left + total;
+      let cx = left;
+      const chipMarkup = chips.map((c, i) => {
+        const g = `<g transform="translate(${cx.toFixed(1)},${chipsY})">
+          <rect width="${widths[i].toFixed(1)}" height="24" rx="12" fill="#ffffff" opacity="0.6"/>
           ${icon(c.ic, 9, 6, '#8891a3')}
           <text x="26" y="16" class="foot">${c.text}</text>
         </g>`;
-        cx += w + 8;
+        cx += widths[i] + gap;
         return g;
       }).join('');
+      const diamond = (x) => `<path d="M${x} ${dividerY - 3.5}l3.5 3.5-3.5 3.5-3.5-3.5Z" fill="${color}" opacity="0.5"/>`;
+      return `<line x1="32" y1="${dividerY}" x2="${(left - 18).toFixed(1)}" y2="${dividerY}" stroke="#c9d0e0" opacity="0.6"/>
+    ${diamond((left - 11).toFixed(1))}
+    ${chipMarkup}
+    ${diamond((right + 11).toFixed(1))}
+    <line x1="${(right + 18).toFixed(1)}" y1="${dividerY}" x2="328" y2="${dividerY}" stroke="#c9d0e0" opacity="0.6"/>`;
     })()}
   </svg>`;
 }
