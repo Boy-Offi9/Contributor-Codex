@@ -1,4 +1,5 @@
 const { checkRateLimit } = require('@vercel/firewall');
+const { fetchCalendar, computeStreaks } = require('./_lib/contrib');
 const {
   esc, ghFetch, avatarDataUri, computeStats, classFor, trophyTier, sanitizeColor,
   CHAKRA_PETCH_FONT_FACE, byteWeightedLangs, colorForLang, icon, badge, sanitizeBadge, avatarShape, sanitizeShape, DISPLAY, isGhName } = require('./_lib/shared');
@@ -27,13 +28,23 @@ const COLLECTION_TROPHIES = [
 
 const LABEL_FONT = DISPLAY;
 
-function statBox(x, y, w, label, value, color, iconName) {
+function statBox(x, y, w, label, value, color, iconName, suffix) {
   return `
     <rect x="${x}" y="${y}" width="${w}" height="58" fill="none" stroke="#1b2233"/>
     <rect x="${x}" y="${y}" width="${w}" height="2" fill="${color}" opacity="0.35"/>
     ${icon(iconName, x + 10, y + 9, color)}
     <text x="${x + 28}" y="${y + 20}" font-family="${LABEL_FONT}" font-weight="600" font-size="10" fill="#8a94ab" letter-spacing=".5">${label}</text>
-    <text x="${x + 10}" y="${y + 46}" font-family="${LABEL_FONT}" font-weight="700" font-size="20" fill="${color}" filter="url(#glow)">${value}</text>`;
+    <text x="${x + 10}" y="${y + 46}" font-family="${LABEL_FONT}" font-weight="700" font-size="20" fill="${color}" filter="url(#glow)">${value}</text>${suffix ? `
+    <text x="${x + 10 + String(value).length * 12.5 + 5}" y="${y + 46}" font-family="${LABEL_FONT}" font-weight="600" font-size="11" fill="#8a94ab">${suffix}</text>` : ''}`;
+}
+
+function streakStrip(y, streaks, color) {
+  const w = (WIDTH - 40 - 16) / 3;
+  return [
+    statBox(20, y, w, 'CURRENT STREAK', streaks.current.length, color, 'flame', 'days'),
+    statBox(20 + (w + 8), y, w, 'LONGEST STREAK', streaks.longest.length, color, 'trophy', 'days'),
+    statBox(20 + 2 * (w + 8), y, w, 'CONTRIBUTIONS', streaks.total.toLocaleString('en-US'), color, 'pulse'),
+  ].join('');
 }
 
 // One achievement cell: a compact framed icon, then value / label / tier as
@@ -51,7 +62,7 @@ function achievement(x, y, cellW, def, value, tier, shape) {
     <rect x="${cx - barW / 2}" y="${y + 99}" width="${(barW * pct) / 100}" height="3" fill="${tier.color}"/>`;
 }
 
-function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape, avatarFrame }) {
+function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape, avatarFrame, streaks }) {
   const displayFont = LABEL_FONT;
   const name = esc(user.name || user.login);
   const classLabel = classFor(stats.topLang);
@@ -60,7 +71,10 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape,
   // section only requires one insertion, not re-deriving every coordinate.
   const headerH = 96;
   const statsY = headerH + 14;
-  const shieldsY = statsY + 58 + 18;
+  // Optional streak strip (?streak=1) sits between the stat tiles and the badges.
+  const streakY = statsY + 58 + 8;
+  const streakBlock = streaks ? 58 + 10 : 0;
+  const shieldsY = statsY + 58 + 18 + streakBlock;
   const langsY = shieldsY + 102 + 14;
   const langChips = topLangs.slice(0, 5);
   const height = langChips.length ? langsY + 56 : langsY + 4;
@@ -117,6 +131,8 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape,
     ${statBox(20 + 2 * (boxW + 8), statsY, boxW, 'FOLLOWERS', user.followers || 0, color, 'people')}
     ${statBox(20 + 3 * (boxW + 8), statsY, boxW, 'REPOS', user.public_repos || 0, color, 'repo')}
 
+    ${streaks ? streakStrip(streakY, streaks, color) : ''}
+
     ${COLLECTION_TROPHIES.map((t, i) => {
       const value = t.value(stats, user);
       const tier = trophyTier(value, t.thresholds);
@@ -162,16 +178,20 @@ module.exports.GET = async (request) => {
     } catch {}
 
     const stats = computeStats(user, repos);
-    const [avatarUri, langStats] = await Promise.all([
+    // Streaks are opt-in (?streak=1): they cost two extra GraphQL calls and need
+    // a token, so a failure here quietly drops the strip instead of the card.
+    const wantStreak = ['1', 'true', 'yes'].includes((url.searchParams.get('streak') || '').toLowerCase());
+    const [avatarUri, langStats, streaks] = await Promise.all([
       avatarDataUri(`${user.avatar_url}&s=160`),
       byteWeightedLangs(repos, token),
+      wantStreak ? fetchCalendar(username, token).then((c) => computeStreaks(c.days)).catch(() => null) : null,
     ]);
     const topLangs = langStats.map((l) => l.name);
     const color = sanitizeColor(url.searchParams.get('color')) || '#00e5ff';
     const avatarFrame = sanitizeShape(url.searchParams.get('shape'), 'hex');
     const badgeShape = sanitizeBadge(url.searchParams.get('badge'), 'hex');
 
-    return svg(render({ user, stats, avatarUri, topLangs, fontFace: CHAKRA_PETCH_FONT_FACE, color, badgeShape, avatarFrame }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
+    return svg(render({ user, stats, avatarUri, topLangs, fontFace: CHAKRA_PETCH_FONT_FACE, color, badgeShape, avatarFrame, streaks }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
   } catch (err) {
     if (err.status === 404) return svg(errorSVG(`user "${username}" not found`), 404, 'public, s-maxage=60');
     if (err.status === 403) return svg(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=60');

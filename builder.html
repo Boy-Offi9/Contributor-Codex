@@ -241,6 +241,7 @@ const TYPES = {
     badgeSupport: true,
     fields: [
       { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
+      { key: 'streak', label: 'Streak strip', type: 'select', options: ['1'], labels: { '1': 'include (needs server token)' } },
     ],
   },
   leaderboard: {
@@ -320,7 +321,7 @@ function renderFields(){
       ${f.type === 'select'
         ? `<select id="f_${f.key}">
             <option value="">default</option>
-            ${f.options.map(o => `<option value="${o}" ${state[f.key] === o ? 'selected' : ''}>${o}</option>`).join('')}
+            ${f.options.map(o => `<option value="${o}" ${state[f.key] === o ? 'selected' : ''}>${(f.labels && f.labels[o]) || o}</option>`).join('')}
           </select>`
         : `<input type="${f.type || 'text'}" id="f_${f.key}" class="mono" placeholder="${f.placeholder || ''}"
         ${f.min !== undefined ? `min="${f.min}"` : ''} ${f.max !== undefined ? `max="${f.max}"` : ''}
