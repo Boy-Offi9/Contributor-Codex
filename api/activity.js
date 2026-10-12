@@ -1,7 +1,7 @@
 const { checkRateLimit } = require('@vercel/firewall');
 const { sanitizeColor, esc, isGhName } = require('./_lib/shared');
 const { fetchCalendar, fmtDate } = require('./_lib/contrib');
-const { FONT, PALETTE, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
+const { FONT, PALETTE, ink, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
 
 const WIDTH = 480;
 const HEIGHT = 238;
@@ -92,7 +92,7 @@ function render({ user, days, range, color, theme }) {
         <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
       </linearGradient>
     </defs>
-    <text x="22" y="32" font-family="${FONT}" font-weight="700" font-size="12" fill="${color}" letter-spacing="1">CONTRIBUTION ACTIVITY</text>
+    <text x="22" y="32" font-family="${FONT}" font-weight="700" font-size="12" fill="${ink(color, theme)}" letter-spacing="1">CONTRIBUTION ACTIVITY</text>
     <text x="${WIDTH - 22}" y="32" text-anchor="end" font-family="${FONT}" font-weight="600" font-size="11" fill="${p.dim}">last ${range} days · ${total.toLocaleString('en-US')} total</text>
     <text x="22" y="49" font-family="${FONT}" font-weight="600" font-size="11" fill="${p.sub}">@${esc(user.login)}${weekly ? ' · per week' : ' · per day'}</text>
     ${grid}

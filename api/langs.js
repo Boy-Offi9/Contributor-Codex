@@ -1,6 +1,6 @@
 const { checkRateLimit } = require('@vercel/firewall');
 const { esc, ghFetch, sanitizeColor, byteWeightedLangs, colorForLang, isGhName } = require('./_lib/shared');
-const { FONT, PALETTE, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
+const { FONT, PALETTE, ink, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
 
 const WIDTH = 480;
 const CACHE_OK = 'public, s-maxage=21600, stale-while-revalidate=86400';
@@ -34,7 +34,7 @@ function render({ username, langs, color, theme }) {
 
   const body = `
     <defs><clipPath id="barClip"><rect x="${barX}" y="${barY}" width="${barW}" height="${barH}" rx="5"/></clipPath></defs>
-    <text x="22" y="32" font-family="${FONT}" font-weight="700" font-size="12" fill="${color}" letter-spacing="1">MOST USED LANGUAGES</text>
+    <text x="22" y="32" font-family="${FONT}" font-weight="700" font-size="12" fill="${ink(color, theme)}" letter-spacing="1">MOST USED LANGUAGES</text>
     <text x="${WIDTH - 22}" y="32" text-anchor="end" font-family="${FONT}" font-weight="600" font-size="11" fill="${p.dim}">@${esc(username)}</text>
     <rect x="${barX}" y="${barY}" width="${barW}" height="${barH}" rx="5" fill="${p.track}"/>
     <g clip-path="url(#barClip)">${segs}</g>
