@@ -1,7 +1,7 @@
 const { checkRateLimit } = require('@vercel/firewall');
 const { sanitizeColor, icon, esc, isGhName } = require('./_lib/shared');
 const { fetchCalendar, computeStreaks, fmtRange, fmtDate } = require('./_lib/contrib');
-const { FONT, PALETTE, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
+const { FONT, PALETTE, ink, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
 
 const WIDTH = 480;
 const HEIGHT = 172;
@@ -17,8 +17,11 @@ function render({ user, streaks, color, theme }) {
   const cols = [WIDTH / 6, WIDTH / 2, (WIDTH * 5) / 6];
   const cy = 66;
 
-  const sinceYear = since && since.slice(0, 4) !== today.slice(0, 4);
-  const totalRange = since ? `${fmtDate(since, sinceYear)} – Present` : 'no contributions yet';
+  // "Since day one": the range starts on the account's join date, not on the
+  // first day that happened to have a contribution.
+  const start = (user.createdAt || '').slice(0, 10) || since;
+  const startYear = start && start.slice(0, 4) !== today.slice(0, 4);
+  const totalRange = start ? `${fmtDate(start, startYear)} – Present` : 'no contributions yet';
   const currentRange = fmtRange(current.start, current.end, today, current.length > 0);
   const longestRange = fmtRange(longest.start, longest.end, today, false);
 
@@ -31,7 +34,7 @@ function render({ user, streaks, color, theme }) {
   const bigNumber = (x, value) =>
     `<text x="${x}" y="${cy + 10}" text-anchor="middle" font-family="${FONT}" font-weight="700" font-size="${String(value).length > 5 ? 26 : 30}" fill="${p.text}">${value}</text>`;
   const label = (x, text, strong) =>
-    `<text x="${x}" y="126" text-anchor="middle" font-family="${FONT}" font-weight="${strong ? 700 : 600}" font-size="13" fill="${strong ? color : p.sub}">${text}</text>`;
+    `<text x="${x}" y="126" text-anchor="middle" font-family="${FONT}" font-weight="${strong ? 700 : 600}" font-size="13" fill="${strong ? ink(color, theme) : p.sub}">${text}</text>`;
   const range = (x, text) =>
     `<text x="${x}" y="146" text-anchor="middle" font-family="${FONT}" font-weight="600" font-size="11" fill="${p.dim}">${esc(text)}</text>`;
 
