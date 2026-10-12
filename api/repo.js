@@ -1,5 +1,5 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { esc, ghFetch, CHAKRA_PETCH_FONT_FACE, sanitizeColor, MONO, isGhName, isGhRepo } = require('./_lib/shared');
+const { esc, ghFetch, CHAKRA_PETCH_FONT_FACE, sanitizeColor, MONO, isGhName, isGhRepo, readableAccent } = require('./_lib/shared');
 
 function errorSVG(message) {
   return `<svg width="420" height="120" viewBox="0 0 420 120" xmlns="http://www.w3.org/2000/svg">
@@ -270,7 +270,7 @@ module.exports.GET = async (request) => {
   try {
     const repo = await ghFetch(`https://api.github.com/repos/${owner}/${repoName}`, token);
     const fontFace = CHAKRA_PETCH_FONT_FACE;
-    const color = sanitizeColor(url.searchParams.get('color')) || '#00e5ff';
+    const color = readableAccent(sanitizeColor(url.searchParams.get('color')), requestedTheme) || '#00e5ff';
 
     let contributors = null;
     let releaseTag = null;

@@ -37,6 +37,36 @@ try {
 
 const CHAKRA_PETCH_FONT_FACE = fontCache;
 
+// WCAG relative luminance of a #rrggbb colour (0 = black, 1 = white).
+function luminance(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const v = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+// A user-chosen accent can disappear into the card: black on a near-black
+// theme, white on the light glass theme. Push it just far enough toward the
+// readable end (keeping its hue) instead of letting the card go blank.
+// Dark themes need luminance >= 0.12 (~3:1 against the card); glass needs <= 0.75.
+// Colours that already read fine are returned untouched.
+function readableAccent(color, theme) {
+  if (!color) return color;
+  const light = theme === 'glass';
+  // Near-black on a dark card has no hue worth keeping; lifting it to dark grey
+  // just looks muddy (and the glow smears it), so use a crisp light steel instead.
+  if (!light && luminance(color) < 0.02) return '#aab4c8';
+  const rgb = [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16));
+  const target = light ? 0 : 255;
+  const ok = (c) => (light ? luminance(c) <= 0.75 : luminance(c) >= 0.12);
+  let out = color;
+  for (let t = 0.04; !ok(out) && t <= 1; t += 0.04) {
+    out = `#${rgb.map((v) => Math.round(v + (target - v) * t).toString(16).padStart(2, '0')).join('')}`;
+  }
+  return out;
+}
+
 function sanitizeColor(input) {
   if (!input) return null;
   const hex = String(input).replace(/^#/, '');
@@ -162,5 +192,5 @@ function badge({ shape = 'hex', cx, cy, size = 46, tier, iconName = 'star' }) {
 }
 
 module.exports = {
-  colorForLang, esc, CHAKRA_PETCH_FONT_FACE, sanitizeColor, truncate, sanitizeShape, avatarShape, ICONS, MONO, SANS, DISPLAY, icon, BADGE_SHAPES, sanitizeBadge, badge,
+  colorForLang, esc, CHAKRA_PETCH_FONT_FACE, sanitizeColor, readableAccent, luminance, truncate, sanitizeShape, avatarShape, ICONS, MONO, SANS, DISPLAY, icon, BADGE_SHAPES, sanitizeBadge, badge,
 };

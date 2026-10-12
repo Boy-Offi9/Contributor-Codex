@@ -1,5 +1,5 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { esc, ghFetch, computeStats, trophyTier, sanitizeColor, badge, sanitizeBadge, SANS, isGhName } = require('./_lib/shared');
+const { esc, ghFetch, computeStats, trophyTier, sanitizeColor, badge, sanitizeBadge, SANS, isGhName, readableAccent } = require('./_lib/shared');
 
 function errorSVG(message) {
   return `<svg width="420" height="120" viewBox="0 0 420 120" xmlns="http://www.w3.org/2000/svg">
@@ -145,7 +145,7 @@ module.exports.GET = async (request) => {
     stats.activeRepos = own.filter((r) => r.pushed_at && new Date(r.pushed_at).getTime() >= ninetyDaysAgo).length;
     stats.topRepoStars = own.reduce((max, r) => Math.max(max, r.stargazers_count || 0), 0);
     stats.topicRepos = own.filter((r) => Array.isArray(r.topics) && r.topics.length > 0).length;
-    const colorOverride = sanitizeColor(url.searchParams.get('color'));
+    const colorOverride = readableAccent(sanitizeColor(url.searchParams.get('color')), 'dark');
     if (colorOverride) stats.color = colorOverride;
 
     return svg(renderTrophies(user, stats, selected, trophyDefs, sanitizeBadge(url.searchParams.get('badge'), 'shield')), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');

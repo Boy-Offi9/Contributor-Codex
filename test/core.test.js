@@ -81,3 +81,14 @@ test('longest streak survives an older year and a year boundary', () => {
   assert.equal(r.current.length, 21);
   assert.equal(listStreaks(days).length, 2);
 });
+
+const { readableAccent, luminance } = require('../api/_lib/shared');
+test('readableAccent keeps accents visible without touching good ones', () => {
+  assert.equal(readableAccent('#00e5ff', 'cyberpunk'), '#00e5ff');
+  assert.equal(readableAccent('#00e5ff', 'glass'), '#00e5ff');
+  assert.equal(readableAccent('#000000', 'cyberpunk'), '#aab4c8');
+  assert.equal(readableAccent('#000000', 'glass'), '#000000');
+  assert.ok(luminance(readableAccent('#1a1a2e', 'terminal')) >= 0.12);
+  assert.ok(luminance(readableAccent('#ffffff', 'glass')) <= 0.76);
+  assert.equal(readableAccent(null, 'glass'), null);
+});

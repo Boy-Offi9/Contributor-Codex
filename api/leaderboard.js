@@ -1,7 +1,7 @@
 const { checkRateLimit } = require('@vercel/firewall');
 const {
   classFor, esc, ghFetch, avatarDataUri, computeStats, sanitizeColor, XP_FORMULA,
-  clearanceFor, truncate, avatarShape, sanitizeShape, icon, colorForLang, MONO, isGhName } = require('./_lib/shared');
+  clearanceFor, truncate, avatarShape, sanitizeShape, icon, colorForLang, MONO, isGhName, readableAccent } = require('./_lib/shared');
 
 const ROW_H = 56;
 const WIDTH = 640;
@@ -235,9 +235,9 @@ module.exports.GET = async (request) => {
   const url = new URL(request.url);
   const org = (url.searchParams.get('org') || '').trim();
   const limit = Math.max(1, Math.min(20, parseInt(url.searchParams.get('limit'), 10) || 10));
-  const colorOverride = sanitizeColor(url.searchParams.get('color'));
-  const accent = colorOverride || '#00e5ff';
   const theme = url.searchParams.get('theme');
+  const colorOverride = readableAccent(sanitizeColor(url.searchParams.get('color')), theme);
+  const accent = colorOverride || '#00e5ff';
   const shape = sanitizeShape(url.searchParams.get('shape'), theme === 'glass' ? 'circle' : 'hex');
 
   if (!org) return svgResponse(errorSVG('missing ?org='), 400);

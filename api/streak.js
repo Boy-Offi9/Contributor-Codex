@@ -1,5 +1,5 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { sanitizeColor, icon, esc, isGhName } = require('./_lib/shared');
+const { sanitizeColor, icon, esc, isGhName, readableAccent } = require('./_lib/shared');
 const { fetchCalendar, computeStreaks, listStreaks, fmtRange, fmtDate } = require('./_lib/contrib');
 const { FONT, PALETTE, ink, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
 
@@ -100,8 +100,8 @@ module.exports.GET = async (request) => {
 
   try {
     const cal = await fetchCalendar(username, process.env.GITHUB_TOKEN);
-    const color = sanitizeColor(url.searchParams.get('color')) || '#00e5ff';
     const theme = sanitizeTheme(url.searchParams.get('theme'));
+    const color = readableAccent(sanitizeColor(url.searchParams.get('color')), theme) || '#00e5ff';
     const streaks = computeStreaks(cal.days);
     if (url.searchParams.get('debug') === '1') return debugResponse(cal, streaks, listStreaks(cal.days));
     return svgResponse(render({ user: cal, streaks, color, theme }), 200, CACHE_OK);

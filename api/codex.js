@@ -2,7 +2,7 @@ const { checkRateLimit } = require('@vercel/firewall');
 const { fetchCalendar, computeStreaks } = require('./_lib/contrib');
 const {
   esc, ghFetch, avatarDataUri, computeStats, classFor, trophyTier, sanitizeColor,
-  CHAKRA_PETCH_FONT_FACE, byteWeightedLangs, colorForLang, icon, badge, sanitizeBadge, avatarShape, sanitizeShape, DISPLAY, isGhName } = require('./_lib/shared');
+  CHAKRA_PETCH_FONT_FACE, byteWeightedLangs, colorForLang, icon, badge, sanitizeBadge, avatarShape, sanitizeShape, DISPLAY, isGhName, readableAccent } = require('./_lib/shared');
 
 const WIDTH = 480;
 
@@ -187,7 +187,7 @@ module.exports.GET = async (request) => {
       wantStreak ? fetchCalendar(username, token).then((c) => computeStreaks(c.days)).catch(() => null) : null,
     ]);
     const topLangs = langStats.map((l) => l.name);
-    const color = sanitizeColor(url.searchParams.get('color')) || '#00e5ff';
+    const color = readableAccent(sanitizeColor(url.searchParams.get('color')), 'dark') || '#00e5ff';
     const avatarFrame = sanitizeShape(url.searchParams.get('shape'), 'hex');
     const badgeShape = sanitizeBadge(url.searchParams.get('badge'), 'hex');
 
