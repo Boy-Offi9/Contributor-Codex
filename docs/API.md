@@ -198,6 +198,10 @@ Errors are returned as a rendered SVG, so a broken `<img>` shows a readable mess
 | `503` | rate limited by GitHub — the deployment needs a `GITHUB_TOKEN` |
 | `500` | unexpected failure |
 
+## Accent colours
+
+`color=` takes six hex digits. A colour that would vanish into the card is adjusted instead of rendering a blank one: on the dark themes near-black becomes a light steel and dark shades are lifted until they read; on `glass`, near-white is darkened. Colours that already read well are never touched.
+
 ## Caching
 
 Responses are cached at Vercel's edge via `Cache-Control`:
