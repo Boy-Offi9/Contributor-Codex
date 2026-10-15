@@ -132,6 +132,29 @@ A compact dossier in one image: a header (avatar, level, XP), a four-stat strip,
 
 `streak=1` costs two extra GraphQL calls and needs `GITHUB_TOKEN` on the server; if that fails the strip is simply left out and the rest of the card still renders. There is no `theme` param; `shape` sets the avatar frame. For a fuller view (bio, location, top repositories), use the Codex Profile page, `/profile.html?u=USERNAME`.
 
+## Stats + Rank
+
+`GET /api/stats`
+
+Stars, commits, pull requests, issues, reviews and repositories contributed to, with a rank grade in a progress ring.
+
+| Param | Required | Values | Default |
+|---|---|---|---|
+| `username` | yes | any GitHub username | — |
+| `hide` | no | comma list of `stars`, `commits`, `prs`, `issues`, `reviews`, `contrib` (at least one stat always stays) | none hidden |
+| `theme` | no | `cyberpunk` \| `glass` \| `terminal` | `cyberpunk` |
+| `color` | no | 6-digit hex, no `#` | `#00e5ff` |
+| `animate` | no | `1` draws the rank ring in | off |
+| `bg` `text` `border` `hide_border` | no | [colour overrides](#colour-overrides) | — |
+
+```md
+![Stats](https://contributor-codex.vercel.app/api/stats?username=octocat)
+```
+
+- Commits and reviews are GitHub's own "last 12 months" totals; stars are summed over the owner's 100 most-starred non-fork repositories; pull requests, issues and "contributed to" are all-time.
+- **Rank** is this project's own scale, not a percentile of GitHub users. Score = commits×1 + PRs×4 + issues×2 + reviews×3 + stars×5 + followers×2 + repos contributed to×3, mapped to **C** (<100), **B** (100), **B+** (300), **A** (700), **A+** (1,500), **S** (3,000). The ring shows progress toward the next grade.
+- One GraphQL request; needs `GITHUB_TOKEN`; cached for 6 hours.
+
 ## Streak Card
 
 `GET /api/streak`

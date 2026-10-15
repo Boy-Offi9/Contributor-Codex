@@ -25,7 +25,7 @@ Contributor Codex is a set of Vercel serverless functions plus four static pages
 1. Fork or clone the repository.
 2. Import it into Vercel as a new project. There is no build command and no output directory; leave the framework preset on **Other**.
 3. Add the `GITHUB_TOKEN` [environment variable](#environment-variables) and redeploy.
-4. Create the eight [rate-limit rules](#rate-limit-rules) in the Vercel Firewall.
+4. Create the [rate-limit rules](#rate-limit-rules) in the Vercel Firewall (one shared rule on Hobby, nine on Pro).
 5. If you are not deploying to `contributor-codex.vercel.app`, work through the [self-hosting checklist](#self-hosting-checklist).
 6. Open `/` — the landing page's live demo should render a card.
 
@@ -39,20 +39,40 @@ Set it in the Vercel dashboard. Never commit it.
 
 ## Rate-limit rules
 
-Each endpoint checks a per-IP rate limit through `@vercel/firewall`, looked up by rule ID. Create one rate-limiting rule per ID, spelled exactly as below:
+Every endpoint checks a per-IP rate limit through `@vercel/firewall`, looked up by rule ID. How many rules you can create depends on your Vercel plan: **Hobby allows 1 rate-limiting rule per project, Pro allows 40.**
 
-| Rule ID | Endpoint |
-|---|---|
-| `card-endpoint` | `/api/card` |
-| `leaderboard-endpoint` | `/api/leaderboard` |
-| `repo-endpoint` | `/api/repo` |
-| `trophies-endpoint` | `/api/trophies` |
-| `codex-endpoint` | `/api/codex` |
-| `streak-endpoint` | `/api/streak` |
-| `activity-endpoint` | `/api/activity` |
-| `langs-endpoint` | `/api/langs` |
+### Hobby: one shared rule
 
-The thresholds are yours to choose. Leave each rule's action at its default: when a request is limited, the endpoint renders a `429` message card from application code rather than showing Vercel's block page.
+1. In Vercel: your project → **Firewall** → **Rules** → **New Rule**. Ignore the "describe your rule" box and use the form under **OR**.
+2. **Name:** `codex-shared-limit` (any name).
+3. In **Configure**, open the first **If** dropdown (it starts on "Request ...") and choose `@vercel/firewall`. A **Rate limit ID** field appears — enter `codex-shared`.
+4. Set **Then** to **Rate Limit**, algorithm **Fixed Window**, window **60 s**, limit **100** (the defaults are fine to start). The first rate-limit rule shows a pricing dialog; continue through it.
+5. Tap **Add Rule**, then **Review Changes** and publish. Nothing is live until you publish.
+6. In **Settings → Environment Variables** add `RATE_LIMIT_SHARED_ID` = `codex-shared` and **redeploy**.
+
+All nine endpoints now count against one per-IP budget. To check it works, request cards in a loop and watch for the `429` message card, or look at the rule's traffic in **Firewall → Traffic**.
+
+### Pro: one rule per endpoint
+
+Leave `RATE_LIMIT_SHARED_ID` unset and create one rule per ID, spelled exactly as below (same steps as above, with the ID from the table):
+
+| Rule ID | Endpoint | Suggested limit (per IP / 60 s) |
+|---|---|---|
+| `card-endpoint` | `/api/card` | 60 |
+| `repo-endpoint` | `/api/repo` | 60 |
+| `trophies-endpoint` | `/api/trophies` | 60 |
+| `codex-endpoint` | `/api/codex` | 40 |
+| `langs-endpoint` | `/api/langs` | 40 |
+| `stats-endpoint` | `/api/stats` | 30 |
+| `streak-endpoint` | `/api/streak` | 30 |
+| `activity-endpoint` | `/api/activity` | 30 |
+| `leaderboard-endpoint` | `/api/leaderboard` | 10 |
+
+The limits are starting points, weighted by how many GitHub calls an uncached render costs. README images are fetched through GitHub's image proxy, so many readers' cards can arrive from the same few IPs: start generous and tighten after watching Firewall → Traffic.
+
+Leave each rule's action at its default: when a request is limited, the endpoint renders a `429` message card from application code rather than showing Vercel's block page. The check **fails open** — if the firewall lookup itself errors, or an ID has no rule, the request is served normally.
+
+Rate-limit counters are tracked per region, so one visitor hitting several regions can exceed the number you set.
 
 ## Checking your GitHub budget
 
@@ -95,6 +115,7 @@ api/
   repo.js            Repository Card           (4 themes)
   trophies.js        Achievements              (12 badges, 6 badge shapes)
   codex.js           Codex Collection
+  stats.js           Stats + rank grade        (3 themes)
   streak.js          Streak Card               (3 themes)
   activity.js        Contribution activity graph
   langs.js           Most-used languages
@@ -129,7 +150,7 @@ The four pages are single self-contained HTML files with no shared bundle. The r
 
 ## GitHub API budget
 
-GitHub requests made for one **uncached** render. Edge caching (1 hour, 6 for the leaderboard, streak, activity and languages cards — see [Caching](API.md#caching)) means most requests cost nothing.
+GitHub requests made for one **uncached** render. Edge caching (1 hour, 6 for the leaderboard, stats, streak, activity and languages cards — see [Caching](API.md#caching)) means most requests cost nothing.
 
 | Endpoint | GitHub requests |
 |---|---|
@@ -141,6 +162,7 @@ GitHub requests made for one **uncached** render. Edge caching (1 hour, 6 for th
 | `/api/repo` with `theme=detailed` | 1 + 2 (contributor count, latest release) |
 | `/api/leaderboard` | 1 (member list) + 2 per ranked member, so up to 121 |
 | `/api/streak`, `/api/activity` | 2 GraphQL requests (profile, then one aliased query covering every year since the account was created). Requires `GITHUB_TOKEN`. |
+| `/api/stats` | 1 GraphQL request. Requires `GITHUB_TOKEN`. |
 | `/api/langs` | 1 (repo list) + up to 6 (language bytes) |
 
 Avatar images come from GitHub's avatar host and are not counted against the API limit. The Search API has its own, lower limit; pull request and issue counts fail soft when it is exhausted.
