@@ -191,6 +191,50 @@ function badge({ shape = 'hex', cx, cy, size = 46, tier, iconName = 'star' }) {
     : `<${el} fill="none" stroke="${tier.color}" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round" opacity="0.75"/>${ic}`;
 }
 
+// ---------------------------------------------------------------------------
+// HTTP response for every SVG card
+// ---------------------------------------------------------------------------
+// CSP / nosniff: cards are escaped, but if one is ever opened as a document
+// (not inside an <img>) these stop any script from running regardless.
+// stale-if-error is added by the callers' Cache-Control strings so a GitHub
+// outage or rate-limit keeps serving the last good card instead of an error.
+// CORS lets the Card Builder fetch a card to export it as PNG.
+function svgHeaders(cacheControl) {
+  const headers = {
+    'Content-Type': 'image/svg+xml; charset=utf-8',
+    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:",
+    'X-Content-Type-Options': 'nosniff',
+    'Access-Control-Allow-Origin': '*',
+  };
+  if (cacheControl) headers['Cache-Control'] = cacheControl;
+  return headers;
+}
+
+// Screen readers: role="img" on the root and, when the card has a <title>,
+// aria-labelledby pointing at it.
+function a11y(svg) {
+  const hasTitle = svg.includes('<title>');
+  const out = svg.replace(/<svg\b/, hasTitle ? '<svg role="img" aria-labelledby="cardTitle"' : '<svg role="img"');
+  return hasTitle ? out.replace('<title>', '<title id="cardTitle">') : out;
+}
+
+function svgReply(body, status, cacheControl) {
+  return new Response(a11y(body), { status, headers: svgHeaders(cacheControl) });
+}
+
+// WCAG contrast ratio between two #rrggbb colours (1 = identical, 21 = black on white).
+function contrastRatio(a, b) {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+// Linear blend: t=0 -> a, t=1 -> b.
+function mixColors(a, b, t) {
+  const ch = (hex, i) => parseInt(hex.slice(i, i + 2), 16);
+  return `#${[1, 3, 5].map((i) => Math.round(ch(a, i) + (ch(b, i) - ch(a, i)) * t).toString(16).padStart(2, '0')).join('')}`;
+}
+
 module.exports = {
+  svgHeaders, svgReply, a11y, contrastRatio, mixColors,
   colorForLang, esc, CHAKRA_PETCH_FONT_FACE, sanitizeColor, readableAccent, luminance, truncate, sanitizeShape, avatarShape, ICONS, MONO, SANS, DISPLAY, icon, BADGE_SHAPES, sanitizeBadge, badge,
 };
