@@ -1,13 +1,13 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { esc, ghFetch, sanitizeColor, byteWeightedLangs, colorForLang, isGhName, readableAccent } = require('./_lib/shared');
-const { FONT, PALETTE, ink, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
+const { esc, ghFetch, sanitizeColor, byteWeightedLangs, colorForLang, isGhName, readableAccent, luminance } = require('./_lib/shared');
+const { FONT, paletteFor, styleFromParams, ink, inkTheme, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
 
 const WIDTH = 480;
-const CACHE_OK = 'public, s-maxage=21600, stale-while-revalidate=86400';
+const CACHE_OK = 'public, s-maxage=21600, stale-while-revalidate=86400, stale-if-error=604800';
 const CACHE_ERR = 'public, s-maxage=60';
 
-function render({ username, langs, color, theme }) {
-  const p = PALETTE[theme];
+function render({ username, langs, color, theme, style }) {
+  const p = paletteFor(theme, style);
   const rows = Math.ceil(langs.length / 2);
   const height = 84 + rows * 26 + 14;
   const sum = langs.reduce((a, l) => a + l.bytes, 0) || 1;
@@ -34,13 +34,13 @@ function render({ username, langs, color, theme }) {
 
   const body = `
     <defs><clipPath id="barClip"><rect x="${barX}" y="${barY}" width="${barW}" height="${barH}" rx="5"/></clipPath></defs>
-    <text x="22" y="32" font-family="${FONT}" font-weight="700" font-size="12" fill="${ink(color, theme)}" letter-spacing="1">MOST USED LANGUAGES</text>
+    <text x="22" y="32" font-family="${FONT}" font-weight="700" font-size="12" fill="${ink(color, inkTheme(theme, style))}" letter-spacing="1">MOST USED LANGUAGES</text>
     <text x="${WIDTH - 22}" y="32" text-anchor="end" font-family="${FONT}" font-weight="600" font-size="11" fill="${p.dim}">@${esc(username)}</text>
     <rect x="${barX}" y="${barY}" width="${barW}" height="${barH}" rx="5" fill="${p.track}"/>
     <g clip-path="url(#barClip)">${segs}</g>
     ${legend}`;
 
-  return frame({ width: WIDTH, height, color, theme, title: `${username} — Most used languages`, body });
+  return frame({ width: WIDTH, height, color, theme, style, title: `${username} — Most used languages`, body });
 }
 
 module.exports.GET = async (request) => {
@@ -60,8 +60,10 @@ module.exports.GET = async (request) => {
     const langs = (await byteWeightedLangs(repos, token)).slice(0, limit);
     if (!langs.length) return svgResponse(errorCard('no language data for this account'), 200, CACHE_ERR);
     const theme = sanitizeTheme(url.searchParams.get('theme'));
-    const color = readableAccent(sanitizeColor(url.searchParams.get('color')), theme) || '#00e5ff';
-    return svgResponse(render({ username, langs, color, theme }), 200, CACHE_OK);
+    const style = styleFromParams(url.searchParams, theme);
+    const accentTheme = style.bg ? (luminance(style.bg) > 0.4 ? 'glass' : 'dark') : theme;
+    const color = readableAccent(sanitizeColor(url.searchParams.get('color')), accentTheme) || '#00e5ff';
+    return svgResponse(render({ username, langs, color, theme, style }), 200, CACHE_OK);
   } catch (err) {
     if (err.status === 404) return svgResponse(errorCard(`user "${username}" not found`), 404, CACHE_ERR);
     if (err.status === 403) return svgResponse(errorCard('rate limited — set GITHUB_TOKEN'), 503, CACHE_ERR);

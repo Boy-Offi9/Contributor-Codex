@@ -1,12 +1,12 @@
 const { checkRateLimit } = require('@vercel/firewall');
-const { sanitizeColor, esc, isGhName, readableAccent } = require('./_lib/shared');
+const { sanitizeColor, esc, isGhName, readableAccent, luminance } = require('./_lib/shared');
 const { fetchCalendar, fmtDate } = require('./_lib/contrib');
-const { FONT, PALETTE, ink, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
+const { FONT, paletteFor, styleFromParams, ink, inkTheme, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
 
 const WIDTH = 480;
 const HEIGHT = 238;
 const RANGES = [30, 90, 180, 365];
-const CACHE_OK = 'public, s-maxage=21600, stale-while-revalidate=86400';
+const CACHE_OK = 'public, s-maxage=21600, stale-while-revalidate=86400, stale-if-error=604800';
 const CACHE_ERR = 'public, s-maxage=60';
 
 // Smallest "round" axis maximum (1, 2, 2.5, 5 × 10^k) that fits the data.
@@ -43,8 +43,8 @@ function smoothPath(pts) {
   return path;
 }
 
-function render({ user, days, range, color, theme }) {
-  const p = PALETTE[theme];
+function render({ user, days, range, color, theme, style, animate }) {
+  const p = paletteFor(theme, style);
   const window = days.slice(-range);
   const weekly = range > 120;
   // 180/365-day views sum into weeks so the line stays readable.
@@ -92,17 +92,25 @@ function render({ user, days, range, color, theme }) {
         <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
       </linearGradient>
     </defs>
-    <text x="22" y="32" font-family="${FONT}" font-weight="700" font-size="12" fill="${ink(color, theme)}" letter-spacing="1">CONTRIBUTION ACTIVITY</text>
+    <text x="22" y="32" font-family="${FONT}" font-weight="700" font-size="12" fill="${ink(color, inkTheme(theme, style))}" letter-spacing="1">CONTRIBUTION ACTIVITY</text>
     <text x="${WIDTH - 22}" y="32" text-anchor="end" font-family="${FONT}" font-weight="600" font-size="11" fill="${p.dim}">last ${range} days · ${total.toLocaleString('en-US')} total</text>
     <text x="22" y="49" font-family="${FONT}" font-weight="600" font-size="11" fill="${p.sub}">@${esc(user.login)}${weekly ? ' · per week' : ' · per day'}</text>
     ${grid}
-    <path d="${area}" fill="url(#areaFill)"/>
-    <path d="${line}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" filter="url(#glow)"/>
+    <path class="areaFill" d="${area}" fill="url(#areaFill)"/>
+    <path class="lineDraw" d="${line}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" pathLength="1" filter="url(#glow)"/>
     ${peak.value > 0 ? `<circle cx="${peakX.toFixed(1)}" cy="${yAt(peak.value).toFixed(1)}" r="3.5" fill="${p.bg}" stroke="${color}" stroke-width="2"/>
     <text x="${peakX.toFixed(1)}" y="${(yAt(peak.value) - 10).toFixed(1)}" text-anchor="${labelAnchor}" font-family="${FONT}" font-weight="700" font-size="10.5" fill="${p.text}">peak ${peak.value} · ${fmtDate(peak.date)}</text>` : ''}
     ${ticks}`;
 
-  return frame({ width: WIDTH, height: HEIGHT, color, theme, title: `${user.login} — Contribution activity`, body });
+  // CSS-only so prefers-reduced-motion users get the finished graph.
+  const css = animate ? `
+    @media (prefers-reduced-motion: no-preference){
+      .lineDraw{stroke-dasharray:1;animation:lineDraw 1.8s cubic-bezier(.3,.7,.3,1) .1s both}
+      @keyframes lineDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+      .areaFill{animation:areaIn 1.4s ease-out .5s both}
+      @keyframes areaIn{from{opacity:0}}
+    }` : '';
+  return frame({ width: WIDTH, height: HEIGHT, color, theme, style, css, title: `${user.login} — Contribution activity`, body });
 }
 
 module.exports.GET = async (request) => {
@@ -119,8 +127,11 @@ module.exports.GET = async (request) => {
   try {
     const cal = await fetchCalendar(username, process.env.GITHUB_TOKEN);
     const theme = sanitizeTheme(url.searchParams.get('theme'));
-    const color = readableAccent(sanitizeColor(url.searchParams.get('color')), theme) || '#00e5ff';
-    return svgResponse(render({ user: cal, days: cal.days, range, color, theme }), 200, CACHE_OK);
+    const style = styleFromParams(url.searchParams, theme);
+    const accentTheme = style.bg ? (luminance(style.bg) > 0.4 ? 'glass' : 'dark') : theme;
+    const color = readableAccent(sanitizeColor(url.searchParams.get('color')), accentTheme) || '#00e5ff';
+    const animate = ['1', 'true', 'yes'].includes((url.searchParams.get('animate') || '').toLowerCase());
+    return svgResponse(render({ user: cal, days: cal.days, range, color, theme, style, animate }), 200, CACHE_OK);
   } catch (err) {
     if (err.status === 404) return svgResponse(errorCard(`user "${username}" not found`), 404, CACHE_ERR);
     if (err.status === 401) return svgResponse(errorCard('activity needs GITHUB_TOKEN on the server'), 503, CACHE_ERR);
