@@ -1,6 +1,6 @@
 // Shared SVG chrome for the streak / activity / languages cards: background,
 // border, glow filter, embedded font. The card body is drawn by the caller.
-const { esc, CHAKRA_PETCH_FONT_FACE, DISPLAY } = require('./shared');
+const { esc, CHAKRA_PETCH_FONT_FACE, DISPLAY, svgReply, sanitizeColor, contrastRatio, mixColors, luminance } = require('./shared');
 
 const FONT = DISPLAY;
 const THEMES = ['cyberpunk', 'glass', 'terminal'];
@@ -16,6 +16,39 @@ const PALETTE = {
   terminal:  { bg: '#000000', text: '#d8f5d8', sub: '#b6d9b6', dim: '#7da07d', track: '#12261a', rule: '#16301f' },
 };
 
+// Per-element colour overrides: ?bg= ?text= ?border= ?hide_border=1.
+// Unreadable choices are dropped rather than rendered (text that fails 3:1
+// against the background falls back to the theme's own text colour).
+function styleFromParams(params, theme) {
+  const bg = sanitizeColor(params.get('bg'));
+  let text = sanitizeColor(params.get('text'));
+  const border = sanitizeColor(params.get('border'));
+  const base = PALETTE[theme] || PALETTE.cyberpunk;
+  if (text && contrastRatio(text, bg || base.bg) < 3) text = null;
+  const hideBorder = ['1', 'true', 'yes'].includes((params.get('hide_border') || '').toLowerCase());
+  return { bg, text, border, hideBorder };
+}
+
+// Theme palette with any overrides applied; secondary text and lines are
+// derived from the chosen text/background so custom colours stay coherent.
+function paletteFor(theme, style = {}) {
+  const base = PALETTE[theme] || PALETTE.cyberpunk;
+  const bg = style.bg || base.bg;
+  let text = style.text || base.text;
+  if (style.bg && !style.text && contrastRatio(text, bg) < 4.5) {
+    text = contrastRatio('#0b0f19', bg) > contrastRatio('#f5f7fb', bg) ? '#0b0f19' : '#f5f7fb';
+  }
+  const custom = Boolean(style.bg || style.text);
+  return {
+    bg,
+    text,
+    sub: custom ? mixColors(text, bg, 0.18) : base.sub,
+    dim: custom ? mixColors(text, bg, 0.45) : base.dim,
+    track: style.bg ? mixColors(bg, text, 0.12) : base.track,
+    rule: style.border || (style.bg ? mixColors(bg, text, 0.16) : base.rule),
+  };
+}
+
 // Bright accents (cyan, lime) wash out on a pale background, so text that is
 // coloured with the accent is mixed toward the ink colour on the glass theme.
 function ink(color, theme) {
@@ -25,8 +58,15 @@ function ink(color, theme) {
   return `#${[mix(r, 0x1c), mix(g, 0x23), mix(b, 0x33)].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
 }
 
-function frame({ width, height, color, theme, title, body }) {
-  const p = PALETTE[theme] || PALETTE.cyberpunk;
+// Which accent-text treatment applies: a light custom background needs the same
+// darkened accent as the glass theme, whatever theme name was asked for.
+function inkTheme(theme, style = {}) {
+  if (style.bg) return luminance(style.bg) > 0.4 ? 'glass' : 'dark';
+  return theme;
+}
+
+function frame({ width, height, color, theme, title, body, style = {}, css = '' }) {
+  const p = paletteFor(theme, style);
   const cyber = theme === 'cyberpunk';
   const glass = theme === 'glass';
   const outline = cyber
@@ -35,24 +75,28 @@ function frame({ width, height, color, theme, title, body }) {
   const clip = cyber
     ? `<clipPath id="cardClip"><polygon points="${outline}"/></clipPath>`
     : `<clipPath id="cardClip"><rect width="${width}" height="${height}" rx="${glass ? 24 : 2}"/></clipPath>`;
-  const border = cyber
-    ? `<polygon points="${outline}" fill="none" stroke="${color}" opacity="0.5"/>`
-    : glass
-      ? ''
-      : `<rect x=".5" y=".5" width="${width - 1}" height="${height - 1}" rx="2" fill="none" stroke="${color}" opacity="0.6"/>`;
+  const bStroke = style.border || color;
+  const bOpacity = style.border ? 1 : cyber ? 0.5 : 0.6;
+  const border = style.hideBorder
+    ? ''
+    : cyber
+      ? `<polygon points="${outline}" fill="none" stroke="${bStroke}" opacity="${bOpacity}"/>`
+      : glass
+        ? (style.border ? `<rect x=".5" y=".5" width="${width - 1}" height="${height - 1}" rx="24" fill="none" stroke="${style.border}"/>` : '')
+        : `<rect x=".5" y=".5" width="${width - 1}" height="${height - 1}" rx="2" fill="none" stroke="${bStroke}" opacity="${bOpacity}"/>`;
   const layers = glass
     ? `<rect width="${width}" height="${height}" fill="url(#glassBg)"/>
       <circle cx="30" cy="20" r="70" fill="${color}" opacity="0.22" filter="url(#blob)"/>
       <circle cx="${width - 15}" cy="60" r="60" fill="#8b5cf6" opacity="0.18" filter="url(#blob)"/>
       <circle cx="${width - 30}" cy="${height - 30}" r="65" fill="${color}" opacity="0.14" filter="url(#blob)"/>
-      <rect x="10" y="10" width="${width - 20}" height="${height - 20}" rx="18" fill="#ffffff" opacity="0.55" filter="url(#soft)"/>
+      <rect x="10" y="10" width="${width - 20}" height="${height - 20}" rx="18" fill="${style.bg ? p.bg : '#ffffff'}" opacity="${style.bg ? 0.7 : 0.55}" filter="url(#soft)"/>
       <rect x="10" y="10" width="${width - 20}" height="1.5" rx="1" fill="#ffffff" opacity="0.8"/>`
     : `<rect width="${width}" height="${height}" fill="${p.bg}"/>
       ${theme === 'terminal' ? '' : `<rect width="${width}" height="${height}" fill="url(#grid)" opacity="0.05"/><rect width="${width}" height="${height}" fill="url(#bgA)"/>`}`;
   return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
     <title>${esc(title)}</title>
     <defs>
-      ${CHAKRA_PETCH_FONT_FACE ? `<style>${CHAKRA_PETCH_FONT_FACE}</style>` : ''}
+      ${CHAKRA_PETCH_FONT_FACE || css ? `<style>${CHAKRA_PETCH_FONT_FACE || ''}${css}</style>` : ''}
       ${clip}
       <radialGradient id="bgA" cx="90%" cy="0%" r="90%">
         <stop offset="0%" stop-color="${color}" stop-opacity="${glass ? 0.16 : 0.13}"/>
@@ -62,8 +106,8 @@ function frame({ width, height, color, theme, title, body }) {
         <path d="M24 0H0V24" fill="none" stroke="${color}" stroke-width="0.5" opacity="0.5"/>
       </pattern>
       <linearGradient id="glassBg" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="#eef1f8"/>
-        <stop offset="100%" stop-color="#dde3f0"/>
+        <stop offset="0%" stop-color="${style.bg ? mixColors(p.bg, '#ffffff', 0.2) : '#eef1f8'}"/>
+        <stop offset="100%" stop-color="${style.bg ? p.bg : '#dde3f0'}"/>
       </linearGradient>
       <filter id="soft"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-opacity="0.12"/></filter>
       <filter id="blob" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="26"/></filter>
@@ -90,9 +134,7 @@ function errorCard(message, title = 'CODEX ERROR') {
 }
 
 function svgResponse(body, status, cacheControl) {
-  const headers = { 'Content-Type': 'image/svg+xml' };
-  if (cacheControl) headers['Cache-Control'] = cacheControl;
-  return new Response(body, { status, headers });
+  return svgReply(body, status, cacheControl);
 }
 
-module.exports = { ink, FONT, THEMES, PALETTE, sanitizeTheme, frame, errorCard, svgResponse };
+module.exports = { ink, inkTheme, FONT, THEMES, PALETTE, paletteFor, styleFromParams, sanitizeTheme, frame, errorCard, svgResponse };

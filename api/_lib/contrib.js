@@ -37,7 +37,7 @@ async function fetchCalendar(username, token) {
     throw err;
   }
   const head = await gql(
-    'query($login:String!){user(login:$login){login name createdAt}}',
+    'query($login:String!){user(login:$login){login name createdAt avatarUrl(size:160)}}',
     { login: username },
     token,
   );
@@ -72,7 +72,7 @@ async function fetchCalendar(username, token) {
     }
   }
   const days = [...byDate.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([date, count]) => ({ date, count }));
-  return { login: user.login, name: user.name, createdAt: user.createdAt, days };
+  return { login: user.login, name: user.name, createdAt: user.createdAt, avatarUrl: user.avatarUrl || null, days };
 }
 
 const dayNum = (iso) => Math.floor(Date.parse(`${iso}T00:00:00Z`) / 86400000);
@@ -120,14 +120,22 @@ function fmtDate(iso, withYear) {
   const [y, m, d] = iso.split('-').map(Number);
   return `${MONTHS[m - 1]} ${d}${withYear ? `, ${y}` : ''}`;
 }
-// "Sep 18 – Oct 11" within the current year, otherwise with years.
+// Ranges must fit one 160px column, so the format shrinks with the span:
+//   same year      "Jun 1 – Jul 15, 2025"  (year omitted when it's the current year)
+//   across years   "Jan 2020 – Oct 2026"
+// openEnded ranges end in "Present".
 function fmtRange(start, end, todayIso = new Date().toISOString().slice(0, 10), openEnded = false) {
   if (!start) return 'no streak yet';
   const nowYear = todayIso.slice(0, 4);
-  const sameYear = start.slice(0, 4) === end.slice(0, 4) && end.slice(0, 4) === nowYear;
-  const left = fmtDate(start, !sameYear);
-  const right = openEnded ? 'Present' : fmtDate(end, !sameYear);
-  return `${left} – ${right}`;
+  const [sy, sm] = [start.slice(0, 4), Number(start.slice(5, 7))];
+  const [ey, em] = [end.slice(0, 4), Number(end.slice(5, 7))];
+  if (sy !== ey) {
+    return `${MONTHS[sm - 1]} ${sy} – ${openEnded ? 'Present' : `${MONTHS[em - 1]} ${ey}`}`;
+  }
+  const left = fmtDate(start, false);
+  const right = openEnded ? 'Present' : fmtDate(end, false);
+  if (sy === nowYear) return `${left} – ${right}`;
+  return `${left} – ${right}${openEnded ? '' : ','} ${sy}`.replace(' Present,', ' Present');
 }
 
 module.exports = { fetchCalendar, computeStreaks, listStreaks, fmtRange, fmtDate };

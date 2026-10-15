@@ -143,6 +143,11 @@ Total contributions, the current streak (with a progress ring relative to your p
 | `username` | yes | any GitHub username | — |
 | `theme` | no | `cyberpunk` \| `glass` (light frosted, matches the Contributor card) \| `terminal` | `cyberpunk` |
 | `color` | no | 6-digit hex, no `#` | `#00e5ff` |
+| `profile` | no | `1` adds a header with avatar, name and join year | off |
+| `year` | no | `1` adds a footer: contributions so far this calendar year | off |
+| `animate` | no | `1` draws the ring in, flickers the flame and pulses a halo | off |
+| `shape` | no | avatar frame for `profile=1`: `hex` \| `circle` \| `rounded` \| `square` | per theme |
+| `bg` `text` `border` `hide_border` | no | [colour overrides](#colour-overrides) | — |
 
 ```md
 ![Streak](https://contributor-codex.vercel.app/api/streak?username=octocat)
@@ -167,6 +172,8 @@ A smooth area graph of contributions with a labelled peak.
 | `days` | no | `30` \| `90` \| `180` \| `365` | `90` |
 | `theme` | no | `cyberpunk` \| `glass` \| `terminal` | `cyberpunk` |
 | `color` | no | 6-digit hex, no `#` | `#00e5ff` |
+| `animate` | no | `1` draws the line in (static when the viewer prefers reduced motion) | off |
+| `bg` `text` `border` `hide_border` | no | [colour overrides](#colour-overrides) | — |
 
 - 30 and 90 days plot one point per day; 180 and 365 sum into weeks so the line stays readable.
 - Same data source, token requirement and caching as the streak card.
@@ -181,10 +188,15 @@ A stacked bar plus legend of the languages you write the most.
 |---|---|---|---|
 | `username` | yes | any GitHub username | — |
 | `limit` | no | integer `2`–`8` | `6` |
+| `bg` `text` `border` `hide_border` | no | [colour overrides](#colour-overrides) | — |
 | `theme` | no | `cyberpunk` \| `glass` \| `terminal` | `cyberpunk` |
 | `color` | no | 6-digit hex, no `#` (used for languages with no known colour) | `#00e5ff` |
 
 - Percentages are by bytes of code across the six most-starred owned, non-fork repositories — the same sample `/api/card` uses.
+
+## Status
+
+`GET /api/status` returns JSON with the server token's remaining GitHub budget (REST, GraphQL, search), when each resets, and a warning under 10%. It uses GitHub's rate-limit endpoint, which costs no quota, and is cached for 60 seconds. The token is never included. If the token is missing or rejected, the response says so.
 
 ## Errors
 
@@ -198,9 +210,32 @@ Errors are returned as a rendered SVG, so a broken `<img>` shows a readable mess
 | `503` | rate limited by GitHub — the deployment needs a `GITHUB_TOKEN` |
 | `500` | unexpected failure |
 
+## Colour overrides
+
+The streak, activity and languages cards accept per-element colours on top of any theme. All take six hex digits (no `#`).
+
+| Param | Sets |
+|---|---|
+| `bg` | card background. Text switches to a readable light or dark automatically if you don't set `text` |
+| `text` | main text. Ignored if it wouldn't reach 3:1 contrast against the background |
+| `border` | border and divider lines |
+| `hide_border` | `1` removes the border |
+
+```md
+![Streak](https://contributor-codex.vercel.app/api/streak?username=octocat&bg=1e1e2e&text=cdd6f4&border=45475a&color=cba6f7)
+```
+
+The Card Builder has one-tap presets (Mocha, Tokyo Night, Dracula, Nord, GitHub Dark, Rosé Pine, Solarized).
+
 ## Accent colours
 
 `color=` takes six hex digits. A colour that would vanish into the card is adjusted instead of rendering a blank one: on the dark themes near-black becomes a light steel and dark shades are lifted until they read; on `glass`, near-white is darkened. Colours that already read well are never touched.
+
+## Response headers
+
+Every card is served with `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:`, `X-Content-Type-Options: nosniff` and `Access-Control-Allow-Origin: *` (so the builder can export PNGs). Cards carry `role="img"` and a `<title>` for screen readers. Cache-Control includes `stale-if-error=604800`, so when GitHub is down or rate-limited the last good card keeps being served for up to a week.
+
+To force a README image to refresh sooner (GitHub caches images for hours), append any unused parameter, e.g. `&v=2`.
 
 ## Caching
 

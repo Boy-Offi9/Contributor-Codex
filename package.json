@@ -1,9 +1,9 @@
 {
   "name": "contributor-codex",
-  "version": "0.16.1",
+  "version": "0.17.0",
   "private": true,
   "license": "MIT",
-  "description": "GitHub data compiled into visual cards, achievements, team leaderboards, and profiles \u2014 embeddable anywhere as server-rendered SVG",
+  "description": "GitHub data compiled into visual cards, achievements, team leaderboards, and profiles — embeddable anywhere as server-rendered SVG",
   "engines": {
     "node": ">=18"
   },
@@ -12,7 +12,8 @@
     "test": "node --test"
   },
   "dependencies": {
+    "@boy-offi9-inc/reqkit": "^0.1.7",
     "@vercel/firewall": "^1.2.1",
-    "@boy-offi9-inc/reqkit": "^0.1.7"
+    "package-lock.json": "^1.0.0"
   }
 }

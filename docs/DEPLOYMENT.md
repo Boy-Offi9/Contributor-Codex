@@ -33,7 +33,7 @@ Contributor Codex is a set of Vercel serverless functions plus four static pages
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `GITHUB_TOKEN` | recommended | Authenticates every server-side GitHub request, raising the limit from 60 to 5,000 requests per hour. Without it, the whole deployment shares the unauthenticated limit across every visitor, and cards start returning `503` quickly. |
+| `GITHUB_TOKEN` | required for streak/activity; recommended for everything | Authenticates every server-side GitHub request, raising the limit from 60 to 5,000 requests per hour. Without it, the whole deployment shares the unauthenticated limit across every visitor, and cards start returning `503` quickly. |
 
 Set it in the Vercel dashboard. Never commit it.
 
@@ -53,6 +53,14 @@ Each endpoint checks a per-IP rate limit through `@vercel/firewall`, looked up b
 | `langs-endpoint` | `/api/langs` |
 
 The thresholds are yours to choose. Leave each rule's action at its default: when a request is limited, the endpoint renders a `429` message card from application code rather than showing Vercel's block page.
+
+## Checking your GitHub budget
+
+`GET /api/status` shows the token's remaining REST and GraphQL budget and when each resets, and warns under 10%. It calls GitHub's rate-limit endpoint, which doesn't count against any quota. If it reports `token: "missing"` or `"rejected"`, that is why cards are failing.
+
+## Rebuilding the embedded font
+
+Cards embed Chakra Petch as base64 so they render identically inside a README image. The font is subset to the characters the cards draw, with both weights embedded. After changing the glyph list in `scripts/build-font.js`, run `npm run build-font` (needs network) and commit `api/_lib/font-data.js`. The script prints each weight's size and warns if the total is larger than expected for a subset. Characters outside the set (such as a non-Latin display name) fall back to the viewer's system font.
 
 ## Self-hosting checklist
 
@@ -132,7 +140,7 @@ GitHub requests made for one **uncached** render. Edge caching (1 hour, 6 for th
 | `/api/repo` | 1 |
 | `/api/repo` with `theme=detailed` | 1 + 2 (contributor count, latest release) |
 | `/api/leaderboard` | 1 (member list) + 2 per ranked member, so up to 121 |
-| `/api/streak`, `/api/activity` | 2 GraphQL requests (active years, then every year's calendar in one aliased query). Requires `GITHUB_TOKEN`. |
+| `/api/streak`, `/api/activity` | 2 GraphQL requests (profile, then one aliased query covering every year since the account was created). Requires `GITHUB_TOKEN`. |
 | `/api/langs` | 1 (repo list) + up to 6 (language bytes) |
 
 Avatar images come from GitHub's avatar host and are not counted against the API limit. The Search API has its own, lower limit; pull request and issue counts fail soft when it is exhausted.

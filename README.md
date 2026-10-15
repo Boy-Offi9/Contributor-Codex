@@ -19,6 +19,10 @@
   <a href="docs/DESIGN.md">Design notes</a>
 </p>
 
+<p align="center">
+  <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FBoy-Offi9%2FContributor-Codex&env=GITHUB_TOKEN&envDescription=GitHub%20token%20for%20server-side%20requests%20%28public%20data%20only%29&envLink=https%3A%2F%2Fgithub.com%2FBoy-Offi9%2FContributor-Codex%2Fblob%2Fmain%2Fdocs%2FDEPLOYMENT.md"><img src="https://vercel.com/button" alt="Deploy with Vercel"></a>
+</p>
+
 <table>
   <tr>
     <td align="center"><img src="https://contributor-codex.vercel.app/api/card?username=octocat&amp;theme=cyberpunk" width="400" alt="Cyberpunk theme card"><br><sub><b>cyberpunk</b> — the RPG dossier</sub></td>
@@ -107,4 +111,4 @@ The embedded Chakra Petch font is the work of its own authors, under the SIL Ope
 
 ---
 
-<p align="center">Made by <a href="https://github.com/Boy-Offi9">Boy Offi9</a> · <a href="https://github.com/boy-offi9-inc">boy-offi9-inc</a></p>
+<p align="center">Made by <a href="https://github.com/Boy-Offi9">Boy Offi9</a>
