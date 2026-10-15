@@ -75,6 +75,49 @@ async function fetchCalendar(username, token) {
   return { login: user.login, name: user.name, createdAt: user.createdAt, avatarUrl: user.avatarUrl || null, days };
 }
 
+// One GraphQL request for the stats card. Commits, PRs-in-window and reviews
+// are GitHub's own "last 12 months" collection; stars come from the owner's
+// 100 most-starred non-fork repositories; PRs and issues are all-time totals.
+async function fetchStats(username, token) {
+  if (!token) {
+    const err = new Error('GITHUB_TOKEN required');
+    err.status = 401;
+    throw err;
+  }
+  const data = await gql(
+    `query($login:String!){user(login:$login){
+      login name avatarUrl(size:160) createdAt
+      followers{totalCount}
+      contributionsCollection{totalCommitContributions totalPullRequestReviewContributions}
+      pullRequests{totalCount}
+      issues{totalCount}
+      repositoriesContributedTo(first:1,contributionTypes:[COMMIT,ISSUE,PULL_REQUEST,REPOSITORY]){totalCount}
+      repositories(first:100,ownerAffiliations:OWNER,isFork:false,orderBy:{field:STARGAZERS,direction:DESC}){nodes{stargazerCount}}
+    }}`,
+    { login: username },
+    token,
+  );
+  const u = data.user;
+  if (!u) {
+    const err = new Error('not found');
+    err.status = 404;
+    throw err;
+  }
+  return {
+    login: u.login,
+    name: u.name,
+    avatarUrl: u.avatarUrl || null,
+    createdAt: u.createdAt,
+    followers: u.followers.totalCount,
+    stars: u.repositories.nodes.reduce((a, r) => a + r.stargazerCount, 0),
+    commits: u.contributionsCollection.totalCommitContributions,
+    reviews: u.contributionsCollection.totalPullRequestReviewContributions,
+    prs: u.pullRequests.totalCount,
+    issues: u.issues.totalCount,
+    contributedTo: u.repositoriesContributedTo.totalCount,
+  };
+}
+
 const dayNum = (iso) => Math.floor(Date.parse(`${iso}T00:00:00Z`) / 86400000);
 
 // Every run of consecutive contribution days, oldest first.
@@ -138,4 +181,4 @@ function fmtRange(start, end, todayIso = new Date().toISOString().slice(0, 10), 
   return `${left} – ${right}${openEnded ? '' : ','} ${sy}`.replace(' Present,', ' Present');
 }
 
-module.exports = { fetchCalendar, computeStreaks, listStreaks, fmtRange, fmtDate };
+module.exports = { fetchCalendar, fetchStats, computeStreaks, listStreaks, fmtRange, fmtDate };

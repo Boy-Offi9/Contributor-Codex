@@ -79,6 +79,31 @@ const HACKER_CLEARANCE = ['SCRIPT KIDDIE', 'OPERATOR', 'GHOST', 'GATEKEEPER', 'R
 
 const clearanceFor = (tier) => HACKER_CLEARANCE[TIER_ORDER.indexOf(tier)] || 'SCRIPT KIDDIE';
 
+// Rank grade for the stats card. This is OUR scale, not a percentile of GitHub
+// users: a weighted activity score mapped onto fixed bands. Weights favour work
+// that involves other people (PRs, reviews) and recognition (stars) over raw
+// commit counts, which are easy to inflate.
+const RANK_WEIGHTS = { commits: 1, prs: 4, issues: 2, reviews: 3, stars: 5, followers: 2, contributedTo: 3 };
+const RANK_BANDS = [
+  { grade: 'C', min: 0 },
+  { grade: 'B', min: 100 },
+  { grade: 'B+', min: 300 },
+  { grade: 'A', min: 700 },
+  { grade: 'A+', min: 1500 },
+  { grade: 'S', min: 3000 },
+];
+
+function computeRank(stats) {
+  const score = Math.round(Object.entries(RANK_WEIGHTS).reduce((sum, [key, weight]) => sum + (Number(stats[key]) || 0) * weight, 0));
+  let i = 0;
+  RANK_BANDS.forEach((band, idx) => { if (score >= band.min) i = idx; });
+  const band = RANK_BANDS[i];
+  const next = RANK_BANDS[i + 1];
+  const progress = next ? Math.min(1, (score - band.min) / (next.min - band.min)) : 1;
+  return { score, grade: band.grade, next: next ? next.grade : null, progress };
+}
+
 module.exports = {
+  computeRank,
   classFor, XP_FORMULA, trophyTier, tierFor, computeStats, clearanceFor,
 };
