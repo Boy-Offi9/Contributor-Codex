@@ -149,6 +149,7 @@
           <button class="typeBtn" data-type="repo">Repository</button>
           <button class="typeBtn" data-type="trophies">Achievements</button>
           <button class="typeBtn" data-type="codex">Codex Collection</button>
+          <button class="typeBtn" data-type="stats">Stats + rank</button>
           <button class="typeBtn" data-type="streak">Streak</button>
           <button class="typeBtn" data-type="activity">Activity graph</button>
           <button class="typeBtn" data-type="langs">Top languages</button>
@@ -220,6 +221,14 @@
           <textarea id="urlOut" class="mono" readonly rows="2"></textarea>
           <button class="copyBtn" data-target="urlOut">Copy</button>
         </div>
+      </div>
+      <div class="outRow" id="pairRow" style="display:none">
+        <label class="mono">Light / dark README (HTML)</label>
+        <div class="outBox">
+          <textarea id="pairOut" class="mono" readonly rows="4"></textarea>
+          <button class="copyBtn" data-target="pairOut">Copy</button>
+        </div>
+        <p class="hint">Shows the dark card to dark-mode viewers and the glass card to light-mode viewers. Hidden when a custom background is set, since that overrides the theme.</p>
       </div>
       <div class="outRow">
         <label class="mono">HTML &lt;img&gt;</label>
@@ -309,6 +318,17 @@ TYPES.streak = {
     { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
     { key: 'profile', label: 'Avatar & name header', ...ON('show') },
     { key: 'year', label: 'This-year footer', ...ON('show') },
+    { key: 'animate', label: 'Animation', ...ON('on (off for reduced-motion users)') },
+    ...STYLE_FIELDS,
+  ],
+};
+TYPES.stats = {
+  endpoint: '/api/stats',
+  themes: CAL_THEMES,
+  styleSupport: true,
+  fields: [
+    { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
+    { key: 'hide', label: 'Hide stats (comma list, optional)', placeholder: 'issues,reviews', },
     { key: 'animate', label: 'Animation', ...ON('on (off for reduced-motion users)') },
     ...STYLE_FIELDS,
   ],
@@ -454,7 +474,7 @@ function renderFields(){
   }
 }
 
-function buildUrl(){
+function buildUrl(themeOverride){
   const def = TYPES[currentType];
   const params = new URLSearchParams();
   let missing = false;
@@ -479,7 +499,8 @@ function buildUrl(){
       params.set('customThresholds', thresholds);
     }
   }
-  if (def.themes && state.theme) params.set('theme', state.theme);
+  const themeValue = themeOverride || state.theme;
+  if (def.themes && themeValue) params.set('theme', themeValue);
   if (def.shapeSupport && state.shape) params.set('shape', state.shape);
   if (def.badgeSupport && state.badge) params.set('badge', state.badge);
   if (currentType !== 'trophies') {
@@ -538,6 +559,24 @@ async function downloadPng(){
 }
 pngBtn.addEventListener('click', downloadPng);
 
+const pairRow = document.getElementById('pairRow');
+const pairOut = document.getElementById('pairOut');
+
+// GitHub READMEs honour <picture> with prefers-color-scheme, so one snippet can
+// show a dark card to dark-mode viewers and the glass card to light-mode ones.
+// Only offered where the type has a glass theme and no custom background (a
+// custom background would make both variants identical).
+function setPair(){
+  const def = TYPES[currentType];
+  const customBg = def.fields.some(f => f.key === 'bg') && (state.bg || '').trim();
+  if (!def.themes || !def.themes.includes('glass') || customBg) { pairRow.style.display = 'none'; return; }
+  const dark = state.theme && state.theme !== 'glass' ? state.theme : 'cyberpunk';
+  const darkUrl = buildUrl(dark).url;
+  const lightUrl = buildUrl('glass').url;
+  pairOut.value = `<picture>\n  <source media="(prefers-color-scheme: dark)" srcset="${darkUrl}">\n  <source media="(prefers-color-scheme: light)" srcset="${lightUrl}">\n  <img alt="GitHub card" src="${darkUrl}">\n</picture>`;
+  pairRow.style.display = '';
+}
+
 function showPreviewPrompt(text, withButton){
   pngBtn.disabled = true;
   previewBox.innerHTML = `<span class="msg">${text}</span>` + (withButton ? '<button class="loadBtn" id="previewBtn" type="button">▶ Generate preview</button>' : '');
@@ -563,12 +602,14 @@ function update(){
       pendingUrl = null;
       showPreviewPrompt('fill in the required fields to preview', false);
       mdOut.value = ''; urlOut.value = ''; htmlOut.value = '';
+      pairRow.style.display = 'none';
       return;
     }
     pendingUrl = url;
     mdOut.value = `![Card](${url})`;
     urlOut.value = url;
     htmlOut.value = `<img src="${url}" alt="card">`;
+    setPair();
     showPreviewPrompt('ready — tap to render the live card', true);
   }, 250);
 }
