@@ -98,6 +98,11 @@
   .previewBox .msg{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);text-align:center;}
   .previewBox .msg.err{color:var(--danger);}
   .previewBox{flex-direction:column;gap:12px;}
+  .presetGrid{display:flex;flex-wrap:wrap;gap:8px;}
+  .presetChip{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--dim);background:none;border:1px solid var(--steel);padding:6px 10px;cursor:pointer;}
+  .presetChip:active{opacity:.6;}
+  .presetChip i{display:inline-block;width:14px;height:14px;border:1px solid rgba(255,255,255,.25);}
+  .loadBtn[disabled]{opacity:.4;cursor:not-allowed;}
   .loadBtn{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--cyan,#00e5ff);background:none;border:1px dashed currentColor;padding:10px 14px;cursor:pointer;}
   .loadBtn:active{opacity:.6;}
 
@@ -189,12 +194,18 @@
         </div>
         <p class="hint">Leave the text field empty to use the theme's default accent. Very dark or very light colors are adjusted automatically so they stay visible.</p>
       </div>
+      <div class="field" id="presetField" style="display:none">
+        <label>Preset themes</label>
+        <div class="presetGrid" id="presetGrid"></div>
+        <p class="hint">Fills in background, text, border and accent. You can still edit each one.</p>
+      </div>
     </div>
   </div>
 
   <div class="col-preview">
     <div class="panel">
       <div class="previewBox" id="previewBox"><span class="msg">fill in the fields to preview</span></div>
+      <div class="outRow"><button class="loadBtn" id="pngBtn" type="button" disabled>⬇ Download PNG (2×)</button></div>
 
       <div class="outRow">
         <label class="mono">Markdown</label>
@@ -272,10 +283,35 @@ const TYPES = {
   },
 };
 const CAL_THEMES = ['cyberpunk', 'glass', 'terminal'];
+const ON = (label) => ({ type: 'select', options: ['1'], labels: { '1': label } });
+const STYLE_FIELDS = [
+  { key: 'bg', label: 'Background color (hex, optional)', placeholder: '1e1e2e' },
+  { key: 'text', label: 'Text color (hex, optional)', placeholder: 'cdd6f4' },
+  { key: 'border', label: 'Border color (hex, optional)', placeholder: '89b4fa' },
+  { key: 'hide_border', label: 'Border', ...ON('hide it') },
+];
+const COLOR_KEYS = ['bg', 'text', 'border'];
+const PRESETS = [
+  { name: 'Mocha', bg: '1e1e2e', text: 'cdd6f4', border: '45475a', color: 'cba6f7' },
+  { name: 'Tokyo Night', bg: '1a1b26', text: 'c0caf5', border: '292e42', color: '7aa2f7' },
+  { name: 'Dracula', bg: '282a36', text: 'f8f8f2', border: '44475a', color: 'bd93f9' },
+  { name: 'Nord', bg: '2e3440', text: 'eceff4', border: '434c5e', color: '88c0d0' },
+  { name: 'GitHub Dark', bg: '0d1117', text: 'e6edf3', border: '30363d', color: '58a6ff' },
+  { name: 'Rosé Pine', bg: '191724', text: 'e0def4', border: '26233a', color: 'eb6f92' },
+  { name: 'Solarized', bg: 'fdf6e3', text: '657b83', border: 'eee8d5', color: '268bd2' },
+];
 TYPES.streak = {
   endpoint: '/api/streak',
   themes: CAL_THEMES,
-  fields: [{ key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true }],
+  shapeSupport: true,
+  styleSupport: true,
+  fields: [
+    { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
+    { key: 'profile', label: 'Avatar & name header', ...ON('show') },
+    { key: 'year', label: 'This-year footer', ...ON('show') },
+    { key: 'animate', label: 'Animation', ...ON('on (off for reduced-motion users)') },
+    ...STYLE_FIELDS,
+  ],
 };
 TYPES.activity = {
   endpoint: '/api/activity',
@@ -283,7 +319,10 @@ TYPES.activity = {
   fields: [
     { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
     { key: 'days', label: 'Range', type: 'select', options: ['30', '90', '180', '365'] },
+    { key: 'animate', label: 'Animation', ...ON('on (off for reduced-motion users)') },
+    ...STYLE_FIELDS,
   ],
+  styleSupport: true,
 };
 TYPES.langs = {
   endpoint: '/api/langs',
@@ -291,7 +330,9 @@ TYPES.langs = {
   fields: [
     { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
     { key: 'limit', label: 'Languages shown (2-8)', placeholder: '6', type: 'number', min: 2, max: 8 },
+    ...STYLE_FIELDS,
   ],
+  styleSupport: true,
 };
 const ALL_TROPHIES = ['STARGAZER', 'BUILDER', 'INFLUENCE', 'VETERAN', 'POLYGLOT', 'FORKED', 'OPEN_SOURCE', 'NETWORKER', 'SNIPPETS', 'ACTIVE', 'HEADLINER', 'CURATOR'];
 
@@ -369,6 +410,25 @@ function renderFields(){
     });
   }
 
+  const presetField = document.getElementById('presetField');
+  const presetGrid = document.getElementById('presetGrid');
+  presetField.style.display = def.styleSupport ? '' : 'none';
+  presetGrid.innerHTML = def.styleSupport
+    ? PRESETS.map((pr, i) => `<button type="button" class="presetChip" data-i="${i}"><i style="background:#${pr.bg}"></i><i style="background:#${pr.color}"></i>${pr.name}</button>`).join('')
+      + '<button type="button" class="presetChip" data-i="reset">Reset</button>'
+    : '';
+  presetGrid.querySelectorAll('.presetChip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const reset = btn.dataset.i === 'reset';
+      const pr = reset ? { bg: '', text: '', border: '', color: '' } : PRESETS[Number(btn.dataset.i)];
+      COLOR_KEYS.forEach(k => { state[k] = pr[k]; });
+      colorText.value = pr.color;
+      if (pr.color) colorPicker.value = '#' + pr.color;
+      renderFields();
+      update();
+    });
+  });
+
   if (def.themes) {
     themeField.style.display = '';
     themeSelect.innerHTML = def.themes.map(t => `<option value="${t}">${t}</option>`).join('');
@@ -400,7 +460,8 @@ function buildUrl(){
   let missing = false;
 
   def.fields.forEach(f => {
-    const val = (state[f.key] || '').trim();
+    let val = (state[f.key] || '').trim();
+    if (COLOR_KEYS.includes(f.key)) val = val.replace(/^#/, '');
     if (f.required && !val) missing = true;
     if (val) params.set(f.key, val);
   });
@@ -436,7 +497,49 @@ function buildUrl(){
 let debounceTimer;
 let pendingUrl = null;
 
+const pngBtn = document.getElementById('pngBtn');
+
+// PNG export: fetch the card as SVG, rasterise it on a canvas at 2x. The
+// animation param is dropped first — a frame captured at t=0 of the draw-in
+// animation would be an empty ring.
+async function downloadPng(){
+  if (!pendingUrl) return;
+  const label = pngBtn.textContent;
+  pngBtn.disabled = true;
+  pngBtn.textContent = 'rendering…';
+  try {
+    const u = new URL(pendingUrl, location.href);
+    u.searchParams.delete('animate');
+    const svgText = await (await fetch(u)).text();
+    const objUrl = URL.createObjectURL(new Blob([svgText], { type: 'image/svg+xml' }));
+    const img = new Image();
+    await new Promise((ok, bad) => { img.onload = ok; img.onerror = bad; img.src = objUrl; });
+    const w = img.naturalWidth || 480, h = img.naturalHeight || 200, scale = 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = w * scale; canvas.height = h * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+    ctx.drawImage(img, 0, 0, w, h);
+    URL.revokeObjectURL(objUrl);
+    canvas.toBlob((blob) => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${currentType}-card.png`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    }, 'image/png');
+  } catch (e) {
+    pngBtn.textContent = 'PNG export failed';
+    setTimeout(() => { pngBtn.textContent = label; pngBtn.disabled = false; }, 2500);
+    return;
+  }
+  pngBtn.textContent = label;
+  pngBtn.disabled = false;
+}
+pngBtn.addEventListener('click', downloadPng);
+
 function showPreviewPrompt(text, withButton){
+  pngBtn.disabled = true;
   previewBox.innerHTML = `<span class="msg">${text}</span>` + (withButton ? '<button class="loadBtn" id="previewBtn" type="button">▶ Generate preview</button>' : '');
   if (withButton) document.getElementById('previewBtn').onclick = loadPreview;
 }
@@ -447,7 +550,7 @@ function loadPreview(){
   previewBox.innerHTML = '<span class="msg">loading…</span>';
   const img = new Image();
   img.alt = 'card preview';
-  img.onload = () => { if (url === pendingUrl) { previewBox.innerHTML = ''; previewBox.appendChild(img); } };
+  img.onload = () => { if (url === pendingUrl) { previewBox.innerHTML = ''; previewBox.appendChild(img); pngBtn.disabled = false; } };
   img.onerror = () => { previewBox.innerHTML = '<span class="msg err">failed to load — check the fields above</span>'; };
   img.src = url;
 }
