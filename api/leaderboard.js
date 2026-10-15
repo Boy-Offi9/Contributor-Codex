@@ -1,7 +1,7 @@
-const { checkRateLimit } = require('@vercel/firewall');
+const { isRateLimited } = require('./_lib/ratelimit');
 const {
   classFor, esc, ghFetch, avatarDataUri, computeStats, sanitizeColor, XP_FORMULA,
-  clearanceFor, truncate, avatarShape, sanitizeShape, icon, colorForLang, MONO, isGhName, readableAccent } = require('./_lib/shared');
+  clearanceFor, truncate, avatarShape, sanitizeShape, icon, colorForLang, MONO, isGhName, readableAccent, svgReply } = require('./_lib/shared');
 
 const ROW_H = 56;
 const WIDTH = 640;
@@ -223,13 +223,11 @@ function renderGlassBoard(org, top, ranked, accent, shape) {
 }
 
 function svgResponse(body, status, cacheControl) {
-  const headers = { 'Content-Type': 'image/svg+xml' };
-  if (cacheControl) headers['Cache-Control'] = cacheControl;
-  return new Response(body, { status, headers });
+  return svgReply(body, status, cacheControl);
 }
 
 module.exports.GET = async (request) => {
-  const { rateLimited } = await checkRateLimit('leaderboard-endpoint', { request });
+  const rateLimited = await isRateLimited('leaderboard-endpoint', request);
   if (rateLimited) return svgResponse(errorSVG('rate limited — slow down a bit'), 429, 'no-store');
 
   const url = new URL(request.url);
@@ -259,7 +257,7 @@ module.exports.GET = async (request) => {
         ? renderGlassBoard(org, top, ranked, accent, shape)
         : renderCyberpunkBoard(org, top, ranked, accent, shape, colorOverride);
 
-    return svgResponse(svg, 200, 'public, s-maxage=21600, stale-while-revalidate=86400');
+    return svgResponse(svg, 200, 'public, s-maxage=21600, stale-while-revalidate=86400, stale-if-error=604800');
   } catch (err) {
     if (err.status === 404) return svgResponse(errorSVG(`org "${org}" not found`), 404, 'public, s-maxage=60');
     if (err.status === 403) return svgResponse(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=60');

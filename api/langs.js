@@ -1,4 +1,4 @@
-const { checkRateLimit } = require('@vercel/firewall');
+const { isRateLimited } = require('./_lib/ratelimit');
 const { esc, ghFetch, sanitizeColor, byteWeightedLangs, colorForLang, isGhName, readableAccent, luminance } = require('./_lib/shared');
 const { FONT, paletteFor, styleFromParams, ink, inkTheme, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
 
@@ -44,7 +44,7 @@ function render({ username, langs, color, theme, style }) {
 }
 
 module.exports.GET = async (request) => {
-  const { rateLimited } = await checkRateLimit('langs-endpoint', { request });
+  const rateLimited = await isRateLimited('langs-endpoint', request);
   if (rateLimited) return svgResponse(errorCard('rate limited — slow down a bit'), 429, 'no-store');
 
   const url = new URL(request.url);

@@ -1,8 +1,8 @@
-const { checkRateLimit } = require('@vercel/firewall');
+const { isRateLimited } = require('./_lib/ratelimit');
 const { fetchCalendar, computeStreaks } = require('./_lib/contrib');
 const {
   esc, ghFetch, avatarDataUri, computeStats, classFor, trophyTier, sanitizeColor,
-  CHAKRA_PETCH_FONT_FACE, byteWeightedLangs, colorForLang, icon, badge, sanitizeBadge, avatarShape, sanitizeShape, DISPLAY, isGhName, readableAccent } = require('./_lib/shared');
+  CHAKRA_PETCH_FONT_FACE, byteWeightedLangs, colorForLang, icon, badge, sanitizeBadge, avatarShape, sanitizeShape, DISPLAY, isGhName, readableAccent, svgReply } = require('./_lib/shared');
 
 const WIDTH = 480;
 
@@ -155,13 +155,11 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape,
 }
 
 function svg(body, status, cacheControl) {
-  const headers = { 'Content-Type': 'image/svg+xml' };
-  if (cacheControl) headers['Cache-Control'] = cacheControl;
-  return new Response(body, { status, headers });
+  return svgReply(body, status, cacheControl);
 }
 
 module.exports.GET = async (request) => {
-  const { rateLimited } = await checkRateLimit('codex-endpoint', { request });
+  const rateLimited = await isRateLimited('codex-endpoint', request);
   if (rateLimited) return svg(errorSVG('rate limited — slow down a bit'), 429, 'no-store');
 
   const url = new URL(request.url);
@@ -191,7 +189,7 @@ module.exports.GET = async (request) => {
     const avatarFrame = sanitizeShape(url.searchParams.get('shape'), 'hex');
     const badgeShape = sanitizeBadge(url.searchParams.get('badge'), 'hex');
 
-    return svg(render({ user, stats, avatarUri, topLangs, fontFace: CHAKRA_PETCH_FONT_FACE, color, badgeShape, avatarFrame, streaks }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
+    return svg(render({ user, stats, avatarUri, topLangs, fontFace: CHAKRA_PETCH_FONT_FACE, color, badgeShape, avatarFrame, streaks }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=604800');
   } catch (err) {
     if (err.status === 404) return svg(errorSVG(`user "${username}" not found`), 404, 'public, s-maxage=60');
     if (err.status === 403) return svg(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=60');

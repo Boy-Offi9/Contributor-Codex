@@ -1,5 +1,5 @@
-const { checkRateLimit } = require('@vercel/firewall');
-const { esc, ghFetch, CHAKRA_PETCH_FONT_FACE, sanitizeColor, MONO, isGhName, isGhRepo, readableAccent } = require('./_lib/shared');
+const { isRateLimited } = require('./_lib/ratelimit');
+const { esc, ghFetch, CHAKRA_PETCH_FONT_FACE, sanitizeColor, MONO, isGhName, isGhRepo, readableAccent, svgReply } = require('./_lib/shared');
 
 function errorSVG(message) {
   return `<svg width="420" height="120" viewBox="0 0 420 120" xmlns="http://www.w3.org/2000/svg">
@@ -248,13 +248,11 @@ function statBox(x, y, label, value, color) {
 const THEMES = { cyberpunk: renderCyberpunk, terminal: renderTerminal, glass: renderGlass, detailed: renderDetailed };
 
 function svg(body, status, cacheControl) {
-  const headers = { 'Content-Type': 'image/svg+xml' };
-  if (cacheControl) headers['Cache-Control'] = cacheControl;
-  return new Response(body, { status, headers });
+  return svgReply(body, status, cacheControl);
 }
 
 module.exports.GET = async (request) => {
-  const { rateLimited } = await checkRateLimit('repo-endpoint', { request });
+  const rateLimited = await isRateLimited('repo-endpoint', request);
   if (rateLimited) return svg(errorSVG('rate limited — slow down a bit'), 429, 'no-store');
 
   const url = new URL(request.url);
@@ -282,7 +280,7 @@ module.exports.GET = async (request) => {
       ]);
     }
 
-    return svg(render({ repo, color, fontFace, contributors, releaseTag }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
+    return svg(render({ repo, color, fontFace, contributors, releaseTag }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=604800');
   } catch (err) {
     if (err.status === 404) return svg(errorSVG(`"${owner}/${repoName}" not found`), 404, 'public, s-maxage=60');
     if (err.status === 403) return svg(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=60');
