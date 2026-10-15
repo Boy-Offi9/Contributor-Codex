@@ -70,6 +70,7 @@ Then make it yours:
 | [`/api/repo`](docs/API.md#repository-card) | A repository's vital signs |
 | [`/api/trophies`](docs/API.md#achievements) | Twelve tiered achievements in six badge shapes, plus an optional custom one |
 | [`/api/codex`](docs/API.md#codex-collection) | A compact dossier in a single image |
+| [`/api/stats`](docs/API.md#stats--rank) | Stars, commits, PRs, issues, reviews and a rank grade |
 | [`/api/streak`](docs/API.md#streak-card) | Total contributions, current streak, longest streak |
 | [`/api/activity`](docs/API.md#activity-graph) | A contribution-activity graph with a labelled peak |
 | [`/api/langs`](docs/API.md#top-languages) | Most-used languages as a stacked bar |
@@ -111,4 +112,4 @@ The embedded Chakra Petch font is the work of its own authors, under the SIL Ope
 
 ---
 
-<p align="center">Made by <a href="https://github.com/Boy-Offi9">Boy Offi9</a>
+<p align="center">Made by <a href="https://github.com/Boy-Offi9">Boy Offi9</a> · <a href="https://github.com/boy-offi9-inc">boy-offi9-inc</a></p>

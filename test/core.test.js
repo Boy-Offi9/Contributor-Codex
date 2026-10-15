@@ -32,7 +32,9 @@ test('streak: no contributions at all', () => {
 });
 test('date ranges', () => {
   assert.equal(fmtRange('2026-09-18', '2026-10-11', '2026-10-11', true), 'Sep 18 – Present');
-  assert.equal(fmtRange('2025-05-14', '2025-06-01', '2026-10-11', false), 'May 14, 2025 – Jun 1, 2025');
+  assert.equal(fmtRange('2025-05-14', '2025-06-01', '2026-10-11', false), 'May 14 – Jun 1, 2025');
+  assert.equal(fmtRange('2020-01-01', '2026-10-12', '2026-10-12', false), 'Jan 2020 – Oct 2026');
+  assert.equal(fmtRange('2025-12-20', '2026-01-18', '2026-10-12', false), 'Dec 2025 – Jan 2026');
   assert.equal(fmtRange(null, null), 'no streak yet');
 });
 
@@ -91,4 +93,50 @@ test('readableAccent keeps accents visible without touching good ones', () => {
   assert.ok(luminance(readableAccent('#1a1a2e', 'terminal')) >= 0.12);
   assert.ok(luminance(readableAccent('#ffffff', 'glass')) <= 0.76);
   assert.equal(readableAccent(null, 'glass'), null);
+});
+
+const { paletteFor, styleFromParams } = require('../api/_lib/frame');
+const { a11y, svgHeaders, contrastRatio, mixColors } = require('../api/_lib/shared');
+
+test('colour params: valid ones pass, junk is dropped, unreadable text is ignored', () => {
+  const q = (o) => styleFromParams(new URLSearchParams(o), 'cyberpunk');
+  assert.deepEqual(q({ bg: '1e1e2e', text: 'cdd6f4', border: '89b4fa' }), { bg: '#1e1e2e', text: '#cdd6f4', border: '#89b4fa', hideBorder: false });
+  const junk = q({ bg: 'zzz', text: 'nothex', border: '"><script>' });
+  assert.deepEqual([junk.bg, junk.text, junk.border], [null, null, null]);
+  assert.equal(q({ bg: 'ffffff', text: 'fefefe' }).text, null);          // white on white
+  assert.equal(q({ hide_border: '1' }).hideBorder, true);
+});
+test('paletteFor picks readable text for a custom background and never mutates the theme', () => {
+  const light = paletteFor('cyberpunk', { bg: '#fdf6e3' });
+  assert.ok(contrastRatio(light.text, light.bg) >= 4.5, 'auto text must contrast with a light bg');
+  assert.equal(paletteFor('cyberpunk').bg, '#05070c');
+  assert.equal(paletteFor('cyberpunk', { border: '#89b4fa' }).rule, '#89b4fa');
+});
+test('mixColors endpoints', () => {
+  assert.equal(mixColors('#000000', '#ffffff', 0), '#000000');
+  assert.equal(mixColors('#000000', '#ffffff', 1), '#ffffff');
+});
+test('SVG responses: hardened headers and accessible root', () => {
+  const h = svgHeaders('public, s-maxage=60');
+  assert.match(h['Content-Security-Policy'], /default-src 'none'/);
+  assert.equal(h['X-Content-Type-Options'], 'nosniff');
+  assert.equal(h['Cache-Control'], 'public, s-maxage=60');
+  assert.match(a11y('<svg width="1"><title>Hi</title></svg>'), /^<svg role="img" aria-labelledby="cardTitle" width="1"><title id="cardTitle">/);
+  assert.match(a11y('<svg width="1"></svg>'), /^<svg role="img" width="1">/);
+});
+
+const { computeRank } = require('../api/_lib/shared');
+test('rank grades: bands, weights and progress', () => {
+  assert.equal(computeRank({}).grade, 'C');
+  assert.equal(computeRank({ commits: 99 }).grade, 'C');
+  assert.equal(computeRank({ commits: 100 }).grade, 'B');
+  // PRs, reviews and stars outweigh raw commits
+  assert.equal(computeRank({ prs: 25 }).score, 100);
+  assert.equal(computeRank({ stars: 20 }).score, 100);
+  assert.equal(computeRank({ commits: 3000 }).grade, 'S');
+  const mid = computeRank({ commits: 200 });                 // halfway from B (100) to B+ (300)
+  assert.deepEqual([mid.grade, mid.next, mid.progress], ['B', 'B+', 0.5]);
+  assert.equal(computeRank({ commits: 99999 }).progress, 1);
+  assert.equal(computeRank({ commits: 99999 }).next, null);
+  assert.equal(computeRank({ commits: 'abc', stars: null }).score, 0);   // junk never produces NaN
 });
