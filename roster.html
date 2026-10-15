@@ -401,5 +401,9 @@ themeSelect.addEventListener('change', () => {
 
 setStatus('Enter an org and tap Load — nothing is fetched until you do.');
 </script>
+<script type="module">
+  import { inject } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics@1/dist/index.mjs';
+  inject();
+</script>
 </body>
 </html>

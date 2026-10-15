@@ -278,5 +278,9 @@ if (initial) {
   setStatus('Enter a GitHub username to load their Codex profile.');
 }
 </script>
+<script type="module">
+  import { inject } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics@1/dist/index.mjs';
+  inject();
+</script>
 </body>
 </html>
