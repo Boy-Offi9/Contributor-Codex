@@ -19,5 +19,5 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Syntax check every endpoint and helper
-        run: for f in api/*.js api/_lib/*.js scripts/*.js; do node --check "$f"; done
+        run: for f in api/*.js api/_lib/*.js scripts/*.js assets/js/*.js; do node --check "$f"; done
       - run: npm test

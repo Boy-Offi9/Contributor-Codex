@@ -1,5 +1,3 @@
-// Shared SVG chrome for the streak / activity / languages cards: background,
-// border, glow filter, embedded font. The card body is drawn by the caller.
 const { esc, CHAKRA_PETCH_FONT_FACE, DISPLAY, svgReply, sanitizeColor, contrastRatio, mixColors, luminance } = require('./shared');
 
 const FONT = DISPLAY;
@@ -11,14 +9,10 @@ const sanitizeTheme = (input, fallback = 'cyberpunk') => {
 
 const PALETTE = {
   cyberpunk: { bg: '#05070c', text: '#e8edf5', sub: '#c3cadb', dim: '#8a94ab', track: '#1b2233', rule: '#1b2233' },
-  // light frosted glass — same look as the contributor card's glass theme
   glass:     { bg: '#f4f6fb', text: '#1c2333', sub: '#3d4760', dim: '#7b8499', track: '#dfe5f1', rule: '#c9d0e0' },
   terminal:  { bg: '#000000', text: '#d8f5d8', sub: '#b6d9b6', dim: '#7da07d', track: '#12261a', rule: '#16301f' },
 };
 
-// Per-element colour overrides: ?bg= ?text= ?border= ?hide_border=1.
-// Unreadable choices are dropped rather than rendered (text that fails 3:1
-// against the background falls back to the theme's own text colour).
 function styleFromParams(params, theme) {
   const bg = sanitizeColor(params.get('bg'));
   let text = sanitizeColor(params.get('text'));
@@ -29,8 +23,6 @@ function styleFromParams(params, theme) {
   return { bg, text, border, hideBorder };
 }
 
-// Theme palette with any overrides applied; secondary text and lines are
-// derived from the chosen text/background so custom colours stay coherent.
 function paletteFor(theme, style = {}) {
   const base = PALETTE[theme] || PALETTE.cyberpunk;
   const bg = style.bg || base.bg;
@@ -49,8 +41,6 @@ function paletteFor(theme, style = {}) {
   };
 }
 
-// Bright accents (cyan, lime) wash out on a pale background, so text that is
-// coloured with the accent is mixed toward the ink colour on the glass theme.
 function ink(color, theme) {
   if (theme !== 'glass') return color;
   const mix = (a, b) => Math.round(a * 0.55 + b * 0.45);
@@ -58,8 +48,6 @@ function ink(color, theme) {
   return `#${[mix(r, 0x1c), mix(g, 0x23), mix(b, 0x33)].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
 }
 
-// Which accent-text treatment applies: a light custom background needs the same
-// darkened accent as the glass theme, whatever theme name was asked for.
 function inkTheme(theme, style = {}) {
   if (style.bg) return luminance(style.bg) > 0.4 ? 'glass' : 'dark';
   return theme;

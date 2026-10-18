@@ -30,14 +30,10 @@ function licenseOf(repo) {
   return repo.license?.spdx_id && repo.license.spdx_id !== 'NOASSERTION' ? repo.license.spdx_id : null;
 }
 
-// Detailed-theme-only lookups. Both fail soft (null) rather than throw, so a
-// rate limit or a repo with no releases still renders a complete card.
 async function contributorCount(owner, repoName, token) {
   try {
     const headers = { Accept: 'application/vnd.github+json' };
-    if (token) headers.Authorization = `token ${token}`;
-    // per_page=1 + the Link header's last-page number gives a total count
-    // without paginating through every contributor.
+    if (token) headers.Authorization = `Bearer ${token}`;
     const res = await fetch(`https://api.github.com/repos/${owner}/${repoName}/contributors?per_page=1&anon=true`, { headers });
     if (!res.ok) return null;
     const link = res.headers.get('link');
@@ -55,7 +51,7 @@ async function contributorCount(owner, repoName, token) {
 async function latestReleaseTag(owner, repoName, token) {
   try {
     const headers = { Accept: 'application/vnd.github+json' };
-    if (token) headers.Authorization = `token ${token}`;
+    if (token) headers.Authorization = `Bearer ${token}`;
     const res = await fetch(`https://api.github.com/repos/${owner}/${repoName}/releases/latest`, { headers });
     if (!res.ok) return null; // 404 means no releases published — not an error
     const data = await res.json();
@@ -166,16 +162,14 @@ function renderDetailed({ repo, color, fontFace, contributors, releaseTag }) {
   const descLines = repo.description ? wrapText(esc(repo.description), 56) : [];
   const license = licenseOf(repo);
   const topics = (repo.topics || []).slice(0, 6);
-  const d = descLines.length * 16; // extra vertical room the description block needs
+  const d = descLines.length * 16;
 
-  // Each Y offset derives from the one before it, so a new field only
-  // requires one insertion, not re-deriving every coordinate below it.
-  const row1Y = 100 + d;               // STARS / FORKS
-  const row2Y = row1Y + 76;            // ISSUES / WATCHERS
-  const row3Y = row2Y + 76;            // CONTRIBUTORS / RELEASE
-  const metaY = row3Y + 78;            // DEFAULT BRANCH / LAST PUSH (label baseline)
+  const row1Y = 100 + d;
+  const row2Y = row1Y + 76;
+  const row3Y = row2Y + 76;
+  const metaY = row3Y + 78;
   const metaValY = metaY + 18;
-  const meta2Y = metaY + 38;           // CREATED / SIZE (label baseline)
+  const meta2Y = metaY + 38;
   const meta2ValY = meta2Y + 18;
   const topicsY = meta2Y + 40;
   const langY = topics.length ? topicsY + 32 : topicsY;
@@ -273,7 +267,6 @@ module.exports.GET = async (request) => {
     let contributors = null;
     let releaseTag = null;
     if (requestedTheme === 'detailed') {
-      // Detailed theme only — both calls fail soft.
       [contributors, releaseTag] = await Promise.all([
         contributorCount(owner, repoName, token),
         latestReleaseTag(owner, repoName, token),

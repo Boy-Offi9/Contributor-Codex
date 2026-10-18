@@ -86,10 +86,10 @@ Cards embed Chakra Petch as base64 so they render identically inside a README im
 
 The pages are written against the production domain, so a deployment elsewhere needs a few replacements:
 
-- **API base URL.** `index.html`, `builder.html`, `roster.html`, and `profile.html` each define `API_BASE = 'https://contributor-codex.vercel.app'`, and `index.html` also uses that domain for its example images and embed snippet. Replace it with your deployment's origin — it must be absolute, because the Card Builder copies these URLs into READMEs. With GNU sed:
+- **API base URL.** `assets/js/common.js` defines `API_BASE = 'https://contributor-codex.vercel.app'`, and every page reads it from there, including the landing page's example images and embed snippet. Replace it with your deployment's origin — it must be absolute, because the Card Builder copies these URLs into READMEs. With GNU sed:
 
   ```sh
-  sed -i 's#https://contributor-codex.vercel.app#https://YOUR-DOMAIN#g' index.html builder.html roster.html profile.html
+  sed -i 's#https://contributor-codex.vercel.app#https://YOUR-DOMAIN#g' assets/js/common.js
   ```
 
 - **Source links.** The footers link to `github.com/Boy-Offi9/Contributor-Codex`; point them at your fork.
@@ -129,6 +129,16 @@ api/
     font-data.js     embedded Chakra Petch (generated)
 scripts/
   build-font.js      regenerates font-data.js
+test/                node:test suites, one file per module (contrib, validation, theme, rank, ratelimit)
+assets/
+  css/site.css       shared stylesheet for every page
+  js/common.js       shared helpers and API_BASE
+  js/home.js         landing page
+  js/builder.js      Card Builder
+  js/profile.js      Codex Profile
+  js/roster.js       organization roster
+  js/analytics.js    Vercel Web Analytics loader
+  favicon.svg
 index.html           landing page
 roster.html          organization roster
 builder.html         Card Builder

@@ -1,5 +1,3 @@
-// Progression rules: languages → classes, XP, levels, tiers, clearance.
-// Pure functions only — no network, no SVG.
 
 const LANG_CLASS = {
   JavaScript: 'NETRUNNER', TypeScript: 'CIPHER ADEPT', Python: 'DATA MAGE',
@@ -72,17 +70,12 @@ function computeStats(user, repos) {
   return { topLang, langs, totalStars, totalForks, years, xp, level, color, tier };
 }
 
-// Terminal-theme vocabulary: the same 5 tiers computeStats produces, relabeled.
 const TIER_ORDER = ['INITIATE', 'OPERATIVE', 'SPECIALIST', 'ELITE', 'LEGENDARY'];
 
 const HACKER_CLEARANCE = ['SCRIPT KIDDIE', 'OPERATOR', 'GHOST', 'GATEKEEPER', 'ROOT'];
 
 const clearanceFor = (tier) => HACKER_CLEARANCE[TIER_ORDER.indexOf(tier)] || 'SCRIPT KIDDIE';
 
-// Rank grade for the stats card. This is OUR scale, not a percentile of GitHub
-// users: a weighted activity score mapped onto fixed bands. Weights favour work
-// that involves other people (PRs, reviews) and recognition (stars) over raw
-// commit counts, which are easy to inflate.
 const RANK_WEIGHTS = { commits: 1, prs: 4, issues: 2, reviews: 3, stars: 5, followers: 2, contributedTo: 3 };
 const RANK_BANDS = [
   { grade: 'C', min: 0 },

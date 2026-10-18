@@ -1,7 +1,3 @@
-// GET /api/status — how much GitHub API budget the server token has left.
-// Calls GitHub's rate-limit endpoint, which does not count against any quota,
-// so it is safe to check as often as the 60s edge cache allows. The token
-// itself is never returned.
 const { version } = require('../package.json');
 
 function json(body, status = 200) {

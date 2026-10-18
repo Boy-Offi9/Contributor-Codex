@@ -18,7 +18,6 @@ const TROPHIES = [
   { key: 'POLYGLOT', label: 'LANGUAGES', thresholds: [3, 6, 10, 15], value: (s, u) => s.langs.length },
   { key: 'FORKED', label: 'FORKS', thresholds: [5, 25, 100, 500], value: (s, u) => s.totalForks },
   { key: 'OPEN_SOURCE', label: 'LICENSED', thresholds: [1, 5, 15, 30], value: (s, u) => s.licensedRepos },
-  // Added in 0.14 — all derived from data the two existing requests already return.
   { key: 'NETWORKER', label: 'FOLLOWING', thresholds: [10, 50, 200, 500], value: (s, u) => u.following || 0 },
   { key: 'SNIPPETS', label: 'GISTS', thresholds: [3, 10, 30, 100], value: (s, u) => u.public_gists || 0 },
   { key: 'ACTIVE', label: 'ACTIVE 90D', thresholds: [1, 3, 6, 12], value: (s, u) => s.activeRepos },
@@ -26,8 +25,6 @@ const TROPHIES = [
   { key: 'CURATOR', label: 'TOPICS', thresholds: [3, 8, 15, 30], value: (s, u) => s.topicRepos },
 ];
 
-// Optional 7th slot for a user-supplied metric (e.g. a Codewars rank),
-// rendered through the same tiered-shield logic. Opt-in only.
 function parseCustomTrophy(url) {
   const label = (url.searchParams.get('customLabel') || '')
     .replace(/[^a-zA-Z0-9 ]/g, '')
@@ -44,7 +41,7 @@ function parseCustomTrophy(url) {
   const thresholds = rawThresholds.split(',').map((s) => Number(s.trim()));
   if (thresholds.length !== 4 || thresholds.some((n) => !Number.isFinite(n))) return null;
   for (let i = 1; i < thresholds.length; i++) {
-    if (thresholds[i] <= thresholds[i - 1]) return null; // must be strictly ascending
+    if (thresholds[i] <= thresholds[i - 1]) return null;
   }
 
   return { key: 'CUSTOM', label, thresholds, value: () => value };
@@ -55,7 +52,6 @@ const TROPHY_ICONS = {
   POLYGLOT: 'globe', FORKED: 'fork', OPEN_SOURCE: 'license', CUSTOM: 'bolt',
   NETWORKER: 'people', SNIPPETS: 'code', ACTIVE: 'pulse', HEADLINER: 'trophy', CURATOR: 'tag',
 };
-
 
 function shield(x, key, label, value, tier, shape, pitch) {
   const cx = x + pitch / 2;

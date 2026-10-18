@@ -3,654 +3,134 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#05070c">
 <title>Card Builder — Contributor Codex</title>
+<meta name="description" content="Pick a Contributor Codex card type, theme, shape and color, preview it live, then copy the Markdown, URL or HTML.">
+<meta property="og:title" content="Card Builder — Contributor Codex">
+<meta property="og:description" content="Pick a Contributor Codex card type, theme, shape and color, preview it live, then copy the Markdown, URL or HTML.">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --void:#05070c;
-    --panel:#0c111c;
-    --steel:#1b2233;
-    --cyan:#00e5ff;
-    --purple:#8b5cf6;
-    --amber:#ffb020;
-    --ghost:#e8edf5;
-    --dim:#7a8399;
-    --danger:#ff4d6d;
-  }
-  *{box-sizing:border-box;}
-  html,body{margin:0;}
-  body{
-    background:
-      radial-gradient(1200px 600px at 15% -10%, rgba(0,229,255,.08), transparent 60%),
-      radial-gradient(1000px 500px at 100% 0%, rgba(139,92,246,.10), transparent 55%),
-      var(--void);
-    color:var(--ghost);
-    font-family:'Inter',sans-serif;
-    min-height:100vh;
-    padding:32px 20px 80px;
-  }
-  .display{font-family:'Chakra Petch',sans-serif;}
-  .mono{font-family:'JetBrains Mono',monospace;}
-
-  header{max-width:1180px;margin:0 auto 8px;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;}
-  h1{
-    font-family:'Chakra Petch',sans-serif;
-    font-weight:700;font-size:clamp(28px,4vw,42px);
-    margin:0 0 6px;letter-spacing:.01em;
-  }
-  h1 span{color:var(--dim);font-weight:500;}
-  nav{display:flex;gap:10px;flex-wrap:wrap;}
-  nav a{
-    font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);
-    text-decoration:none;border:1px solid var(--steel);padding:7px 12px;border-radius:3px;
-  }
-  nav a:hover{color:var(--ghost);border-color:var(--cyan);}
-
-  .sub{max-width:1180px;margin:0 auto 26px;color:var(--dim);font-size:14px;}
-
-  .layout{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(280px,380px) 1fr;gap:28px;}
-  @media (max-width:820px){.layout{grid-template-columns:1fr;}}
-
-  .panel{background:var(--panel);border:1px solid var(--steel);padding:20px;border-radius:4px;}
-  .panel + .panel{margin-top:20px;}
-
-  .field{margin-bottom:16px;}
-  .field:last-child{margin-bottom:0;}
-  label{
-    display:block;font-family:'JetBrains Mono',monospace;font-size:10.5px;
-    color:var(--dim);letter-spacing:.06em;margin-bottom:6px;text-transform:uppercase;
-  }
-  input[type="text"], input[type="number"], select{
-    width:100%;background:#0a0e17;border:1px solid var(--steel);
-    color:var(--ghost);font-family:'JetBrains Mono',monospace;font-size:13.5px;
-    padding:10px 12px;border-radius:3px;outline:none;
-  }
-  input::placeholder{color:#4d5568;}
-  input:focus, select:focus{border-color:var(--cyan);}
-
-  .colorField{display:flex;gap:8px;align-items:center;}
-  .colorField input[type="color"]{
-    width:38px;height:38px;padding:0;border:1px solid var(--steel);border-radius:3px;
-    background:none;cursor:pointer;
-  }
-  .colorField input[type="text"]{flex:1;}
-
-  .typeGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
-  .typeBtn{
-    font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.02em;
-    background:transparent;border:1px solid var(--steel);color:var(--dim);
-    padding:10px 8px;border-radius:3px;cursor:pointer;text-align:center;
-  }
-  .typeBtn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.08);}
-
-  .trophyGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 10px;}
-  .trophyChip{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--dim);}
-  .trophyChip input{accent-color:var(--cyan);}
-
-  .hint{font-family:'JetBrains Mono',monospace;font-size:11px;color:#4d5568;margin-top:6px;line-height:1.5;}
-
-  .previewBox{
-    min-height:220px;display:flex;align-items:center;justify-content:center;
-    background:#0a0e17;border:1px dashed var(--steel);border-radius:4px;padding:24px;margin-bottom:18px;
-  }
-  .previewBox img{max-width:100%;height:auto;display:block;}
-  .previewBox .msg{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);text-align:center;}
-  .previewBox .msg.err{color:var(--danger);}
-  .previewBox{flex-direction:column;gap:12px;}
-  .presetGrid{display:flex;flex-wrap:wrap;gap:8px;}
-  .presetChip{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--dim);background:none;border:1px solid var(--steel);padding:6px 10px;cursor:pointer;}
-  .presetChip:active{opacity:.6;}
-  .presetChip i{display:inline-block;width:14px;height:14px;border:1px solid rgba(255,255,255,.25);}
-  .loadBtn[disabled]{opacity:.4;cursor:not-allowed;}
-  .loadBtn{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--cyan,#00e5ff);background:none;border:1px dashed currentColor;padding:10px 14px;cursor:pointer;}
-  .loadBtn:active{opacity:.6;}
-
-  .outRow{margin-bottom:14px;}
-  .outRow label{margin-bottom:8px;}
-  .outBox{
-    display:flex;gap:8px;align-items:flex-start;
-  }
-  textarea{
-    flex:1;resize:vertical;min-height:44px;
-    background:#0a0e17;border:1px solid var(--steel);color:var(--ghost);
-    font-family:'JetBrains Mono',monospace;font-size:12.5px;padding:10px 12px;border-radius:3px;
-    outline:none;
-  }
-  textarea:focus{border-color:var(--cyan);}
-  button.copyBtn{
-    font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.03em;
-    background:transparent;border:1px solid var(--cyan);color:var(--cyan);
-    padding:0 14px;border-radius:3px;cursor:pointer;white-space:nowrap;
-    align-self:stretch;
-  }
-  button.copyBtn:hover{background:var(--cyan);color:var(--void);}
-
-  footer{max-width:1180px;margin:36px auto 0;color:#5a6480;font-size:12.5px;}
-  footer a{color:#5a6480;}
-</style>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/css/site.css">
 </head>
 <body>
-
-<header>
-  <h1>Card <span>Builder</span></h1>
-  <nav><a href="/">← home</a> <a href="/roster.html">roster →</a></nav>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="wrap">
+    <a class="wordmark" href="./"><img src="assets/favicon.svg" alt="" width="24" height="24">Contributor <span>Codex</span></a>
+    <nav aria-label="Primary"><a href="roster.html">roster</a><a href="builder.html" aria-current="page">card builder</a><a href="profile.html">codex profile</a></nav>
+  </div>
 </header>
-<p class="sub mono">Pick a card, fill in the fields, copy the markdown. No GitHub token needed unless you're generating a lot of cards.</p>
 
-<div class="layout">
-  <div class="col-form">
-    <div class="panel">
-      <div class="field">
-        <label>Card type</label>
-        <div class="typeGrid" id="typeGrid">
-          <button class="typeBtn active" data-type="card">Contributor</button>
-          <button class="typeBtn" data-type="leaderboard">Leaderboard</button>
-          <button class="typeBtn" data-type="repo">Repository</button>
-          <button class="typeBtn" data-type="trophies">Achievements</button>
-          <button class="typeBtn" data-type="codex">Codex Collection</button>
-          <button class="typeBtn" data-type="stats">Stats + rank</button>
-          <button class="typeBtn" data-type="streak">Streak</button>
-          <button class="typeBtn" data-type="activity">Activity graph</button>
-          <button class="typeBtn" data-type="langs">Top languages</button>
-        </div>
-      </div>
-
-      <div id="dynamicFields"></div>
-
-      <div class="field" id="themeField">
-        <label>Theme</label>
-        <select id="themeSelect"></select>
-      </div>
-
-      <div class="field" id="badgeField">
-        <label>Badge shape</label>
-        <select id="badgeSelect">
-          <option value="">default</option>
-          <option value="hex">hex</option>
-          <option value="shield">shield</option>
-          <option value="diamond">diamond</option>
-          <option value="octagon">octagon</option>
-          <option value="circle">circle</option>
-          <option value="square">square</option>
-        </select>
-      </div>
-
-      <div class="field" id="shapeField">
-        <label>Avatar shape</label>
-        <select id="shapeSelect">
-          <option value="">theme default</option>
-          <option value="hex">hex</option>
-          <option value="circle">circle</option>
-          <option value="rounded">rounded</option>
-          <option value="square">square</option>
-        </select>
-      </div>
-
-      <div class="field" id="colorFieldWrap">
-        <label>Accent color</label>
-        <div class="colorField">
-          <input type="color" id="colorPicker" value="#00e5ff">
-          <input type="text" id="colorText" class="mono" placeholder="00e5ff (optional)">
-        </div>
-        <p class="hint">Leave the text field empty to use the theme's default accent. Very dark or very light colors are adjusted automatically so they stay visible.</p>
-      </div>
-      <div class="field" id="presetField" style="display:none">
-        <label>Preset themes</label>
-        <div class="presetGrid" id="presetGrid"></div>
-        <p class="hint">Fills in background, text, border and accent. You can still edit each one.</p>
-      </div>
-    </div>
+<main id="main" class="wrap">
+  <div class="pageHead">
+    <h1>Card <span>Builder</span></h1>
+    <p>Pick a card, fill in the fields, copy the markdown. No GitHub token needed unless you're generating a lot of cards.</p>
   </div>
 
-  <div class="col-preview">
-    <div class="panel">
-      <div class="previewBox" id="previewBox"><span class="msg">fill in the fields to preview</span></div>
-      <div class="outRow"><button class="loadBtn" id="pngBtn" type="button" disabled>⬇ Download PNG (2×)</button></div>
-
-      <div class="outRow">
-        <label class="mono">Markdown</label>
-        <div class="outBox">
-          <textarea id="mdOut" class="mono" readonly rows="2"></textarea>
-          <button class="copyBtn" data-target="mdOut">Copy</button>
+  <div class="layout">
+    <div class="col-form">
+      <div class="panel">
+        <div class="field">
+          <span class="fieldLabel" id="typeLabel">Card type</span>
+          <div class="typePicker" id="typePicker" role="group" aria-labelledby="typeLabel"></div>
         </div>
-      </div>
-      <div class="outRow">
-        <label class="mono">Direct URL</label>
-        <div class="outBox">
-          <textarea id="urlOut" class="mono" readonly rows="2"></textarea>
-          <button class="copyBtn" data-target="urlOut">Copy</button>
+
+        <div id="dynamicFields"></div>
+
+        <div class="field" id="themeField">
+          <label for="themeSelect">Theme</label>
+          <select id="themeSelect"></select>
         </div>
-      </div>
-      <div class="outRow" id="pairRow" style="display:none">
-        <label class="mono">Light / dark README (HTML)</label>
-        <div class="outBox">
-          <textarea id="pairOut" class="mono" readonly rows="4"></textarea>
-          <button class="copyBtn" data-target="pairOut">Copy</button>
-        </div>
-        <p class="hint">Shows the dark card to dark-mode viewers and the glass card to light-mode viewers. Hidden when a custom background is set, since that overrides the theme.</p>
-      </div>
-      <div class="outRow">
-        <label class="mono">HTML &lt;img&gt;</label>
-        <div class="outBox">
-          <textarea id="htmlOut" class="mono" readonly rows="2"></textarea>
-          <button class="copyBtn" data-target="htmlOut">Copy</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
-<footer class="mono">Contributor Codex — <a href="https://github.com/Boy-Offi9/Contributor-Codex">source</a></footer>
-
-<script>
-const API_BASE = 'https://contributor-codex.vercel.app';
-
-const TYPES = {
-  card: {
-    endpoint: '/api/card',
-    themes: ['cyberpunk', 'terminal', 'glass', 'detailed'],
-    shapeSupport: true,
-    fields: [
-      { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
-    ],
-  },
-  codex: {
-    endpoint: '/api/codex',
-    themes: null,
-    badgeSupport: true,
-    fields: [
-      { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
-      { key: 'streak', label: 'Streak strip', type: 'select', options: ['1'], labels: { '1': 'include (needs server token)' } },
-    ],
-  },
-  leaderboard: {
-    endpoint: '/api/leaderboard',
-    themes: ['cyberpunk', 'terminal', 'glass'],
-    shapeSupport: true,
-    fields: [
-      { key: 'org', label: 'Organization', placeholder: 'boy-offi9-inc', required: true },
-      { key: 'limit', label: 'Member limit (1-20)', placeholder: '10', type: 'number', min: 1, max: 20 },
-    ],
-  },
-  repo: {
-    endpoint: '/api/repo',
-    themes: ['cyberpunk', 'terminal', 'glass', 'detailed'],
-    fields: [
-      { key: 'owner', label: 'Repo owner', placeholder: 'boy-offi9-inc', required: true },
-      { key: 'repo', label: 'Repo name', placeholder: 'Contributor-Codex', required: true },
-    ],
-  },
-  trophies: {
-    endpoint: '/api/trophies',
-    themes: null,
-    badgeSupport: true,
-    fields: [
-      { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
-    ],
-    trophyPicker: true,
-  },
-};
-const CAL_THEMES = ['cyberpunk', 'glass', 'terminal'];
-const ON = (label) => ({ type: 'select', options: ['1'], labels: { '1': label } });
-const STYLE_FIELDS = [
-  { key: 'bg', label: 'Background color (hex, optional)', placeholder: '1e1e2e' },
-  { key: 'text', label: 'Text color (hex, optional)', placeholder: 'cdd6f4' },
-  { key: 'border', label: 'Border color (hex, optional)', placeholder: '89b4fa' },
-  { key: 'hide_border', label: 'Border', ...ON('hide it') },
-];
-const COLOR_KEYS = ['bg', 'text', 'border'];
-const PRESETS = [
-  { name: 'Mocha', bg: '1e1e2e', text: 'cdd6f4', border: '45475a', color: 'cba6f7' },
-  { name: 'Tokyo Night', bg: '1a1b26', text: 'c0caf5', border: '292e42', color: '7aa2f7' },
-  { name: 'Dracula', bg: '282a36', text: 'f8f8f2', border: '44475a', color: 'bd93f9' },
-  { name: 'Nord', bg: '2e3440', text: 'eceff4', border: '434c5e', color: '88c0d0' },
-  { name: 'GitHub Dark', bg: '0d1117', text: 'e6edf3', border: '30363d', color: '58a6ff' },
-  { name: 'Rosé Pine', bg: '191724', text: 'e0def4', border: '26233a', color: 'eb6f92' },
-  { name: 'Solarized', bg: 'fdf6e3', text: '657b83', border: 'eee8d5', color: '268bd2' },
-];
-TYPES.streak = {
-  endpoint: '/api/streak',
-  themes: CAL_THEMES,
-  shapeSupport: true,
-  styleSupport: true,
-  fields: [
-    { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
-    { key: 'profile', label: 'Avatar & name header', ...ON('show') },
-    { key: 'year', label: 'This-year footer', ...ON('show') },
-    { key: 'animate', label: 'Animation', ...ON('on (off for reduced-motion users)') },
-    ...STYLE_FIELDS,
-  ],
-};
-TYPES.stats = {
-  endpoint: '/api/stats',
-  themes: CAL_THEMES,
-  styleSupport: true,
-  fields: [
-    { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
-    { key: 'hide', label: 'Hide stats (comma list, optional)', placeholder: 'issues,reviews', },
-    { key: 'animate', label: 'Animation', ...ON('on (off for reduced-motion users)') },
-    ...STYLE_FIELDS,
-  ],
-};
-TYPES.activity = {
-  endpoint: '/api/activity',
-  themes: CAL_THEMES,
-  fields: [
-    { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
-    { key: 'days', label: 'Range', type: 'select', options: ['30', '90', '180', '365'] },
-    { key: 'animate', label: 'Animation', ...ON('on (off for reduced-motion users)') },
-    ...STYLE_FIELDS,
-  ],
-  styleSupport: true,
-};
-TYPES.langs = {
-  endpoint: '/api/langs',
-  themes: CAL_THEMES,
-  fields: [
-    { key: 'username', label: 'GitHub username', placeholder: 'octocat', required: true },
-    { key: 'limit', label: 'Languages shown (2-8)', placeholder: '6', type: 'number', min: 2, max: 8 },
-    ...STYLE_FIELDS,
-  ],
-  styleSupport: true,
-};
-const ALL_TROPHIES = ['STARGAZER', 'BUILDER', 'INFLUENCE', 'VETERAN', 'POLYGLOT', 'FORKED', 'OPEN_SOURCE', 'NETWORKER', 'SNIPPETS', 'ACTIVE', 'HEADLINER', 'CURATOR'];
-
-let currentType = 'card';
-const state = {};
-
-const dynamicFields = document.getElementById('dynamicFields');
-const themeField = document.getElementById('themeField');
-const themeSelect = document.getElementById('themeSelect');
-const shapeField = document.getElementById('shapeField');
-const shapeSelect = document.getElementById('shapeSelect');
-const badgeField = document.getElementById('badgeField');
-const badgeSelect = document.getElementById('badgeSelect');
-const colorFieldWrap = document.getElementById('colorFieldWrap');
-const colorPicker = document.getElementById('colorPicker');
-const colorText = document.getElementById('colorText');
-const previewBox = document.getElementById('previewBox');
-const mdOut = document.getElementById('mdOut');
-const urlOut = document.getElementById('urlOut');
-const htmlOut = document.getElementById('htmlOut');
-
-function renderFields(){
-  const def = TYPES[currentType];
-  dynamicFields.innerHTML = def.fields.map(f => `
-    <div class="field">
-      <label>${f.label}</label>
-      ${f.type === 'select'
-        ? `<select id="f_${f.key}">
+        <div class="field" id="badgeField">
+          <label for="badgeSelect">Badge shape</label>
+          <select id="badgeSelect">
             <option value="">default</option>
-            ${f.options.map(o => `<option value="${o}" ${state[f.key] === o ? 'selected' : ''}>${(f.labels && f.labels[o]) || o}</option>`).join('')}
-          </select>`
-        : `<input type="${f.type || 'text'}" id="f_${f.key}" class="mono" placeholder="${f.placeholder || ''}"
-        ${f.min !== undefined ? `min="${f.min}"` : ''} ${f.max !== undefined ? `max="${f.max}"` : ''}
-        value="${state[f.key] || ''}">`}
-    </div>`).join('');
+            <option value="hex">hex</option>
+            <option value="shield">shield</option>
+            <option value="diamond">diamond</option>
+            <option value="octagon">octagon</option>
+            <option value="circle">circle</option>
+            <option value="square">square</option>
+          </select>
+        </div>
 
-  if (def.trophyPicker) {
-    dynamicFields.innerHTML += `
-      <div class="field">
-        <label>Trophies (none selected = show all)</label>
-        <div class="trophyGrid" id="trophyGrid">
-          ${ALL_TROPHIES.map(t => `
-            <label class="trophyChip"><input type="checkbox" value="${t}" ${state.trophies?.includes(t) ? 'checked' : ''}> ${t}</label>
-          `).join('')}
+        <div class="field" id="shapeField">
+          <label for="shapeSelect">Avatar shape</label>
+          <select id="shapeSelect">
+            <option value="">theme default</option>
+            <option value="hex">hex</option>
+            <option value="circle">circle</option>
+            <option value="rounded">rounded</option>
+            <option value="square">square</option>
+          </select>
+        </div>
+
+        <div class="field" id="colorFieldWrap">
+          <label for="colorText">Accent color</label>
+          <div class="colorField">
+            <input type="color" id="colorPicker" value="#00e5ff" aria-label="Accent color picker">
+            <input type="text" id="colorText" class="mono" placeholder="00e5ff (optional)" autocomplete="off" spellcheck="false">
+          </div>
+          <p class="hint">Leave the text field empty to use the theme's default accent. Very dark or very light colors are adjusted automatically so they stay visible.</p>
+        </div>
+
+        <div class="field hidden" id="presetField">
+          <span class="fieldLabel">Preset themes</span>
+          <div class="presetGrid" id="presetGrid"></div>
+          <p class="hint">Fills in background, text, border and accent. You can still edit each one.</p>
         </div>
       </div>
-      <div class="field">
-        <label>Custom trophy (optional) — for anything that isn't from GitHub</label>
-        <input type="text" id="f_customLabel" class="mono" placeholder="Label, e.g. CODEWARS (max 10 chars)" value="${state.customLabel || ''}" maxlength="10" style="margin-bottom:8px;">
-        <input type="text" id="f_customValue" class="mono" placeholder="Current value, e.g. 1450" value="${state.customValue || ''}" style="margin-bottom:8px;">
-        <input type="text" id="f_customThresholds" class="mono" placeholder="4 ascending thresholds, e.g. 100,500,1500,5000" value="${state.customThresholds || ''}">
-        <p class="hint">All three fields are required together, or the custom trophy is silently skipped.</p>
-      </div>`;
-  }
+    </div>
 
-  def.fields.forEach(f => {
-    document.getElementById(`f_${f.key}`).addEventListener('input', (e) => {
-      state[f.key] = e.target.value;
-      update();
-    });
-  });
-  if (def.trophyPicker) {
-    document.querySelectorAll('#trophyGrid input').forEach(cb => {
-      cb.addEventListener('change', () => {
-        const checked = [...document.querySelectorAll('#trophyGrid input:checked')].map(c => c.value);
-        state.trophies = checked;
-        update();
-      });
-    });
-    ['customLabel', 'customValue', 'customThresholds'].forEach(key => {
-      document.getElementById(`f_${key}`).addEventListener('input', (e) => {
-        state[key] = e.target.value;
-        update();
-      });
-    });
-  }
+    <div class="col-preview">
+      <div class="panel previewPanel">
+        <div class="previewBox" id="previewBox" aria-live="polite"><span class="msg">fill in the fields to preview</span></div>
+        <div class="outRow"><button class="btn dashed" id="pngBtn" type="button" disabled>⬇ Download PNG (2×)</button></div>
 
-  const presetField = document.getElementById('presetField');
-  const presetGrid = document.getElementById('presetGrid');
-  presetField.style.display = def.styleSupport ? '' : 'none';
-  presetGrid.innerHTML = def.styleSupport
-    ? PRESETS.map((pr, i) => `<button type="button" class="presetChip" data-i="${i}"><i style="background:#${pr.bg}"></i><i style="background:#${pr.color}"></i>${pr.name}</button>`).join('')
-      + '<button type="button" class="presetChip" data-i="reset">Reset</button>'
-    : '';
-  presetGrid.querySelectorAll('.presetChip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const reset = btn.dataset.i === 'reset';
-      const pr = reset ? { bg: '', text: '', border: '', color: '' } : PRESETS[Number(btn.dataset.i)];
-      COLOR_KEYS.forEach(k => { state[k] = pr[k]; });
-      colorText.value = pr.color;
-      if (pr.color) colorPicker.value = '#' + pr.color;
-      renderFields();
-      update();
-    });
-  });
+        <div class="outRow">
+          <label for="mdOut">Markdown</label>
+          <div class="outBox">
+            <textarea id="mdOut" class="mono" readonly rows="2"></textarea>
+            <button class="btn copyBtn" type="button" data-target="mdOut">Copy</button>
+          </div>
+        </div>
+        <div class="outRow">
+          <label for="urlOut">Direct URL</label>
+          <div class="outBox">
+            <textarea id="urlOut" class="mono" readonly rows="2"></textarea>
+            <button class="btn copyBtn" type="button" data-target="urlOut">Copy</button>
+          </div>
+        </div>
+        <div class="outRow hidden" id="pairRow">
+          <label for="pairOut">Light / dark README (HTML)</label>
+          <div class="outBox">
+            <textarea id="pairOut" class="mono" readonly rows="4"></textarea>
+            <button class="btn copyBtn" type="button" data-target="pairOut">Copy</button>
+          </div>
+          <p class="hint">Shows the dark card to dark-mode viewers and the glass card to light-mode viewers. Hidden when a custom background is set, since that overrides the theme.</p>
+        </div>
+        <div class="outRow">
+          <label for="htmlOut">HTML &lt;img&gt;</label>
+          <div class="outBox">
+            <textarea id="htmlOut" class="mono" readonly rows="2"></textarea>
+            <button class="btn copyBtn" type="button" data-target="htmlOut">Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<footer class="siteFooter mono">
+  <span>Contributor Codex</span>
+  <a href="https://github.com/Boy-Offi9/Contributor-Codex" target="_blank" rel="noopener">source on GitHub</a>
+</footer>
 
-  if (def.themes) {
-    themeField.style.display = '';
-    themeSelect.innerHTML = def.themes.map(t => `<option value="${t}">${t}</option>`).join('');
-    themeSelect.value = state.theme && def.themes.includes(state.theme) ? state.theme : def.themes[0];
-    state.theme = themeSelect.value;
-  } else {
-    themeField.style.display = 'none';
-  }
-  colorFieldWrap.style.display = currentType === 'trophies' ? 'none' : '';
-
-  if (def.shapeSupport) {
-    shapeField.style.display = '';
-    shapeSelect.value = state.shape || '';
-  } else {
-    shapeField.style.display = 'none';
-  }
-
-  if (def.badgeSupport) {
-    badgeField.style.display = '';
-    badgeSelect.value = state.badge || '';
-  } else {
-    badgeField.style.display = 'none';
-  }
-}
-
-function buildUrl(themeOverride){
-  const def = TYPES[currentType];
-  const params = new URLSearchParams();
-  let missing = false;
-
-  def.fields.forEach(f => {
-    let val = (state[f.key] || '').trim();
-    if (COLOR_KEYS.includes(f.key)) val = val.replace(/^#/, '');
-    if (f.required && !val) missing = true;
-    if (val) params.set(f.key, val);
-  });
-
-  if (def.trophyPicker && state.trophies && state.trophies.length) {
-    params.set('trophies', state.trophies.join(','));
-  }
-  if (def.trophyPicker) {
-    const label = (state.customLabel || '').trim();
-    const value = (state.customValue || '').trim();
-    const thresholds = (state.customThresholds || '').trim();
-    if (label && value && thresholds) {
-      params.set('customLabel', label);
-      params.set('customValue', value);
-      params.set('customThresholds', thresholds);
-    }
-  }
-  const themeValue = themeOverride || state.theme;
-  if (def.themes && themeValue) params.set('theme', themeValue);
-  if (def.shapeSupport && state.shape) params.set('shape', state.shape);
-  if (def.badgeSupport && state.badge) params.set('badge', state.badge);
-  if (currentType !== 'trophies') {
-    const color = (colorText.value || '').trim().replace(/^#/, '');
-    if (/^[0-9a-fA-F]{6}$/.test(color)) params.set('color', color);
-  }
-
-  return { url: `${API_BASE}${def.endpoint}?${params.toString()}`, missing };
-}
-
-// Editing a field only rebuilds the copyable URL / Markdown / HTML text — no
-// network. The live card is requested only when the user taps "Generate
-// preview", so typing a username or flipping a dropdown never spends GitHub
-// API calls.
-let debounceTimer;
-let pendingUrl = null;
-
-const pngBtn = document.getElementById('pngBtn');
-
-// PNG export: fetch the card as SVG, rasterise it on a canvas at 2x. The
-// animation param is dropped first — a frame captured at t=0 of the draw-in
-// animation would be an empty ring.
-async function downloadPng(){
-  if (!pendingUrl) return;
-  const label = pngBtn.textContent;
-  pngBtn.disabled = true;
-  pngBtn.textContent = 'rendering…';
-  try {
-    const u = new URL(pendingUrl, location.href);
-    u.searchParams.delete('animate');
-    const svgText = await (await fetch(u)).text();
-    const objUrl = URL.createObjectURL(new Blob([svgText], { type: 'image/svg+xml' }));
-    const img = new Image();
-    await new Promise((ok, bad) => { img.onload = ok; img.onerror = bad; img.src = objUrl; });
-    const w = img.naturalWidth || 480, h = img.naturalHeight || 200, scale = 2;
-    const canvas = document.createElement('canvas');
-    canvas.width = w * scale; canvas.height = h * scale;
-    const ctx = canvas.getContext('2d');
-    ctx.scale(scale, scale);
-    ctx.drawImage(img, 0, 0, w, h);
-    URL.revokeObjectURL(objUrl);
-    canvas.toBlob((blob) => {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `${currentType}-card.png`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-    }, 'image/png');
-  } catch (e) {
-    pngBtn.textContent = 'PNG export failed';
-    setTimeout(() => { pngBtn.textContent = label; pngBtn.disabled = false; }, 2500);
-    return;
-  }
-  pngBtn.textContent = label;
-  pngBtn.disabled = false;
-}
-pngBtn.addEventListener('click', downloadPng);
-
-const pairRow = document.getElementById('pairRow');
-const pairOut = document.getElementById('pairOut');
-
-// GitHub READMEs honour <picture> with prefers-color-scheme, so one snippet can
-// show a dark card to dark-mode viewers and the glass card to light-mode ones.
-// Only offered where the type has a glass theme and no custom background (a
-// custom background would make both variants identical).
-function setPair(){
-  const def = TYPES[currentType];
-  const customBg = def.fields.some(f => f.key === 'bg') && (state.bg || '').trim();
-  if (!def.themes || !def.themes.includes('glass') || customBg) { pairRow.style.display = 'none'; return; }
-  const dark = state.theme && state.theme !== 'glass' ? state.theme : 'cyberpunk';
-  const darkUrl = buildUrl(dark).url;
-  const lightUrl = buildUrl('glass').url;
-  pairOut.value = `<picture>\n  <source media="(prefers-color-scheme: dark)" srcset="${darkUrl}">\n  <source media="(prefers-color-scheme: light)" srcset="${lightUrl}">\n  <img alt="GitHub card" src="${darkUrl}">\n</picture>`;
-  pairRow.style.display = '';
-}
-
-function showPreviewPrompt(text, withButton){
-  pngBtn.disabled = true;
-  previewBox.innerHTML = `<span class="msg">${text}</span>` + (withButton ? '<button class="loadBtn" id="previewBtn" type="button">▶ Generate preview</button>' : '');
-  if (withButton) document.getElementById('previewBtn').onclick = loadPreview;
-}
-
-function loadPreview(){
-  if (!pendingUrl) return;
-  const url = pendingUrl;
-  previewBox.innerHTML = '<span class="msg">loading…</span>';
-  const img = new Image();
-  img.alt = 'card preview';
-  img.onload = () => { if (url === pendingUrl) { previewBox.innerHTML = ''; previewBox.appendChild(img); pngBtn.disabled = false; } };
-  img.onerror = () => { previewBox.innerHTML = '<span class="msg err">failed to load — check the fields above</span>'; };
-  img.src = url;
-}
-
-function update(){
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => {
-    const { url, missing } = buildUrl();
-    if (missing) {
-      pendingUrl = null;
-      showPreviewPrompt('fill in the required fields to preview', false);
-      mdOut.value = ''; urlOut.value = ''; htmlOut.value = '';
-      pairRow.style.display = 'none';
-      return;
-    }
-    pendingUrl = url;
-    mdOut.value = `![Card](${url})`;
-    urlOut.value = url;
-    htmlOut.value = `<img src="${url}" alt="card">`;
-    setPair();
-    showPreviewPrompt('ready — tap to render the live card', true);
-  }, 250);
-}
-
-document.getElementById('typeGrid').addEventListener('click', (e) => {
-  const btn = e.target.closest('.typeBtn');
-  if (!btn) return;
-  document.querySelectorAll('.typeBtn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  currentType = btn.dataset.type;
-  renderFields();
-  update();
-});
-
-themeSelect.addEventListener('change', () => { state.theme = themeSelect.value; update(); });
-shapeSelect.addEventListener('change', () => { state.shape = shapeSelect.value; update(); });
-badgeSelect.addEventListener('change', () => { state.badge = badgeSelect.value; update(); });
-colorPicker.addEventListener('input', () => { colorText.value = colorPicker.value.replace(/^#/, ''); update(); });
-colorText.addEventListener('input', update);
-
-document.querySelectorAll('.copyBtn').forEach(btn => {
-  btn.addEventListener('click', async () => {
-    const target = document.getElementById(btn.dataset.target);
-    if (!target.value) return;
-    try {
-      await navigator.clipboard.writeText(target.value);
-      const original = btn.textContent;
-      btn.textContent = 'Copied ✓';
-      setTimeout(() => { btn.textContent = original; }, 1500);
-    } catch {
-      target.select();
-      btn.textContent = 'Select & copy manually';
-    }
-  });
-});
-
-renderFields();
-</script>
-<script type="module">
-  import { inject } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics@1/dist/index.mjs';
-  inject();
-</script>
+<script src="assets/js/common.js"></script>
+<script src="assets/js/builder.js"></script>
+<script src="assets/js/analytics.js" defer></script>
 </body>
 </html>

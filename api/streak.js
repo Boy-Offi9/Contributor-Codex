@@ -14,9 +14,6 @@ const THEME_SHAPE = { cyberpunk: 'hex', glass: 'circle', terminal: 'hex' };
 const fmtNumber = (n) => n.toLocaleString('en-US');
 const flag = (v) => ['1', 'true', 'yes'].includes(String(v || '').toLowerCase());
 
-// Everything animated lives in CSS (not SMIL) so it can sit behind a
-// prefers-reduced-motion query: people who ask for less motion get the
-// finished, static card.
 function animationCss(circ) {
   return `
     @media (prefers-reduced-motion: no-preference){
@@ -41,17 +38,12 @@ function render({ user, streaks, color, theme, opts }) {
   const top = profile ? HEADER_H : 0;
   const height = BASE_HEIGHT + top + (year ? FOOTER_H : 0);
 
-  // "Since day one": the range starts on the account's join date, not on the
-  // first day that happened to have a contribution.
   const start = (user.createdAt || '').slice(0, 10) || since;
   const startYear = start && start.slice(0, 4) !== today.slice(0, 4);
   const totalRange = start ? `${fmtDate(start, startYear)} – Present` : 'no contributions yet';
   const currentRange = fmtRange(current.start, current.end, today, current.length > 0);
   const longestRange = fmtRange(longest.start, longest.end, today, false);
 
-  // Ring shows the current streak relative to the personal best. The arc is a
-  // full-length dash shifted by dashoffset so the draw-in animation can start
-  // from "empty" and end exactly where the static card sits.
   const r = 33;
   const circ = 2 * Math.PI * r;
   const progress = longest.length ? Math.min(1, current.length / longest.length) : 0;
@@ -106,9 +98,6 @@ function render({ user, streaks, color, theme, opts }) {
   });
 }
 
-// ?debug=1 — what the card was computed from. Use it when a number looks
-// wrong: it shows which years GitHub returned, how many days and contributions
-// each held, and the five longest streaks it found.
 function debugResponse(cal, streaks, runs) {
   const perYear = {};
   for (const d of cal.days) {
@@ -146,7 +135,6 @@ module.exports.GET = async (request) => {
     const cal = await fetchCalendar(username, process.env.GITHUB_TOKEN);
     const theme = sanitizeTheme(url.searchParams.get('theme'));
     const style = styleFromParams(url.searchParams, theme);
-    // With a custom background, "is this card light or dark?" follows the colour, not the theme.
     const accentTheme = style.bg ? (luminance(style.bg) > 0.4 ? 'glass' : 'dark') : theme;
     const color = readableAccent(sanitizeColor(url.searchParams.get('color')), accentTheme) || '#00e5ff';
     const streaks = computeStreaks(cal.days);

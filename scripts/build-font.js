@@ -1,17 +1,3 @@
-// Run manually with `npm run build-font` whenever the pinned font weights or
-// the character set below change. Output is committed to api/_lib/font-data.js
-// and required synchronously at runtime — no network fetch happens in the
-// serverless functions themselves.
-//
-// The font is SUBSET to the characters the cards actually draw (Google Fonts'
-// `text=` parameter does the subsetting server-side). The full Latin file was
-// ~94 KB and was embedded in every card; the subset is a small fraction of
-// that. Each weight is its own file, so both are embedded and declared with
-// their real weights (the previous script embedded only the first file and
-// declared it for 600 AND 700).
-//
-// Characters outside this set (e.g. a non-Latin display name) fall back to the
-// system font in the card, which is the right trade for a per-request payload.
 
 const fs = require('fs');
 const path = require('path');

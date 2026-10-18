@@ -26,9 +26,6 @@ async function buildEntry(login, token) {
   return { user, avatarUri, ...stats };
 }
 
-// Ranking requires every member's stats before sorting, so total GitHub
-// calls are fixed either way — a worker pool just parallelizes them.
-// MEMBER_CAP bounds worst-case time for very large orgs.
 const CONCURRENCY = 4;
 const MEMBER_CAP = 60;
 
@@ -43,7 +40,6 @@ async function buildEntries(members, token) {
       try {
         results[i] = await buildEntry(pool[i].login, token);
       } catch {
-        // one member's profile/repos failing shouldn't sink the whole board
       }
     }
   }
@@ -52,7 +48,7 @@ async function buildEntries(members, token) {
   return results.filter(Boolean);
 }
 
-const MEDALS = ['#ffd166', '#cbd5e1', '#d08a5c']; // gold, silver, bronze
+const MEDALS = ['#ffd166', '#cbd5e1', '#d08a5c'];
 
 const hexPoints = (cx, cy, r) => [0, 1, 2, 3, 4, 5].map((k) => {
   const a = ((-90 + 60 * k) * Math.PI) / 180;

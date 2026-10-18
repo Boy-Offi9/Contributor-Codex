@@ -34,7 +34,6 @@ function render({ stats, rank, cells, color, theme, style, animate }) {
     <text x="${x}" y="${y + 40}" font-family="${FONT}" font-weight="700" font-size="21" fill="${p.text}">${fmt(c.value(stats))}</text>`;
   }).join('');
 
-  // Rank ring: progress toward the next grade (full at S).
   const r = 38;
   const circ = 2 * Math.PI * r;
   const cx = 412;
@@ -71,7 +70,6 @@ module.exports.GET = async (request) => {
   if (!username) return svgResponse(errorCard('missing ?username='), 400);
   if (!isGhName(username)) return svgResponse(errorCard('invalid username'), 400);
 
-  // ?hide=stars,prs — unknown keys are ignored; at least one stat always stays.
   const hidden = new Set((url.searchParams.get('hide') || '').toLowerCase().split(',').map((x) => x.trim()));
   let cells = CELLS.filter((c) => !hidden.has(c.key));
   if (!cells.length) cells = CELLS;

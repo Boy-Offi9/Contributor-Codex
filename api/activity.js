@@ -9,7 +9,6 @@ const RANGES = [30, 90, 180, 365];
 const CACHE_OK = 'public, s-maxage=21600, stale-while-revalidate=86400, stale-if-error=604800';
 const CACHE_ERR = 'public, s-maxage=60';
 
-// Smallest "round" axis maximum (1, 2, 2.5, 5 × 10^k) that fits the data.
 function niceMax(value) {
   if (value <= 4) return 4;
   const pow = 10 ** Math.floor(Math.log10(value / 4));
@@ -17,9 +16,6 @@ function niceMax(value) {
   return value;
 }
 
-// Monotone cubic (Fritsch–Carlson) through every data point: the curve is
-// smooth but never overshoots, so a peak is drawn exactly at its true height
-// and a quiet stretch never dips below zero.
 function smoothPath(pts) {
   const n = pts.length;
   const f = (v) => v.toFixed(1);
@@ -47,7 +43,6 @@ function render({ user, days, range, color, theme, style, animate }) {
   const p = paletteFor(theme, style);
   const window = days.slice(-range);
   const weekly = range > 120;
-  // 180/365-day views sum into weeks so the line stays readable.
   let series = window.map((d) => ({ date: d.date, value: d.count }));
   if (weekly) {
     series = [];
@@ -102,7 +97,6 @@ function render({ user, days, range, color, theme, style, animate }) {
     <text x="${peakX.toFixed(1)}" y="${(yAt(peak.value) - 10).toFixed(1)}" text-anchor="${labelAnchor}" font-family="${FONT}" font-weight="700" font-size="10.5" fill="${p.text}">peak ${peak.value} · ${fmtDate(peak.date)}</text>` : ''}
     ${ticks}`;
 
-  // CSS-only so prefers-reduced-motion users get the finished graph.
   const css = animate ? `
     @media (prefers-reduced-motion: no-preference){
       .lineDraw{stroke-dasharray:1;animation:lineDraw 1.8s cubic-bezier(.3,.7,.3,1) .1s both}

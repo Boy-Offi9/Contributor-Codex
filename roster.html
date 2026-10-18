@@ -3,407 +3,74 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#05070c">
 <title>Roster — Contributor Codex</title>
+<meta name="description" content="Load any GitHub organization to see its team leaderboard and every public member's Contributor Codex card.">
+<meta property="og:title" content="Roster — Contributor Codex">
+<meta property="og:description" content="Load any GitHub organization to see its team leaderboard and every public member's Contributor Codex card.">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --void:#05070c;
-    --panel:#0c111c;
-    --steel:#1b2233;
-    --cyan:#00e5ff;
-    --purple:#8b5cf6;
-    --amber:#ffb020;
-    --ghost:#e8edf5;
-    --dim:#7a8399;
-    --danger:#ff4d6d;
-  }
-  *{box-sizing:border-box;}
-  html,body{margin:0;}
-  body{
-    background:
-      radial-gradient(1200px 600px at 15% -10%, rgba(0,229,255,.08), transparent 60%),
-      radial-gradient(1000px 500px at 100% 0%, rgba(139,92,246,.10), transparent 55%),
-      var(--void);
-    color:var(--ghost);
-    font-family:'Inter',sans-serif;
-    min-height:100vh;
-    padding:32px 20px 80px;
-  }
-  .display{font-family:'Chakra Petch',sans-serif;}
-  .mono{font-family:'JetBrains Mono',monospace;}
-
-  header{max-width:1180px;margin:0 auto 28px;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;}
-  h1{
-    font-family:'Chakra Petch',sans-serif;
-    font-weight:700;font-size:clamp(28px,4vw,42px);
-    margin:0 0 6px;letter-spacing:.01em;
-  }
-  h1 span{color:var(--dim);font-weight:500;}
-  header nav{display:flex;gap:10px;flex-wrap:wrap;}
-  header nav a{
-    font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);
-    text-decoration:none;border:1px solid var(--steel);padding:7px 12px;border-radius:3px;
-  }
-  header nav a:hover{color:var(--ghost);border-color:var(--cyan);}
-
-  .controls{
-    max-width:1180px;margin:26px auto 8px;
-    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
-  }
-  input[type="text"], input[type="password"]{
-    background:var(--panel);border:1px solid var(--steel);
-    color:var(--ghost);font-family:'JetBrains Mono',monospace;font-size:13.5px;
-    padding:10px 12px;border-radius:3px;outline:none;
-  }
-  input::placeholder{color:#4d5568;}
-  input:focus{border-color:var(--cyan);}
-  #orgInput{width:220px;}
-  #userInput{width:170px;}
-  #tokenInput{width:230px;}
-  button{
-    font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:13.5px;
-    letter-spacing:.03em;
-    background:transparent;border:1px solid var(--cyan);color:var(--cyan);
-    padding:10px 16px;border-radius:3px;cursor:pointer;
-    transition:background .15s, color .15s;
-  }
-  button:hover{background:var(--cyan);color:var(--void);}
-  button.ghost{border-color:var(--steel);color:var(--dim);}
-  button.ghost:hover{background:var(--steel);color:var(--ghost);}
-
-  #status{
-    max-width:1180px;margin:18px auto;color:var(--dim);
-    font-family:'JetBrains Mono',monospace;font-size:13px;min-height:18px;
-  }
-  #status.err{color:var(--danger);}
-
-  #lbPreview{
-    max-width:1180px;margin:18px auto 0;display:none;
-  }
-  #lbPreview.show{display:block;}
-  #lbPreview .lbHead{
-    display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:8px;
-  }
-  #lbPreview .lbLabel{
-    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;
-  }
-  #lbPreview img{max-width:100%;height:auto;display:block;}
-  #lbPreview button{
-    font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:12px;letter-spacing:.03em;
-    background:transparent;border:1px solid var(--steel);color:var(--dim);
-    padding:6px 12px;border-radius:3px;cursor:pointer;
-  }
-  #lbPreview button:hover{background:var(--steel);color:var(--ghost);}
-
-  .grid{
-    max-width:1180px;margin:18px auto 0;
-    display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
-    gap:22px;
-  }
-
-  .card{
-    position:relative;
-    cursor:pointer;
-    transition:transform .15s ease;
-    min-height:200px;
-  }
-  .card img{display:block;width:100%;height:auto;}
-  .card:hover{transform:translateY(-3px);}
-  .card:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;}
-  .card.skeleton{
-    background:#0d1320;border:1px solid var(--steel);
-    display:flex;align-items:center;justify-content:center;
-    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim);
-  }
-  .card.errorCard{
-    background:#0d1320;border:1px solid var(--danger);color:var(--danger);
-    font-family:'JetBrains Mono',monospace;font-size:12px;padding:16px;
-  }
-
-  #overlay{
-    position:fixed;inset:0;background:rgba(2,4,8,.86);
-    backdrop-filter:blur(3px);
-    display:none;align-items:center;justify-content:center;
-    padding:24px;z-index:50;
-  }
-  #overlay.open{display:flex;}
-  .dossier{
-    width:min(560px,100%);background:var(--panel);border:1px solid var(--rarity, var(--cyan));
-    position:relative;padding:28px 26px 26px;
-    clip-path:polygon(0 18px,18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%);
-  }
-  .dossier .scan{
-    position:absolute;inset:0;pointer-events:none;opacity:.5;
-    background:repeating-linear-gradient(0deg, rgba(0,229,255,.03) 0 1px, transparent 1px 3px);
-  }
-  .closeBtn{
-    position:absolute;top:14px;right:16px;background:none;border:none;color:var(--dim);
-    font-size:20px;cursor:pointer;line-height:1;padding:4px;
-  }
-  .closeBtn:hover{color:var(--ghost);background:none;}
-  .dLogin{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--dim);}
-  .bio{font-size:13.5px;line-height:1.6;color:#c3cadb;margin:14px 0 18px;}
-  .statGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 18px;margin-bottom:16px;}
-  .statBox{border:1px solid var(--steel);padding:10px 12px;}
-  .statBox .k{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);}
-  .statBox .v{font-family:'Chakra Petch',sans-serif;font-size:18px;font-weight:600;margin-top:2px;}
-  .langList{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
-  .langChip{
-    font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--dim);
-    border:1px solid var(--steel);padding:4px 8px;
-  }
-  .profileLink{
-    display:inline-block;font-family:'Chakra Petch',sans-serif;font-size:13px;font-weight:600;
-    color:var(--void);background:var(--cyan);padding:9px 16px;text-decoration:none;
-    border:none;cursor:pointer;letter-spacing:.03em;margin-right:8px;
-  }
-  .profileLink.ghost{background:transparent;color:var(--dim);border:1px solid var(--steel);}
-  .profileLink.ghost:hover{background:var(--steel);color:var(--ghost);}
-  .dossierCard{display:block;margin:0 auto;max-width:100%;height:auto;}
-  .themeSelect{
-    background:var(--panel);border:1px solid var(--steel);color:var(--ghost);
-    font-family:'JetBrains Mono',monospace;font-size:13px;padding:10px 12px;border-radius:3px;
-  }
-
-  footer a{color:#5a6480;}
-</style>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/css/site.css">
 </head>
 <body>
-
-<header>
-  <h1>Contributor <span>Codex</span></h1>
-  <nav><a href="/">← home</a> <a href="/profile.html">full profile →</a> <a href="/builder.html">card builder →</a></nav>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="wrap">
+    <a class="wordmark" href="./"><img src="assets/favicon.svg" alt="" width="24" height="24">Contributor <span>Codex</span></a>
+    <nav aria-label="Primary"><a href="roster.html" aria-current="page">roster</a><a href="builder.html">card builder</a><a href="profile.html">codex profile</a></nav>
+  </div>
 </header>
 
-<div class="controls">
-  <input type="text" id="orgInput" class="mono" placeholder="org name" value="vercel">
-  <button id="loadOrgBtn">Load org</button>
-  <input type="text" id="userInput" class="mono" placeholder="add username">
-  <button id="addUserBtn" class="ghost">Add card</button>
-  <input type="password" id="tokenInput" class="mono" placeholder="GitHub token (optional)" title="Raises the rate limit from 60/hr to 5,000/hr. Stays in this tab, only sent to api.github.com.">
-  <select id="themeSelect" class="themeSelect">
-    <option value="cyberpunk">cyberpunk</option>
-    <option value="terminal">terminal</option>
-    <option value="glass">glass</option>
-    <option value="detailed">detailed</option>
-  </select>
-</div>
-
-<div id="status" class="mono"></div>
-<div id="lbPreview">
-  <div class="lbHead">
-    <span class="lbLabel mono">Team leaderboard</span>
-    <button id="lbCopyBtn">Copy embed</button>
+<main id="main" class="wrap">
+  <div class="pageHead">
+    <h1>Org <span>Roster</span></h1>
+    <p>Load an organization to see its leaderboard and every public member's card. Select a card for a quick-look dossier.</p>
   </div>
-  <button id="lbLoadBtn" type="button">▶ Load leaderboard (ranks every member — uses the most API calls)</button>
-  <img id="lbImg" alt="team leaderboard" style="display:none">
-</div>
-<div class="grid" id="grid"></div>
+
+  <div class="controls">
+    <label class="sr-only" for="orgInput">Organization name</label>
+    <input type="text" id="orgInput" class="mono w-lg" placeholder="org name" value="vercel" autocomplete="off" spellcheck="false">
+    <button class="btn" id="loadOrgBtn" type="button">Load org</button>
+    <label class="sr-only" for="userInput">Username to add</label>
+    <input type="text" id="userInput" class="mono w-sm" placeholder="add username" autocomplete="off" spellcheck="false">
+    <button class="btn ghost" id="addUserBtn" type="button">Add card</button>
+    <label class="sr-only" for="tokenInput">GitHub token (optional)</label>
+    <input type="password" id="tokenInput" class="mono w-md" placeholder="GitHub token (optional)" autocomplete="off" title="Raises the rate limit from 60/hr to 5,000/hr. Stays in this tab, only sent to api.github.com.">
+    <label class="sr-only" for="themeSelect">Card theme</label>
+    <select id="themeSelect">
+      <option value="cyberpunk">cyberpunk</option>
+      <option value="terminal">terminal</option>
+      <option value="glass">glass</option>
+      <option value="detailed">detailed</option>
+    </select>
+  </div>
+
+  <div id="status" class="status mono" role="status" aria-live="polite"></div>
+
+  <div class="lbPreview" id="lbPreview">
+    <div class="lbHead">
+      <span class="sectionLabel mono lbLabel">Team leaderboard</span>
+      <button class="btn ghost sm" id="lbCopyBtn" type="button">Copy embed</button>
+    </div>
+    <div id="lbStage"></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</main>
 
 <div id="overlay">
-  <div class="dossier" id="dossier"></div>
+  <div class="dossier" id="dossier" role="dialog" aria-modal="true" aria-label="Contributor dossier"></div>
 </div>
+<footer class="siteFooter mono">
+  <span>Contributor Codex</span>
+  <a href="https://github.com/Boy-Offi9/Contributor-Codex" target="_blank" rel="noopener">source on GitHub</a>
+</footer>
 
-<script>
-const grid = document.getElementById('grid');
-const statusEl = document.getElementById('status');
-const overlay = document.getElementById('overlay');
-const dossier = document.getElementById('dossier');
-const themeSelect = document.getElementById('themeSelect');
-const API_BASE = 'https://contributor-codex.vercel.app';
-let currentOrg = null;
-
-// The leaderboard ranks every member, so it is by far the costliest request
-// on this page. It only loads after an explicit tap; once the user has asked
-// for it, a theme change refreshes it.
-let lbRequested = false;
-function showLeaderboardPreview(){
-  if (!currentOrg) return;
-  const url = leaderboardUrlFor(currentOrg, themeSelect.value);
-  const img = document.getElementById('lbImg');
-  const btn = document.getElementById('lbLoadBtn');
-  document.getElementById('lbCopyBtn').dataset.url = url;
-  document.getElementById('lbPreview').classList.add('show');
-  if (lbRequested) {
-    img.style.display = '';
-    btn.style.display = 'none';
-    img.src = url;
-  } else {
-    img.style.display = 'none';
-    img.removeAttribute('src');
-    btn.style.display = '';
-  }
-}
-document.getElementById('lbLoadBtn').onclick = () => { lbRequested = true; showLeaderboardPreview(); };
-
-document.getElementById('lbCopyBtn').onclick = async (e) => {
-  const url = e.target.dataset.url;
-  if (!url) return;
-  try {
-    await navigator.clipboard.writeText(`![Leaderboard](${url})`);
-    const original = e.target.textContent;
-    e.target.textContent = 'Copied ✓';
-    setTimeout(() => { e.target.textContent = original; }, 1500);
-  } catch {
-    e.target.textContent = 'Copy failed';
-  }
-};
-
-function authHeaders(){
-  const token = document.getElementById('tokenInput').value.trim();
-  return token ? { Authorization: 'token ' + token } : {};
-}
-
-async function ghFetch(url){
-  const res = await fetch(url, { headers: { Accept:'application/vnd.github+json', ...authHeaders() } });
-  if (!res.ok) {
-    const err = new Error(res.status + ' ' + res.statusText);
-    err.status = res.status;
-    throw err;
-  }
-  return res.json();
-}
-
-function setStatus(msg, isErr){
-  statusEl.textContent = msg || '';
-  statusEl.classList.toggle('err', !!isErr);
-}
-
-function cardUrlFor(login, theme){
-  return `${API_BASE}/api/card?username=${encodeURIComponent(login)}&theme=${encodeURIComponent(theme)}`;
-}
-
-const LB_THEMES = ['cyberpunk', 'terminal', 'glass']; // /api/leaderboard has no detailed theme
-function leaderboardUrlFor(org, theme){
-  const lbTheme = LB_THEMES.includes(theme) ? theme : 'cyberpunk';
-  return `${API_BASE}/api/leaderboard?org=${encodeURIComponent(org)}&limit=10&theme=${encodeURIComponent(lbTheme)}`;
-}
-
-const cardObserver = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (!entry.isIntersecting) return;
-    cardObserver.unobserve(entry.target);
-    if (entry.target._start) entry.target._start();
-  });
-}, { rootMargin: '150px' });
-
-function renderCard(login){
-  if (document.querySelector(`.card[data-login="${login}" i]`)) return;
-  const el = document.createElement('div');
-  el.className = 'card skeleton';
-  el.dataset.login = login;
-  el.textContent = `loading @${login}…`;
-  grid.appendChild(el);
-
-  // Only request the card once its placeholder is near the viewport, so a
-  // 100-member org doesn't fire 100 API requests the moment it's loaded.
-  el._start = () => {
-  const img = new Image();
-  img.alt = `${login} card`;
-  img.src = cardUrlFor(login, themeSelect.value);
-  img.onload = () => {
-    el.classList.remove('skeleton');
-    el.textContent = '';
-    el.appendChild(img);
-    el.onclick = () => openDossier(login);
-  };
-  img.onerror = () => {
-    el.classList.remove('skeleton');
-    el.classList.add('errorCard');
-    el.textContent = `@${login} — failed to load card`;
-  };
-  };
-  cardObserver.observe(el);
-}
-
-async function openDossier(login){
-  dossier.innerHTML = `<div class="scan"></div><button class="closeBtn" aria-label="Close">✕</button><p class="dLogin mono">loading @${login}…</p>`;
-  overlay.classList.add('open');
-
-  const cardUrl = cardUrlFor(login, themeSelect.value);
-  let user = null;
-  try { user = await ghFetch(`https://api.github.com/users/${login}`); } catch {}
-
-  const joined = user ? new Date(user.created_at).getFullYear() : null;
-  dossier.innerHTML = `
-    <div class="scan"></div>
-    <button class="closeBtn" aria-label="Close">✕</button>
-    <img class="dossierCard" src="${cardUrl}" alt="${login} card">
-    ${joined ? `<p class="dLogin mono" style="text-align:center;margin-top:10px;">member since ${joined}</p>` : ''}
-    ${user?.bio ? `<p class="bio">${user.bio}</p>` : ''}
-    <a class="profileLink" href="/profile.html?u=${encodeURIComponent(login)}">FULL PROFILE →</a>
-    <button class="profileLink ghost copyBtn" data-url="${cardUrl}">COPY EMBED LINK</button>
-  `;
-  dossier.querySelector('.closeBtn').onclick = closeDossier;
-  const copyBtn = dossier.querySelector('.copyBtn');
-  copyBtn.onclick = async () => {
-    try {
-      await navigator.clipboard.writeText(copyBtn.dataset.url);
-      const original = copyBtn.textContent;
-      copyBtn.textContent = 'COPIED ✓';
-      setTimeout(() => { copyBtn.textContent = original; }, 1500);
-    } catch {
-      copyBtn.textContent = 'COPY FAILED — SELECT MANUALLY';
-    }
-  };
-}
-
-function closeDossier(){ overlay.classList.remove('open'); }
-overlay.addEventListener('click', (e) => { if (e.target === overlay) closeDossier(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDossier(); });
-
-async function loadOrg(){
-  const org = document.getElementById('orgInput').value.trim();
-  if (!org) return;
-  grid.innerHTML = '';
-  currentOrg = null;
-  document.getElementById('lbPreview').classList.remove('show');
-  lbRequested = false;
-  setStatus(`Fetching ${org}'s member list…`);
-  try {
-    const members = await ghFetch(`https://api.github.com/orgs/${org}/members?per_page=100`);
-    if (!members.length) {
-      setStatus(`No public members returned for "${org}" — its member list may be private. Add usernames manually below instead.`, true);
-      return;
-    }
-    currentOrg = org;
-    showLeaderboardPreview();
-    setStatus(`Loading ${members.length} member${members.length===1?'':'s'}…`);
-    members.forEach(m => renderCard(m.login));
-    setStatus(`${members.length} member${members.length===1?'':'s'} found — cards load as you scroll.`);
-  } catch (err) {
-    if (err.status === 404) setStatus(`Org "${org}" not found.`, true);
-    else if (err.status === 403) setStatus('Rate limited by GitHub — add a token above and try again.', true);
-    else setStatus('Failed to load org: ' + err.message, true);
-  }
-}
-
-document.getElementById('loadOrgBtn').onclick = loadOrg;
-document.getElementById('addUserBtn').onclick = () => {
-  const input = document.getElementById('userInput');
-  const login = input.value.trim();
-  if (!login) return;
-  input.value = '';
-  renderCard(login);
-};
-document.getElementById('userInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') document.getElementById('addUserBtn').click();
-});
-themeSelect.addEventListener('change', () => {
-  document.querySelectorAll('.card[data-login]').forEach(el => {
-    const login = el.dataset.login;
-    el.remove();
-    renderCard(login);
-  });
-  showLeaderboardPreview();
-});
-
-setStatus('Enter an org and tap Load — nothing is fetched until you do.');
-</script>
-<script type="module">
-  import { inject } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics@1/dist/index.mjs';
-  inject();
-</script>
+<script src="assets/js/common.js"></script>
+<script src="assets/js/roster.js"></script>
+<script src="assets/js/analytics.js" defer></script>
 </body>
 </html>

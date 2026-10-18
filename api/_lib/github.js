@@ -1,5 +1,3 @@
-// Everything that talks to api.github.com (or fetches an avatar), plus the
-// name validation that guards what we put into those URLs.
 const { retryAfterAware, withDedupe } = require('@boy-offi9-inc/reqkit');
 
 const dedupedFetch = withDedupe(
@@ -7,16 +5,13 @@ const dedupedFetch = withDedupe(
   { keyFn: (url, headers) => `${headers.Authorization || 'anon'}:${url}` },
 );
 
-// Names go straight into api.github.com paths (and one search query) that are
-// called with the server's token, so anything that isn't a plain GitHub name
-// must be refused up front: "a/../../orgs/x", "a?per_page=1", "a+is:private".
 const isGhName = (v) => /^[A-Za-z0-9][A-Za-z0-9-]{0,38}$/.test(v);
 
 const isGhRepo = (v) => /^[A-Za-z0-9._-]{1,100}$/.test(v) && v !== '.' && v !== '..';
 
 async function ghFetch(url, token) {
   const headers = { Accept: 'application/vnd.github+json' };
-  if (token) headers.Authorization = `token ${token}`;
+  if (token) headers.Authorization = `Bearer ${token}`;
 
   const res = await retryAfterAware(() => dedupedFetch(url, headers), {
     retries: 2,

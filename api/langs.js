@@ -12,7 +12,6 @@ function render({ username, langs, color, theme, style }) {
   const height = 84 + rows * 26 + 14;
   const sum = langs.reduce((a, l) => a + l.bytes, 0) || 1;
 
-  // Stacked bar: segments are clipped to one rounded track.
   const barX = 22, barW = WIDTH - 44, barY = 50, barH = 10;
   let cursor = barX;
   const segs = langs.map((l) => {

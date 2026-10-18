@@ -15,10 +15,6 @@ function errorSVG(message) {
   </svg>`;
 }
 
-// Fixed subset of the full trophy list — Collections is a glanceable
-// dossier, not a full achievements card. Tiering logic duplicated from
-// trophies.js rather than imported, keeping each endpoint independently
-// deployable.
 const COLLECTION_TROPHIES = [
   { key: 'STARGAZER', label: 'STARS', icon: 'star', thresholds: [10, 50, 200, 1000], value: (s, u) => s.totalStars },
   { key: 'BUILDER', label: 'REPOS', icon: 'repo', thresholds: [10, 25, 50, 100], value: (s, u) => u.public_repos || 0 },
@@ -47,8 +43,6 @@ function streakStrip(y, streaks, color) {
   ].join('');
 }
 
-// One achievement cell: a compact framed icon, then value / label / tier as
-// real text underneath, plus a thin progress bar toward the next tier.
 function achievement(x, y, cellW, def, value, tier, shape) {
   const cx = x + cellW / 2;
   const pct = tier.nextThreshold ? Math.min(100, Math.round((value / tier.nextThreshold) * 100)) : 100;
@@ -67,11 +61,8 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape,
   const name = esc(user.name || user.login);
   const classLabel = classFor(stats.topLang);
 
-  // Each section's Y offset derives from the one before it, so a new
-  // section only requires one insertion, not re-deriving every coordinate.
   const headerH = 96;
   const statsY = headerH + 14;
-  // Optional streak strip (?streak=1) sits between the stat tiles and the badges.
   const streakY = statsY + 58 + 8;
   const streakBlock = streaks ? 58 + 10 : 0;
   const shieldsY = statsY + 58 + 18 + streakBlock;
@@ -176,8 +167,6 @@ module.exports.GET = async (request) => {
     } catch {}
 
     const stats = computeStats(user, repos);
-    // Streaks are opt-in (?streak=1): they cost two extra GraphQL calls and need
-    // a token, so a failure here quietly drops the strip instead of the card.
     const wantStreak = ['1', 'true', 'yes'].includes((url.searchParams.get('streak') || '').toLowerCase());
     const [avatarUri, langStats, streaks] = await Promise.all([
       avatarDataUri(`${user.avatar_url}&s=160`),

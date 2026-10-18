@@ -1,17 +1,10 @@
-// Contribution-calendar data for the streak and activity cards.
-//
-// GitHub only exposes the calendar through GraphQL (the REST API has no
-// equivalent), and GraphQL always needs a token. A calendar window can span at
-// most one year, so lifetime totals take one aliased query covering every year
-// the user was active. That is two HTTP calls per card render, both hidden
-// behind the long s-maxage the endpoints send.
 
 const GQL = 'https://api.github.com/graphql';
 
 async function gql(query, variables, token) {
   const res = await fetch(GQL, {
     method: 'POST',
-    headers: { Authorization: `bearer ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'contributor-codex' },
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'contributor-codex' },
     body: JSON.stringify({ query, variables }),
   });
   if (!res.ok) {
@@ -29,7 +22,6 @@ async function gql(query, variables, token) {
   return body.data;
 }
 
-// Returns { login, name, createdAt, days: [{ date: 'YYYY-MM-DD', count }] } sorted ascending.
 async function fetchCalendar(username, token) {
   if (!token) {
     const err = new Error('GITHUB_TOKEN required');
@@ -47,10 +39,6 @@ async function fetchCalendar(username, token) {
     err.status = 404;
     throw err;
   }
-  // Every calendar year from the join year to now. GitHub's own
-  // `contributionYears` list is deliberately NOT trusted to be complete: a year
-  // missing from it silently drops that year's streaks (and the longest streak
-  // with it), so we ask for each year and let empty ones come back as zeros.
   const nowYear = new Date().getUTCFullYear();
   const joinYear = Math.min(nowYear, Math.max(2008, new Date(user.createdAt).getUTCFullYear() || nowYear));
   const wanted = [];
@@ -67,7 +55,7 @@ async function fetchCalendar(username, token) {
     const weeks = data.user[`y${y}`].contributionCalendar.weeks;
     for (const w of weeks) {
       for (const d of w.contributionDays) {
-        if (d.date.startsWith(String(y))) byDate.set(d.date, d.contributionCount); // drops the neighbouring year's padding days
+        if (d.date.startsWith(String(y))) byDate.set(d.date, d.contributionCount);
       }
     }
   }
@@ -75,9 +63,6 @@ async function fetchCalendar(username, token) {
   return { login: user.login, name: user.name, createdAt: user.createdAt, avatarUrl: user.avatarUrl || null, days };
 }
 
-// One GraphQL request for the stats card. Commits, PRs-in-window and reviews
-// are GitHub's own "last 12 months" collection; stars come from the owner's
-// 100 most-starred non-fork repositories; PRs and issues are all-time totals.
 async function fetchStats(username, token) {
   if (!token) {
     const err = new Error('GITHUB_TOKEN required');
@@ -120,7 +105,6 @@ async function fetchStats(username, token) {
 
 const dayNum = (iso) => Math.floor(Date.parse(`${iso}T00:00:00Z`) / 86400000);
 
-// Every run of consecutive contribution days, oldest first.
 function listStreaks(days) {
   const runs = [];
   let run = null;
@@ -140,9 +124,6 @@ function listStreaks(days) {
   return runs;
 }
 
-// Streak maths. Dates are GitHub's own UTC calendar days. A streak that was
-// alive yesterday still counts as current while today is empty — otherwise
-// every card would reset to 0 each morning until the first commit.
 function computeStreaks(days, todayIso = new Date().toISOString().slice(0, 10)) {
   const total = days.reduce((a, d) => a + d.count, 0);
   const firstActive = days.find((d) => d.count > 0);
@@ -163,10 +144,6 @@ function fmtDate(iso, withYear) {
   const [y, m, d] = iso.split('-').map(Number);
   return `${MONTHS[m - 1]} ${d}${withYear ? `, ${y}` : ''}`;
 }
-// Ranges must fit one 160px column, so the format shrinks with the span:
-//   same year      "Jun 1 – Jul 15, 2025"  (year omitted when it's the current year)
-//   across years   "Jan 2020 – Oct 2026"
-// openEnded ranges end in "Present".
 function fmtRange(start, end, todayIso = new Date().toISOString().slice(0, 10), openEnded = false) {
   if (!start) return 'no streak yet';
   const nowYear = todayIso.slice(0, 4);

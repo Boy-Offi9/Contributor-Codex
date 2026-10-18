@@ -140,7 +140,6 @@ function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, c
   const name = esc(user.name || user.login);
   const joined = new Date(user.created_at).getFullYear();
 
-  // Language donut: top 4 by bytes plus an "Other" slice for the remainder.
   const segs = (langStats || []).slice(0, 4).map((l) => ({ name: l.name, pct: l.pct, color: colorForLang(l.name, color) }));
   const shown = segs.reduce((sum, l) => sum + l.pct, 0);
   if (segs.length && shown < 100) segs.push({ name: 'Other', pct: 100 - shown, color: '#c4cbdb' });
@@ -150,8 +149,6 @@ function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, c
   const tilesY = 132;
   const langLabelY = tilesY + 82;
   const donutCy = langLabelY + 48;
-  // The Joined / location chips sit *inside* the divider (line — chips — line),
-  // 18px clear of the content above and 18px above the panel edge below.
   const dividerY = hasLangs ? donutCy + 66 : tilesY + 60 + 30;
   const chipsY = dividerY - 12;
   const height = dividerY + 12 + 18 + 16;
@@ -289,13 +286,9 @@ function wrapBio(text, maxChars) {
   return lines.slice(0, 3);
 }
 
-// Detailed-theme-only. Uses the stable Search Issues API (not the commit
-// search preview, which is still unlaunched years after its 2017 announcement)
-// to count PRs and issues opened by a user. Fails soft — a search rate limit
-// just omits these two fields rather than breaking the card.
 async function prIssueCounts(username, token) {
   const headers = { Accept: 'application/vnd.github+json' };
-  if (token) headers.Authorization = `token ${token}`;
+  if (token) headers.Authorization = `Bearer ${token}`;
   const fetchCount = async (type) => {
     try {
       const res = await fetch(`https://api.github.com/search/issues?q=author:${username}+type:${type}&per_page=1`, { headers });
@@ -310,18 +303,11 @@ async function prIssueCounts(username, token) {
   return { prs, issues };
 }
 
-// A transparent, soft-capped rank score — same "letter grade" idea used by
-// stats cards across the GitHub README ecosystem, but our own simple formula
-// rather than a hidden one, documented in full in docs/API.md. sqrt scaling
-// (same diminishing-returns curve the XP->level formula already uses) means
-// moderate activity still scores fairly instead of being crushed by caps
-// tuned to top-percentile numbers. Missing PR/issue data (search rate-limited)
-// just drops those two terms instead of failing.
 const RANK_CAPS = { stars: 300, repos: 60, followers: 300, prs: 100, issues: 60 };
 const RANK_WEIGHTS = { stars: 30, repos: 20, followers: 25, prs: 15, issues: 10 };
 function computeRank({ totalStars, repoCount, followers, prs, issues }) {
   const contribution = (value, key) => {
-    if (value === null || value === undefined) return 0; // missing data scores 0, not excluded
+    if (value === null || value === undefined) return 0;
     return Math.min(1, Math.sqrt(value / RANK_CAPS[key])) * RANK_WEIGHTS[key];
   };
   const score = contribution(totalStars, 'stars') + contribution(repoCount, 'repos') + contribution(followers, 'followers')
@@ -445,7 +431,6 @@ function renderDetailed({ user, avatarUri, shape, langStats, totalStars, totalFo
 }
 
 const THEMES = { cyberpunk: renderCyberpunk, terminal: renderTerminal, glass: renderGlass, detailed: renderDetailed };
-// Each theme's natural avatar frame; ?shape= overrides it (terminal has no avatar).
 const THEME_SHAPE = { cyberpunk: 'hex', detailed: 'rounded', glass: 'circle', terminal: 'hex' };
 
 function svg(body, status, cacheControl) {

@@ -1,10 +1,4 @@
-// Visual building blocks shared by every card: escaping, colours, font stacks,
-// avatar frames, icons and achievement badges.
 
-// The color convention github-linguist popularized and most of the README
-// stats ecosystem now shares — factual hex associations, not copied code.
-// Falls back to the card's own accent color for anything unmapped, so an
-// obscure language still looks intentional rather than defaulting to gray.
 const LANG_COLORS = {
   JavaScript: '#f1e05a', TypeScript: '#3178c6', Python: '#3572A5', Java: '#b07219',
   'C++': '#f34b7d', C: '#555555', 'C#': '#178600', PHP: '#4F5D95', Ruby: '#701516',
@@ -17,8 +11,6 @@ const LANG_COLORS = {
 
 const colorForLang = (name, fallback) => LANG_COLORS[name] || fallback;
 
-// Escapes quotes as well as <, > and &, so the result is safe in an attribute
-// value (title="...", aria-label="...") and not just in a text node.
 function esc(str = '') {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -32,12 +24,11 @@ let fontCache;
 try {
   fontCache = require('./font-data');
 } catch {
-  fontCache = null; // scripts/build-font.js hasn't been run yet - falls back to system-ui, same as a failed fetch used to
+  fontCache = null;
 }
 
 const CHAKRA_PETCH_FONT_FACE = fontCache;
 
-// WCAG relative luminance of a #rrggbb colour (0 = black, 1 = white).
 function luminance(hex) {
   const [r, g, b] = [1, 3, 5].map((i) => {
     const v = parseInt(hex.slice(i, i + 2), 16) / 255;
@@ -46,16 +37,9 @@ function luminance(hex) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-// A user-chosen accent can disappear into the card: black on a near-black
-// theme, white on the light glass theme. Push it just far enough toward the
-// readable end (keeping its hue) instead of letting the card go blank.
-// Dark themes need luminance >= 0.12 (~3:1 against the card); glass needs <= 0.75.
-// Colours that already read fine are returned untouched.
 function readableAccent(color, theme) {
   if (!color) return color;
   const light = theme === 'glass';
-  // Near-black on a dark card has no hue worth keeping; lifting it to dark grey
-  // just looks muddy (and the glow smears it), so use a crisp light steel instead.
   if (!light && luminance(color) < 0.02) return '#aab4c8';
   const rgb = [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16));
   const target = light ? 0 : 255;
@@ -75,8 +59,6 @@ function sanitizeColor(input) {
 
 const truncate = (str, max) => (str.length > max ? `${str.slice(0, max - 1)}…` : str);
 
-// Avatar frames. Every card draws its avatar through avatarShape() so the
-// frame, the clip, and the ring gap are always geometrically consistent.
 const AVATAR_SHAPES = ['hex', 'circle', 'rounded', 'square'];
 
 const sanitizeShape = (input, fallback) => {
@@ -98,8 +80,6 @@ function shapeElement(shape, size, inset) {
   return `polygon points="${points.join(' ')}"`;
 }
 
-// Returns markup in a local 0..size box; wrap it in <g transform="translate(x,y)">.
-// `id` must be unique within the SVG (it names the clipPath).
 function avatarShape({ id, shape = 'hex', size, uri, ring, bg = '#0b1220', glow = false, ringWidth = 1.6 }) {
   const outer = shapeElement(shape, size, 0.75);
   const inner = shapeElement(shape, size, size * 0.06 + 1.5);
@@ -111,9 +91,6 @@ function avatarShape({ id, shape = 'hex', size, uri, ring, bg = '#0b1220', glow 
     <${inner} fill="none" stroke="${ring}" stroke-width="${ringWidth}" stroke-linejoin="round"${glow ? ' filter="url(#glow)"' : ''}/>`;
 }
 
-// Small stroke icons (12x12, stroke=currentColor) as raw path fragments so
-// they drop into a parent <g fill="none" stroke="${color}"> without a nested
-// viewBox — matches the icon set used across the HTML pages.
 const ICONS = {
   repo: '<path d="M2 4l4-2 4 2v5l-4 2-4-2V4Z"/><path d="M2 4l4 2 4-2"/><path d="M6 6v5"/>',
   star: '<path d="M6 1l1.5 3.2L11 4.7l-2.5 2.4.6 3.4L6 8.9 2.9 10.5l.6-3.4L1 4.7l3.5-.5L6 1Z" stroke-linejoin="round"/>',
@@ -136,9 +113,6 @@ const ICONS = {
   trophy: '<path d="M3.4 1.6h5.2v3a2.6 2.6 0 0 1-5.2 0v-3Z" stroke-linejoin="round"/><path d="M3.4 2.6H1.7c0 1.5.6 2.4 1.9 2.7"/><path d="M8.6 2.6h1.7c0 1.5-.6 2.4-1.9 2.7"/><path d="M6 7.2v2"/><path d="M4.2 10.4h3.6"/>',
 };
 
-// Font stacks used by every card. 'Courier New' is deliberately absent: Android
-// resolves that name to a thin serif face, which is unreadable at label sizes.
-// A bare `monospace` falls through to the platform's sans monospace instead.
 const MONO = "ui-monospace,'JetBrains Mono','DejaVu Sans Mono',Menlo,Consolas,monospace";
 
 const SANS = "system-ui,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif";
@@ -151,8 +125,6 @@ function icon(name, x, y, color, scale = 1) {
   return `<g transform="${t}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round">${ICONS[name]}</g>`;
 }
 
-// Achievement badge frames. Same idea as avatarShape: one function owns the
-// geometry, so every card that draws a badge stays consistent.
 const BADGE_SHAPES = ['hex', 'shield', 'diamond', 'octagon', 'circle', 'square'];
 
 const sanitizeBadge = (input, fallback) => {
@@ -175,12 +147,9 @@ function badgeElement(shape, cx, cy, size) {
     const pts = [[0, -1], [0.88, -0.58], [0.88, 0.3], [0, 1.08], [-0.88, 0.3], [-0.88, -0.58]];
     return `polygon points="${pts.map(([px, py]) => `${f(cx + px * r)},${f(cy + py * r)}`).join(' ')}"`;
   }
-  return `polygon points="${ring(6, -90, r * 1.04)}"`; // hex
+  return `polygon points="${ring(6, -90, r * 1.04)}"`;
 }
 
-// Frame + centered icon. Earned badges glow in the tier color; locked ones
-// are a dashed outline so they read as "not yet" rather than "broken".
-// Needs a <filter id="glow"> in the host SVG.
 function badge({ shape = 'hex', cx, cy, size = 46, tier, iconName = 'star' }) {
   const earned = tier.index > 0;
   const el = badgeElement(shape, cx, cy, size);
@@ -193,14 +162,6 @@ function badge({ shape = 'hex', cx, cy, size = 46, tier, iconName = 'star' }) {
     : `<${el} fill="none" stroke="${tier.color}" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round" opacity="0.75"/>${ic}`;
 }
 
-// ---------------------------------------------------------------------------
-// HTTP response for every SVG card
-// ---------------------------------------------------------------------------
-// CSP / nosniff: cards are escaped, but if one is ever opened as a document
-// (not inside an <img>) these stop any script from running regardless.
-// stale-if-error is added by the callers' Cache-Control strings so a GitHub
-// outage or rate-limit keeps serving the last good card instead of an error.
-// CORS lets the Card Builder fetch a card to export it as PNG.
 function svgHeaders(cacheControl) {
   const headers = {
     'Content-Type': 'image/svg+xml; charset=utf-8',
@@ -212,8 +173,6 @@ function svgHeaders(cacheControl) {
   return headers;
 }
 
-// Screen readers: role="img" on the root and, when the card has a <title>,
-// aria-labelledby pointing at it.
 function a11y(svg) {
   const hasTitle = svg.includes('<title>');
   const out = svg.replace(/<svg\b/, hasTitle ? '<svg role="img" aria-labelledby="cardTitle"' : '<svg role="img"');
@@ -224,13 +183,11 @@ function svgReply(body, status, cacheControl) {
   return new Response(a11y(body), { status, headers: svgHeaders(cacheControl) });
 }
 
-// WCAG contrast ratio between two #rrggbb colours (1 = identical, 21 = black on white).
 function contrastRatio(a, b) {
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
   return (hi + 0.05) / (lo + 0.05);
 }
 
-// Linear blend: t=0 -> a, t=1 -> b.
 function mixColors(a, b, t) {
   const ch = (hex, i) => parseInt(hex.slice(i, i + 2), 16);
   return `#${[1, 3, 5].map((i) => Math.round(ch(a, i) + (ch(b, i) - ch(a, i)) * t).toString(16).padStart(2, '0')).join('')}`;
