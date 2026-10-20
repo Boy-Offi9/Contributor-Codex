@@ -1,22 +1,30 @@
+const { asTimeout } = require('./github');
 
 const GQL = 'https://api.github.com/graphql';
 
 async function gql(query, variables, token) {
-  const res = await fetch(GQL, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'contributor-codex' },
-    body: JSON.stringify({ query, variables }),
-  });
+  let res;
+  try {
+    res = await fetch(GQL, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'contributor-codex' },
+      body: JSON.stringify({ query, variables }),
+      signal: AbortSignal.timeout((Number(process.env.GITHUB_TIMEOUT_MS) || 6000) + 2000),
+    });
+  } catch (err) {
+    throw asTimeout(err);
+  }
   if (!res.ok) {
     const err = new Error(String(res.status));
     err.status = res.status;
+    if (res.status === 401) err.rejected = true;
     throw err;
   }
   const body = await res.json();
   if (body.errors && body.errors.length) {
-    const notFound = body.errors.some((e) => e.type === 'NOT_FOUND');
+    const has = (type) => body.errors.some((e) => e.type === type);
     const err = new Error(body.errors[0].message || 'graphql error');
-    err.status = notFound ? 404 : 502;
+    err.status = has('NOT_FOUND') ? 404 : has('RATE_LIMITED') ? 429 : 502;
     throw err;
   }
   return body.data;

@@ -66,6 +66,7 @@ module.exports.GET = async (request) => {
   } catch (err) {
     if (err.status === 404) return svgResponse(errorCard(`user "${username}" not found`), 404, CACHE_ERR);
     if (err.status === 403) return svgResponse(errorCard('rate limited — set GITHUB_TOKEN'), 503, CACHE_ERR);
+    if (err.status === 504) return svgResponse(errorCard('GitHub is slow right now — try again soon'), 504, CACHE_ERR);
     return svgResponse(errorCard('failed to load'), 500, CACHE_ERR);
   }
 };

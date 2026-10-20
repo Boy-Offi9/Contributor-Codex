@@ -125,4 +125,16 @@ function svgResponse(body, status, cacheControl) {
   return svgReply(body, status, cacheControl);
 }
 
-module.exports = { ink, inkTheme, FONT, THEMES, PALETTE, paletteFor, styleFromParams, sanitizeTheme, frame, errorCard, svgResponse };
+const ERROR_CACHE = 'public, s-maxage=60';
+
+function githubErrorCard(err, subject, what) {
+  const make = (message, status) => svgResponse(errorCard(message), status, ERROR_CACHE);
+  if (err.status === 404) return make(`user "${subject}" not found`, 404);
+  if (err.status === 401) return make(err.rejected ? 'server token was rejected — check /api/status' : `${what} need GITHUB_TOKEN on the server`, 503);
+  if (err.status === 403 || err.status === 429) return make('rate limited — try again soon', 503);
+  if (err.status === 504) return make('GitHub is slow right now — try again soon', 504);
+  return make('failed to load', 500);
+}
+
+module.exports = {
+  githubErrorCard, ink, inkTheme, FONT, THEMES, PALETTE, paletteFor, styleFromParams, sanitizeTheme, frame, errorCard, svgResponse };

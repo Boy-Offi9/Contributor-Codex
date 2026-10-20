@@ -1,7 +1,7 @@
 const { isRateLimited } = require('./_lib/ratelimit');
 const { sanitizeColor, icon, esc, isGhName, readableAccent, luminance, avatarDataUri, avatarShape, sanitizeShape, truncate } = require('./_lib/shared');
 const { fetchCalendar, computeStreaks, listStreaks, fmtRange, fmtDate } = require('./_lib/contrib');
-const { FONT, paletteFor, styleFromParams, ink, inkTheme, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
+const { FONT, paletteFor, styleFromParams, ink, inkTheme, sanitizeTheme, frame, errorCard, svgResponse, githubErrorCard } = require('./_lib/frame');
 
 const WIDTH = 480;
 const BASE_HEIGHT = 172;
@@ -154,10 +154,7 @@ module.exports.GET = async (request) => {
     };
     return svgResponse(render({ user: cal, streaks, color, theme, opts }), 200, CACHE_OK);
   } catch (err) {
-    if (err.status === 404) return svgResponse(errorCard(`user "${username}" not found`), 404, CACHE_ERR);
-    if (err.status === 401) return svgResponse(errorCard('streaks need GITHUB_TOKEN on the server'), 503, CACHE_ERR);
-    if (err.status === 403 || err.status === 429) return svgResponse(errorCard('rate limited — try again soon'), 503, CACHE_ERR);
-    return svgResponse(errorCard('failed to load'), 500, CACHE_ERR);
+    return githubErrorCard(err, username, 'streaks');
   }
 };
 module.exports.computeStreaks = computeStreaks;

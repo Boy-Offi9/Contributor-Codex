@@ -1,7 +1,7 @@
 const { isRateLimited } = require('./_lib/ratelimit');
 const { sanitizeColor, esc, isGhName, readableAccent, luminance } = require('./_lib/shared');
 const { fetchCalendar, fmtDate } = require('./_lib/contrib');
-const { FONT, paletteFor, styleFromParams, ink, inkTheme, sanitizeTheme, frame, errorCard, svgResponse } = require('./_lib/frame');
+const { FONT, paletteFor, styleFromParams, ink, inkTheme, sanitizeTheme, frame, errorCard, svgResponse, githubErrorCard } = require('./_lib/frame');
 
 const WIDTH = 480;
 const HEIGHT = 238;
@@ -127,9 +127,6 @@ module.exports.GET = async (request) => {
     const animate = ['1', 'true', 'yes'].includes((url.searchParams.get('animate') || '').toLowerCase());
     return svgResponse(render({ user: cal, days: cal.days, range, color, theme, style, animate }), 200, CACHE_OK);
   } catch (err) {
-    if (err.status === 404) return svgResponse(errorCard(`user "${username}" not found`), 404, CACHE_ERR);
-    if (err.status === 401) return svgResponse(errorCard('activity needs GITHUB_TOKEN on the server'), 503, CACHE_ERR);
-    if (err.status === 403 || err.status === 429) return svgResponse(errorCard('rate limited — try again soon'), 503, CACHE_ERR);
-    return svgResponse(errorCard('failed to load'), 500, CACHE_ERR);
+    return githubErrorCard(err, username, 'activity graphs');
   }
 };
