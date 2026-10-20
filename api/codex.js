@@ -2,7 +2,7 @@ const { isRateLimited } = require('./_lib/ratelimit');
 const { fetchCalendar, computeStreaks } = require('./_lib/contrib');
 const {
   esc, ghFetch, avatarDataUri, computeStats, classFor, trophyTier, sanitizeColor,
-  CHAKRA_PETCH_FONT_FACE, byteWeightedLangs, colorForLang, icon, badge, sanitizeBadge, avatarShape, sanitizeShape, DISPLAY, isGhName, readableAccent, svgReply } = require('./_lib/shared');
+  CHAKRA_PETCH_FONT_FACE, byteWeightedLangs, colorForLang, icon, badge, sanitizeBadge, avatarShape, sanitizeShape, DISPLAY, isGhName, readableAccent, svgReply, truncate } = require('./_lib/shared');
 
 const WIDTH = 480;
 
@@ -58,7 +58,7 @@ function achievement(x, y, cellW, def, value, tier, shape) {
 
 function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape, avatarFrame, streaks }) {
   const displayFont = LABEL_FONT;
-  const name = esc(user.name || user.login);
+  const name = esc(truncate(user.name || user.login, 20));
   const classLabel = classFor(stats.topLang);
 
   const headerH = 96;

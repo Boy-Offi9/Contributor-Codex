@@ -11,8 +11,11 @@ const LANG_COLORS = {
 
 const colorForLang = (name, fallback) => LANG_COLORS[name] || fallback;
 
+const XML_INVALID = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
+
 function esc(str = '') {
   return String(str)
+    .replace(XML_INVALID, '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -57,7 +60,14 @@ function sanitizeColor(input) {
   return /^[0-9a-fA-F]{6}$/.test(hex) ? `#${hex}` : null;
 }
 
-const truncate = (str, max) => (str.length > max ? `${str.slice(0, max - 1)}…` : str);
+const segmenter = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : null;
+
+const graphemes = (text) => (segmenter ? Array.from(segmenter.segment(text), (part) => part.segment) : Array.from(text));
+
+function truncate(str, max) {
+  const chars = graphemes(String(str ?? ''));
+  return chars.length > max ? `${chars.slice(0, max - 1).join('')}…` : chars.join('');
+}
 
 const AVATAR_SHAPES = ['hex', 'circle', 'rounded', 'square'];
 
