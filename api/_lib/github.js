@@ -11,8 +11,18 @@ function asTimeout(err) {
   return err;
 }
 
+function isRateLimitResponse(res) {
+  if (res.status === 429) return true;
+  return res.status === 403 && (res.headers.get('x-ratelimit-remaining') === '0' || Boolean(res.headers.get('retry-after')));
+}
+
+function normalizeRateLimit(res) {
+  if (res.status !== 403 || !isRateLimitResponse(res)) return res;
+  return new Response(null, { status: 429, headers: res.headers });
+}
+
 const dedupedFetch = withDedupe(
-  (url, headers) => fetch(url, { headers, signal: AbortSignal.timeout(timeoutMs()) }),
+  (url, headers) => fetch(url, { headers, signal: AbortSignal.timeout(timeoutMs()) }).then(normalizeRateLimit),
   { keyFn: (url, headers) => `${headers.Authorization || 'anon'}:${url}` },
 );
 
@@ -28,7 +38,7 @@ async function ghFetch(url, token) {
   try {
     res = await retryAfterAware(() => dedupedFetch(url, headers), {
       retries: 2,
-      retryStatusCodes: [403, 429],
+      retryStatusCodes: [429],
     });
   } catch (err) {
     throw asTimeout(err);
@@ -69,5 +79,5 @@ async function byteWeightedLangs(repos, token) {
 }
 
 module.exports = {
-  asTimeout, isGhName, isGhRepo, ghFetch, avatarDataUri, byteWeightedLangs,
+  isRateLimitResponse, normalizeRateLimit, asTimeout, isGhName, isGhRepo, ghFetch, avatarDataUri, byteWeightedLangs,
 };

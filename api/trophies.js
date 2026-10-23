@@ -145,7 +145,9 @@ module.exports.GET = async (request) => {
     return svg(renderTrophies(user, stats, selected, trophyDefs, sanitizeBadge(url.searchParams.get('badge'), 'shield')), 200, 'public, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=604800');
   } catch (err) {
     if (err.status === 404) return svg(errorSVG(`user "${username}" not found`), 404, 'public, s-maxage=60');
-    if (err.status === 403) return svg(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=60');
+    if (err.status === 429) return svg(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=60');
+    if (err.status === 403) return svg(errorSVG('GitHub refused this request'), 502, 'public, s-maxage=60');
+    if (err.status === 504) return svg(errorSVG('GitHub is slow right now — try again soon'), 504, 'public, s-maxage=60');
     return svg(errorSVG('failed to load'), 500, 'public, s-maxage=60');
   }
 };

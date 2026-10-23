@@ -1,22 +1,25 @@
-const { asTimeout } = require('./github');
+const { asTimeout, isRateLimitResponse } = require('./github');
 
 const GQL = 'https://api.github.com/graphql';
 
-async function gql(query, variables, token) {
+const budgetMs = () => Number(process.env.GITHUB_TIMEOUT_MS) || 6000;
+const newDeadline = () => Date.now() + Math.round(budgetMs() * 1.5);
+
+async function gql(query, variables, token, deadline = newDeadline()) {
   let res;
   try {
     res = await fetch(GQL, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'contributor-codex' },
       body: JSON.stringify({ query, variables }),
-      signal: AbortSignal.timeout((Number(process.env.GITHUB_TIMEOUT_MS) || 6000) + 2000),
+      signal: AbortSignal.timeout(Math.max(50, deadline - Date.now())),
     });
   } catch (err) {
     throw asTimeout(err);
   }
   if (!res.ok) {
     const err = new Error(String(res.status));
-    err.status = res.status;
+    err.status = isRateLimitResponse(res) ? 429 : res.status;
     if (res.status === 401) err.rejected = true;
     throw err;
   }
@@ -36,10 +39,12 @@ async function fetchCalendar(username, token) {
     err.status = 401;
     throw err;
   }
+  const deadline = newDeadline();
   const head = await gql(
     'query($login:String!){user(login:$login){login name createdAt avatarUrl(size:160)}}',
     { login: username },
     token,
+    deadline,
   );
   const user = head.user;
   if (!user) {
@@ -56,7 +61,7 @@ async function fetchCalendar(username, token) {
     const to = y === nowYear ? new Date().toISOString() : `${y}-12-31T23:59:59Z`;
     return `y${y}:contributionsCollection(from:"${y}-01-01T00:00:00Z",to:"${to}"){contributionCalendar{weeks{contributionDays{date contributionCount}}}}`;
   }).join(' ');
-  const data = await gql(`query($login:String!){user(login:$login){${fields}}}`, { login: username }, token);
+  const data = await gql(`query($login:String!){user(login:$login){${fields}}}`, { login: username }, token, deadline);
 
   const byDate = new Map();
   for (const y of wanted) {

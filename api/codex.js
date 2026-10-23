@@ -70,6 +70,7 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape,
   const langChips = topLangs.slice(0, 5);
   const height = langChips.length ? langsY + 56 : langsY + 4;
 
+  const outline = `0,14 14,0 ${WIDTH},0 ${WIDTH},${height - 14} ${WIDTH - 14},${height} 0,${height}`;
   const avatarX = 20;
   const textX = 104;
 
@@ -90,21 +91,18 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape,
         <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
       </radialGradient>
       <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
-        <path d="M24 0H0V24" fill="none" stroke="${color}" stroke-width="0.5" opacity="0.5"/>
+        <path d="M24 0H0V24" fill="none" stroke="${color}" stroke-width="0.5" stroke-opacity="0.03"/>
       </pattern>
       <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
-        <feGaussianBlur stdDeviation="2.4" result="blur"/>
+        <feGaussianBlur stdDeviation="1.5" result="blur"/>
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
-      <clipPath id="cardClip"><polygon points="0,14 14,0 ${WIDTH},0 ${WIDTH},${height - 14} ${WIDTH - 14},${height} 0,${height}"/></clipPath>
     </defs>
-    <g clip-path="url(#cardClip)">
-      <rect width="${WIDTH}" height="${height}" fill="#05070c"/>
-      <rect width="${WIDTH}" height="${height}" fill="url(#grid)" opacity="0.05"/>
-      <rect width="${WIDTH}" height="${height}" fill="url(#bg)"/>
-      <rect width="${WIDTH}" height="${height}" fill="url(#bg2)"/>
-    </g>
-    <polygon points="0,14 14,0 ${WIDTH},0 ${WIDTH},${height - 14} ${WIDTH - 14},${height} 0,${height}" fill="none" stroke="${color}" opacity="0.5"/>
+    <polygon points="${outline}" fill="#05070c"/>
+    <polygon points="${outline}" fill="url(#grid)"/>
+    <polygon points="${outline}" fill="url(#bg)"/>
+    <polygon points="${outline}" fill="url(#bg2)"/>
+    <polygon points="${outline}" fill="none" stroke="${color}" opacity="0.5"/>
 
     <g transform="translate(${avatarX},14)">${avatarShape({ id: 'avatar', shape: avatarFrame, size: 68, uri: avatarUri, ring: color, bg: '#1b2233', glow: true })}</g>
     <text x="${textX}" y="36" font-family="${displayFont}" font-weight="700" font-size="19" fill="#e8edf5">${name}</text>
@@ -181,7 +179,9 @@ module.exports.GET = async (request) => {
     return svg(render({ user, stats, avatarUri, topLangs, fontFace: CHAKRA_PETCH_FONT_FACE, color, badgeShape, avatarFrame, streaks }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=604800');
   } catch (err) {
     if (err.status === 404) return svg(errorSVG(`user "${username}" not found`), 404, 'public, s-maxage=60');
-    if (err.status === 403) return svg(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=60');
+    if (err.status === 429) return svg(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=60');
+    if (err.status === 403) return svg(errorSVG('GitHub refused this request'), 502, 'public, s-maxage=60');
+    if (err.status === 504) return svg(errorSVG('GitHub is slow right now — try again soon'), 504, 'public, s-maxage=60');
     return svg(errorSVG('failed to load'), 500, 'public, s-maxage=60');
   }
 };
