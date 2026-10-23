@@ -29,6 +29,6 @@ test('sanitizers fall back instead of passing junk through', () => {
 });
 test('esc and truncate', () => {
   assert.equal(esc(`<a href="x">&'</a>`), '&lt;a href=&quot;x&quot;&gt;&amp;&#39;&lt;/a&gt;');
-  assert.equal(truncate('abcdef', 4), 'abc…');
+  assert.equal(truncate('abcdef', 4), 'abc\u2026');
   assert.equal(truncate('abc', 4), 'abc');
 });

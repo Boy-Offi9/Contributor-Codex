@@ -29,10 +29,10 @@ test('streak: no contributions at all', () => {
   assert.deepEqual([r.current.length, r.longest.length, r.total, r.since], [0, 0, 0, null]);
 });
 test('date ranges', () => {
-  assert.equal(fmtRange('2026-09-18', '2026-10-11', '2026-10-11', true), 'Sep 18 – Present');
-  assert.equal(fmtRange('2025-05-14', '2025-06-01', '2026-10-11', false), 'May 14 – Jun 1, 2025');
-  assert.equal(fmtRange('2020-01-01', '2026-10-12', '2026-10-12', false), 'Jan 2020 – Oct 2026');
-  assert.equal(fmtRange('2025-12-20', '2026-01-18', '2026-10-12', false), 'Dec 2025 – Jan 2026');
+  assert.equal(fmtRange('2026-09-18', '2026-10-11', '2026-10-11', true), 'Sep 18 \u2013 Present');
+  assert.equal(fmtRange('2025-05-14', '2025-06-01', '2026-10-11', false), 'May 14 \u2013 Jun 1, 2025');
+  assert.equal(fmtRange('2020-01-01', '2026-10-12', '2026-10-12', false), 'Jan 2020 \u2013 Oct 2026');
+  assert.equal(fmtRange('2025-12-20', '2026-01-18', '2026-10-12', false), 'Dec 2025 \u2013 Jan 2026');
   assert.equal(fmtRange(null, null), 'no streak yet');
 });
 
