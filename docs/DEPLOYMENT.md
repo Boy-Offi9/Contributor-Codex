@@ -74,6 +74,10 @@ Leave each rule's action at its default: when a request is limited, the endpoint
 
 Rate-limit counters are tracked per region, so one visitor hitting several regions can exceed the number you set.
 
+## Security headers for the pages
+
+`vercel.json` adds a Content-Security-Policy, frame blocking, `nosniff`, a referrer policy and a permissions policy to the four HTML pages (the cards set their own headers). The policy only allows what the pages use today: scripts from this site and `cdn.jsdelivr.net` (analytics), styles and fonts from this site and Google Fonts, images from this site, the card API, GitHub avatars, `data:` and `blob:` (PNG export), and requests to `api.github.com` and the card API. If you add a new external script, font, image host or API, add its host to the matching directive or the browser will block it. Check a deployment with `curl -I https://your-site/` or the Network tab's response headers.
+
 ## Checking your GitHub budget
 
 `GET /api/status` shows the token's remaining REST and GraphQL budget and when each resets, and warns under 10%. It calls GitHub's rate-limit endpoint, which doesn't count against any quota. If it reports `token: "missing"` or `"rejected"`, that is why cards are failing.
