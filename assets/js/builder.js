@@ -29,6 +29,7 @@
   const TYPES = {
     card: {
       label: 'Contributor',
+      accentAuto: true,
       endpoint: '/api/card',
       themes: ALL_THEMES,
       shapeSupport: true,
@@ -139,6 +140,8 @@
   const colorFieldWrap = $('#colorFieldWrap');
   const colorPicker = $('#colorPicker');
   const colorText = $('#colorText');
+  const colorField = $('.colorField');
+  const colorHint = $('#colorHint');
   const presetField = $('#presetField');
   const presetGrid = $('#presetGrid');
   const previewBox = $('#previewBox');
@@ -219,6 +222,15 @@
 
   const normHex = (value) => String(value || '').trim().replace(/^#/, '').toLowerCase();
 
+  function syncAccentUi() {
+    const auto = Boolean(TYPES[currentType].accentAuto) && !colorText.value.trim();
+    colorField.classList.toggle('autoColor', auto);
+    colorText.placeholder = TYPES[currentType].accentAuto ? 'auto (by level tier)' : '00e5ff (default)';
+    colorHint.textContent = TYPES[currentType].accentAuto
+      ? 'Leave the text field empty and the card colors itself by your level tier (it changes as you level up). Enter a color to pin it. Very dark or very light colors are adjusted automatically so they stay visible.'
+      : 'Leave the text field empty for the default cyan. Very dark or very light colors are adjusted automatically so they stay visible.';
+  }
+
   function syncPresets() {
     const current = {
       bg: normHex(state.bg), text: normHex(state.text), border: normHex(state.border), color: normHex(colorText.value),
@@ -259,6 +271,7 @@
     }
 
     colorFieldWrap.classList.toggle('hidden', currentType === 'trophies');
+    syncAccentUi();
 
     shapeField.classList.toggle('hidden', !def.shapeSupport);
     if (def.shapeSupport) shapeSelect.value = state.shape || '';
@@ -360,6 +373,7 @@
 
   function update() {
     syncPresets();
+    syncAccentUi();
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       const { url, missing } = buildUrl();

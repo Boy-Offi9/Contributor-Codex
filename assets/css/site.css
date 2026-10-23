@@ -240,6 +240,8 @@ section.block{padding-block:40px;}
   background:none;cursor:pointer;flex-shrink:0;
 }
 .colorField input[type="text"]{flex:1;}
+.colorField.autoColor input[type="color"]::-webkit-color-swatch{background:repeating-linear-gradient(45deg,#2a3350 0 6px,#1b2233 6px 12px);}
+.colorField.autoColor input[type="color"]::-moz-color-swatch{background:repeating-linear-gradient(45deg,#2a3350 0 6px,#1b2233 6px 12px);}
 
 .typePicker{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
 .typeBtn{
