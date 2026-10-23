@@ -199,8 +199,9 @@
     }
     presetGrid.innerHTML = PRESETS.map((preset, index) => `
       <button type="button" class="presetChip" data-i="${index}">
-        <i style="background:#${preset.bg}"></i><i style="background:#${preset.color}"></i>${esc(preset.name)}
+        <i data-swatch="${preset.bg}"></i><i data-swatch="${preset.color}"></i>${esc(preset.name)}
       </button>`).join('') + '<button type="button" class="presetChip" data-i="reset">Reset</button>';
+    $$('[data-swatch]', presetGrid).forEach((swatch) => { swatch.style.background = `#${swatch.dataset.swatch}`; });
     $$('.presetChip', presetGrid).forEach((button) => {
       button.addEventListener('click', () => {
         const preset = button.dataset.i === 'reset'
@@ -212,6 +213,21 @@
         renderFields();
         update();
       });
+    });
+    syncPresets();
+  }
+
+  const normHex = (value) => String(value || '').trim().replace(/^#/, '').toLowerCase();
+
+  function syncPresets() {
+    const current = {
+      bg: normHex(state.bg), text: normHex(state.text), border: normHex(state.border), color: normHex(colorText.value),
+    };
+    $$('.presetChip', presetGrid).forEach((button) => {
+      const preset = PRESETS[Number(button.dataset.i)];
+      const active = Boolean(preset) && ['bg', 'text', 'border', 'color'].every((key) => normHex(preset[key]) === current[key]);
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
   }
 
@@ -343,6 +359,7 @@
   }
 
   function update() {
+    syncPresets();
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       const { url, missing } = buildUrl();
