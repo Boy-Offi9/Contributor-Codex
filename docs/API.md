@@ -130,7 +130,7 @@ A compact dossier in one image: a header (avatar, level, XP), a four-stat strip,
 ![Codex](https://contributor-codex.vercel.app/api/codex?username=octocat)
 ```
 
-`streak=1` costs two extra GraphQL calls and needs `GITHUB_TOKEN` on the server; if that fails the strip is simply left out and the rest of the card still renders. There is no `theme` param; `shape` sets the avatar frame. For a fuller view (bio, location, top repositories), use the Codex Profile page, `/profile.html?u=USERNAME`.
+`streak=1` costs two extra GraphQL calls and needs `GITHUB_TOKEN` on the server; if that fails the strip is simply left out and the rest of the card still renders. There is no `theme` param; `shape` sets the avatar frame.
 
 ## Stats + Rank
 

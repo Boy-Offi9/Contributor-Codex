@@ -98,7 +98,7 @@ The pages are written against the production domain, so a deployment elsewhere n
 
 - **Source links.** The footers link to `github.com/Boy-Offi9/Contributor-Codex`; point them at your fork.
 - **License notices.** The MIT license requires copies to keep the copyright notice and license text, and the embedded font carries its own notice. Keep [`LICENSE`](../LICENSE) and [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) in your fork.
-- **Example org and user.** The roster defaults to the `vercel` org and the landing demo to `octocat`. Change them if you want different first impressions.
+- **Example org and user.** The leaderboard page defaults to the `vercel` org and the landing demo to `octocat`. Change them if you want different first impressions.
 
 ## Fonts
 
@@ -139,14 +139,12 @@ assets/
   js/common.js       shared helpers and API_BASE
   js/home.js         landing page
   js/builder.js      Card Builder
-  js/profile.js      Codex Profile
-  js/roster.js       organization roster
+  js/roster.js       team leaderboard page
   js/analytics.js    Vercel Web Analytics loader
   favicon.svg
 index.html           landing page
-roster.html          organization roster
+roster.html          team leaderboard (member cards optional)
 builder.html         Card Builder
-profile.html         Codex Profile
 docs/                API reference, deployment, design notes
 LICENSE              MIT
 THIRD_PARTY_NOTICES.md   embedded font notice (SIL OFL 1.1)
@@ -160,7 +158,7 @@ Each endpoint file is independently deployable. The original five cards keep the
 
 Every name that reaches a GitHub URL (`username`, `org`, `owner`, `repo`) is validated with `isGhName` / `isGhRepo` first, because those requests carry the server's token. Anything that isn't a plain GitHub name returns a 400 card.
 
-The four pages are single self-contained HTML files with no shared bundle. The roster and profile pages call GitHub directly from the visitor's browser, with an optional token field that raises that visitor's limit from 60 to 5,000 requests per hour. That token is sent only to `api.github.com` and never leaves the browser tab.
+The three pages share one stylesheet and a small helpers file. The leaderboard page asks the card API for the leaderboard image; only its optional member cards call GitHub directly from the visitor's browser, with an optional token field that raises that visitor's limit from 60 to 5,000 requests per hour. That token is sent only to `api.github.com` and never leaves the browser tab.
 
 ## GitHub API budget
 
@@ -183,7 +181,7 @@ Avatar images come from GitHub's avatar host and are not counted against the API
 
 ## Known limits
 
-- **Public membership only.** The leaderboard and roster list only organization members whose membership is public, because that is all GitHub's API returns.
+- **Public membership only.** The leaderboard and the member cards list only organization members whose membership is public, because that is all GitHub's API returns.
 - **First 100 repositories.** Repo-derived stats — stars, forks, languages, licensed repos — are computed from the first 100 owned repositories GitHub returns for a user, and the member list is capped at 100. Results are not paginated, so a user with more than 100 repos is undercounted. Follower and repo totals come from the profile itself and are exact.
 - **Leaderboard cap.** At most the first 60 public members are ranked, through a pool of 4 concurrent workers, and at most 20 are shown. Large orgs get a representative ranking rather than a timeout.
 - **Leaderboard language.** The leaderboard uses the cheaper repo-count method for each member's top language; byte-weighting every member would multiply an already expensive request.
@@ -197,5 +195,5 @@ Avatar images come from GitHub's avatar host and are not counted against the API
 | Cards show "rate limited — slow down a bit" (`429`) | A visitor tripped your per-IP firewall rule. |
 | Leaderboard shows "has no public members" | The org has no members with public membership. Members must make it public in their org settings. |
 | A card does not reflect a recent change on GitHub | Edge caching: up to 1 hour (6 for a leaderboard), and the first request after that may still return the older copy while it refreshes. |
-| Roster or profile page reports a rate limit | The visitor's 60 requests per hour are used up. Paste a personal access token into the page's token field. |
+| Member cards report a rate limit | The visitor's 60 requests per hour are used up. Paste a personal access token into the page's token field. |
 | A fork's pages show the original site's cards | `API_BASE` still points at the original domain — see the [self-hosting checklist](#self-hosting-checklist). |

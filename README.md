@@ -44,7 +44,7 @@ It started as a personal experiment with server-rendered SVG and the GitHub API,
 
 - **Four voices, not four palettes.** `cyberpunk` is an RPG dossier. `terminal` is a hacker's session log with its own vocabulary. `glass` is a casual, gamification-free profile. `detailed` is an analytics dossier built around a rank gauge. Choosing a theme changes what the card *says*, not just its accent color.
 - **From one person to a whole org.** The same data that builds a single card also ranks every public member of an organization, describes a repository, or folds into a one-image collection.
-- **A toolkit, not just an endpoint.** A no-code Card Builder, a shareable profile page, and an org roster sit beside the raw API, for anyone who would rather not hand-write a query string.
+- **A toolkit, not just an endpoint.** A no-code Card Builder and a team leaderboard page sit beside the raw API, for anyone who would rather not hand-write a query string.
 - **Every score shows its formula.** Nothing is ranked against other users or hidden behind an opaque algorithm.
 
 ## Quick start
@@ -58,8 +58,7 @@ Paste this into any README, with your own username:
 Then make it yours:
 
 - **[Card Builder](https://contributor-codex.vercel.app/builder.html)** — pick a card type, theme, avatar shape, and color with a live preview, then copy the Markdown, URL, or HTML.
-- **[Codex Profile](https://contributor-codex.vercel.app/profile.html)** — a shareable page per contributor: the generated cards plus bio, location, and top repositories.
-- **[Org Roster](https://contributor-codex.vercel.app/roster.html)** — load any organization to see its leaderboard and every public member's card.
+- **[Team Leaderboard](https://contributor-codex.vercel.app/roster.html)** — load any organization to rank its public members and copy the embed; member cards are optional.
 
 ## The codex
 

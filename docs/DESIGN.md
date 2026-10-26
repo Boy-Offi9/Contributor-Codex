@@ -11,7 +11,7 @@ Contributor Codex treats GitHub data as raw material for a visual identity, not 
 ## Principles
 
 - **A theme is a voice, not a palette.** Switching theme changes what the card *says* — its vocabulary, its structure, which numbers it foregrounds — not only its accent color. Two themes never share rank or score words.
-- **One data pipeline, several outputs.** A user's stats feed a single card, a leaderboard row, a collection, and a profile page. Outputs differ in presentation, not in how the numbers are computed.
+- **One data pipeline, several outputs.** A user's stats feed a single card, a leaderboard row, and a collection. Outputs differ in presentation, not in how the numbers are computed.
 - **Show the formula.** Every score is computed from the profile alone and its formula is available on the card. Nothing is ranked against other users or hidden behind an opaque algorithm.
 - **Self-contained.** A card is one SVG with its font and avatar embedded. No scripts, no external requests, no icon font or library — icons are hand-drawn paths.
 - **Fit the container.** Text that can overflow is truncated with an ellipsis, and chips that cannot fit are dropped. Nothing is allowed to overlap.
