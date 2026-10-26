@@ -193,7 +193,7 @@ section.block{padding-block:40px;}
   word-break:break-all;
 }
 
-.toolGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.toolGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;}
 @media (max-width:900px){.toolGrid{grid-template-columns:1fr;}}
 .toolCard{display:flex;flex-direction:column;gap:12px;}
 .toolCard svg{color:var(--purple);width:26px;height:26px;}
@@ -290,46 +290,6 @@ section.block{padding-block:40px;}
 }
 .outBox .btn{padding:0 14px;white-space:nowrap;font-size:12.5px;}
 
-#profile{display:none;}
-#profile.show{display:block;}
-.profileHero{
-  display:flex;gap:22px;align-items:center;flex-wrap:wrap;
-  padding:24px;background:var(--panel);border:1px solid var(--steel);
-  clip-path:polygon(0 18px,18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%);
-  margin-bottom:20px;
-}
-.avatar{width:84px;height:84px;border-radius:50%;border:2px solid var(--cyan);object-fit:cover;flex-shrink:0;}
-.heroInfo{flex:1;min-width:200px;}
-.heroName{font-family:var(--display);font-size:22px;font-weight:700;margin:0;}
-.heroLogin{font-family:var(--mono);font-size:12.5px;color:var(--dim);margin:2px 0 10px;}
-.heroBio{font-size:13.5px;line-height:1.6;color:var(--soft);margin:0 0 10px;max-width:60ch;}
-.heroMeta{display:flex;flex-wrap:wrap;gap:14px;font-family:var(--mono);font-size:11.5px;color:var(--dim);}
-.heroMeta svg{width:12px;height:12px;vertical-align:-1.5px;margin-right:3px;}
-.heroActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
-.heroActions .btn{padding:8px 14px;font-size:12.5px;}
-
-.statTiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
-@media (max-width:640px){.statTiles{grid-template-columns:repeat(2,1fr);}}
-.statTile{border:1px solid var(--steel);background:var(--panel);padding:12px 14px;}
-.statTile .k{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase;}
-.statTile .v{font-family:var(--display);font-size:22px;font-weight:600;margin-top:2px;}
-
-.cardsRow{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:24px;}
-.cardsRow > div{flex:1;min-width:260px;}
-.cardsRow img{display:block;height:auto;}
-.cardsRow .cardShell{min-height:140px;display:flex;align-items:center;justify-content:center;}
-.cardsRow .btn{margin-top:10px;}
-
-.repoList{list-style:none;margin:0;padding:0;border:1px solid var(--steel);}
-.repoList li{
-  padding:14px 16px;border-bottom:1px solid var(--steel);
-  display:flex;justify-content:space-between;gap:16px;align-items:flex-start;
-}
-.repoList li:last-child{border-bottom:none;}
-.repoName{font-family:var(--display);font-size:14.5px;font-weight:600;color:var(--ghost);text-decoration:none;}
-.repoName:hover{color:var(--cyan);}
-.repoDesc{font-size:12.5px;color:var(--dim);margin:4px 0 0;max-width:52ch;line-height:1.5;}
-.repoMeta{font-family:var(--mono);font-size:12px;color:var(--dim);white-space:nowrap;text-align:right;}
 .repoMeta .stars{color:var(--amber);}
 .repoEmpty{font-family:var(--mono);color:var(--dim);}
 
@@ -390,3 +350,8 @@ section.block{padding-block:40px;}
 }
 
 .lbLabel{margin:0;}
+
+.membersPanel{margin-top:28px;padding-top:16px;border-top:1px solid var(--steel);}
+.membersPanel [hidden]{display:none;}
+.membersToggle{display:inline-flex;align-items:center;min-height:44px;}
+.membersBody{margin-top:14px;}

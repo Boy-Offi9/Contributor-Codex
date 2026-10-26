@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#05070c">
-<title>Roster — Contributor Codex</title>
-<meta name="description" content="Load any GitHub organization to see its team leaderboard and every public member's Contributor Codex card.">
-<meta property="og:title" content="Roster — Contributor Codex">
-<meta property="og:description" content="Load any GitHub organization to see its team leaderboard and every public member's Contributor Codex card.">
+<title>Team Leaderboard — Contributor Codex</title>
+<meta name="description" content="Rank any GitHub organization's public members and copy an embeddable team leaderboard.">
+<meta property="og:title" content="Team Leaderboard — Contributor Codex">
+<meta property="og:description" content="Rank any GitHub organization's public members and copy an embeddable team leaderboard.">
 <meta property="og:type" content="website">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,31 +20,26 @@
 <header class="topbar">
   <div class="wrap">
     <a class="wordmark" href="./"><img src="assets/favicon.svg" alt="" width="24" height="24">Contributor <span>Codex</span></a>
-    <nav aria-label="Primary"><a href="roster.html" aria-current="page">roster</a><a href="builder.html">card builder</a><a href="profile.html">codex profile</a></nav>
+    <nav aria-label="Primary"><a href="roster.html" aria-current="page">leaderboard</a><a href="builder.html">card builder</a></nav>
   </div>
 </header>
 
 <main id="main" class="wrap">
   <div class="pageHead">
-    <h1>Org <span>Roster</span></h1>
-    <p>Load an organization to see its leaderboard and every public member's card. Select a card for a quick-look dossier.</p>
+    <h1>Team <span>Leaderboard</span></h1>
+    <p>Enter an organization to rank its public members and copy the embed. Member cards are optional and stay off until you turn them on.</p>
   </div>
 
   <div class="controls">
     <label class="sr-only" for="orgInput">Organization name</label>
     <input type="text" id="orgInput" class="mono w-lg" placeholder="org name" value="vercel" autocomplete="off" spellcheck="false">
-    <button class="btn" id="loadOrgBtn" type="button">Load org</button>
-    <label class="sr-only" for="userInput">Username to add</label>
-    <input type="text" id="userInput" class="mono w-sm" placeholder="add username" autocomplete="off" spellcheck="false">
-    <button class="btn ghost" id="addUserBtn" type="button">Add card</button>
-    <label class="sr-only" for="tokenInput">GitHub token (optional)</label>
-    <input type="password" id="tokenInput" class="mono w-md" placeholder="GitHub token (optional)" autocomplete="off" title="Raises the rate limit from 60/hr to 5,000/hr. Stays in this tab, only sent to api.github.com.">
-    <label class="sr-only" for="themeSelect">Card theme</label>
+    <button class="btn" id="loadOrgBtn" type="button">Load leaderboard</button>
+    <label class="sr-only" for="themeSelect">Theme</label>
     <select id="themeSelect">
       <option value="cyberpunk">cyberpunk</option>
       <option value="terminal">terminal</option>
       <option value="glass">glass</option>
-      <option value="detailed">detailed</option>
+      <option value="detailed">detailed (member cards only)</option>
     </select>
   </div>
 
@@ -58,7 +53,20 @@
     <div id="lbStage"></div>
   </div>
 
-  <div class="grid" id="grid"></div>
+  <section class="membersPanel" aria-label="Member cards">
+    <button class="btn ghost membersToggle" id="membersToggle" type="button" aria-expanded="false" aria-controls="membersBody">▸ Member cards (optional)</button>
+    <div class="membersBody" id="membersBody" hidden>
+      <p class="hint">One card per public member, loaded as you scroll. These requests go from your browser to GitHub, which allows 60 per hour without a token.</p>
+      <div class="controls">
+        <label class="sr-only" for="tokenInput">GitHub token (optional)</label>
+        <input type="password" id="tokenInput" class="mono w-md" placeholder="GitHub token (optional)" autocomplete="off" title="Raises the rate limit from 60/hr to 5,000/hr. Stays in this tab, only sent to api.github.com.">
+        <label class="sr-only" for="userInput">Username to add</label>
+        <input type="text" id="userInput" class="mono w-sm" placeholder="add username" autocomplete="off" spellcheck="false">
+        <button class="btn ghost" id="addUserBtn" type="button">Add card</button>
+      </div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </section>
 </main>
 
 <div id="overlay">

@@ -14,10 +14,12 @@
   const lbPreview = $('#lbPreview');
   const lbStage = $('#lbStage');
   const lbCopyBtn = $('#lbCopyBtn');
+  const membersToggle = $('#membersToggle');
+  const membersBody = $('#membersBody');
 
   const loaded = new Set();
   let currentOrg = null;
-  let lbRequested = false;
+  let membersOrg = null;
   let dossierTicket = 0;
   let lastFocus = null;
 
@@ -29,24 +31,18 @@
     return apiUrl('/api/leaderboard', { org, limit: 10, theme: lbTheme });
   }
 
-  function showLeaderboardPreview() {
+  function showLeaderboard() {
     if (!currentOrg) return;
     const url = leaderboardUrlFor(currentOrg, themeSelect.value);
     lbCopyBtn.dataset.url = url;
     lbPreview.classList.add('show');
-    if (lbRequested) {
-      loadImage(lbStage, url, { alt: `${currentOrg} team leaderboard`, failure: "couldn't load the leaderboard — try again in a minute" });
-      return;
-    }
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'btn dashed sm';
-    button.textContent = '▶ Load leaderboard (ranks every member — uses the most API calls)';
-    button.addEventListener('click', () => {
-      lbRequested = true;
-      showLeaderboardPreview();
+    loadImage(lbStage, url, {
+      alt: `${currentOrg} team leaderboard`,
+      loading: `ranking ${currentOrg}'s members…`,
+      failure: "couldn't load the leaderboard — try again in a minute",
+      onLoad: () => setStatus(statusEl, ''),
+      onError: () => setStatus(statusEl, ''),
     });
-    lbStage.replaceChildren(button);
   }
 
   lbCopyBtn.addEventListener('click', (event) => {
@@ -134,7 +130,7 @@
       ${joined ? `<p class="dLogin">member since ${joined}</p>` : ''}
       ${user && user.bio ? `<p class="bio">${esc(user.bio)}</p>` : ''}
       <div class="dossierActions">
-        <a class="btn solid" href="profile.html?u=${enc(login)}">FULL PROFILE →</a>
+        <a class="btn solid" href="https://github.com/${enc(login)}" target="_blank" rel="noopener">VIEW ON GITHUB →</a>
         <button class="btn ghost" id="dossierCopy" type="button">COPY EMBED LINK</button>
       </div>`);
     $('#dossierCopy').addEventListener('click', (event) => {
@@ -175,18 +171,38 @@
     }
   });
 
+  const membersOpen = () => membersToggle.getAttribute('aria-expanded') === 'true';
+
+  function setMembersOpen(open) {
+    membersToggle.setAttribute('aria-expanded', String(open));
+    membersToggle.textContent = `${open ? '▾' : '▸'} Member cards (optional)`;
+    membersBody.hidden = !open;
+    if (open) loadMembers();
+  }
+
   function resetGrid() {
     grid.replaceChildren();
     loaded.clear();
+    membersOrg = null;
   }
 
-  async function loadOrg() {
+  function loadLeaderboard() {
     const org = orgInput.value.trim();
     if (!org) return;
+    currentOrg = org;
+    setStatus(statusEl, `Ranking ${org}'s public members — this can take a few seconds…`);
+    showLeaderboard();
+    if (membersOpen()) loadMembers();
+  }
+
+  async function loadMembers() {
+    const org = currentOrg || orgInput.value.trim();
+    if (!org) {
+      setStatus(statusEl, 'Enter an organization first, or add usernames below.', true);
+      return;
+    }
+    if (membersOrg === org) return;
     resetGrid();
-    currentOrg = null;
-    lbPreview.classList.remove('show');
-    lbRequested = false;
     setStatus(statusEl, `Fetching ${org}'s member list…`);
     try {
       const members = await ghFetch(`/orgs/${enc(org)}/members?per_page=100`, token());
@@ -194,8 +210,7 @@
         setStatus(statusEl, `No public members returned for "${org}" — its member list may be private. Add usernames manually below instead.`, true);
         return;
       }
-      currentOrg = org;
-      showLeaderboardPreview();
+      membersOrg = org;
       members.forEach((member) => renderCard(member.login));
       setStatus(statusEl, `${members.length} member${members.length === 1 ? '' : 's'} found — cards load as you scroll.`);
     } catch (err) {
@@ -210,17 +225,22 @@
     renderCard(login);
   }
 
-  $('#loadOrgBtn').addEventListener('click', loadOrg);
+  $('#loadOrgBtn').addEventListener('click', loadLeaderboard);
   $('#addUserBtn').addEventListener('click', addUser);
-  onEnter(orgInput, loadOrg);
+  membersToggle.addEventListener('click', () => setMembersOpen(!membersOpen()));
+  onEnter(orgInput, loadLeaderboard);
   onEnter(userInput, addUser);
 
   themeSelect.addEventListener('change', () => {
-    const logins = $$('.card[data-login]', grid).map((el) => el.dataset.login);
-    resetGrid();
-    logins.forEach(renderCard);
-    showLeaderboardPreview();
+    if (membersOpen()) {
+      const logins = $$('.card[data-login]', grid).map((el) => el.dataset.login);
+      const org = membersOrg;
+      resetGrid();
+      membersOrg = org;
+      logins.forEach(renderCard);
+    }
+    showLeaderboard();
   });
 
-  setStatus(statusEl, 'Enter an org and tap Load — nothing is fetched until you do.');
+  setStatus(statusEl, 'Enter an org and tap Load leaderboard — nothing is fetched until you do.');
 })();
