@@ -5,7 +5,7 @@ const GQL = 'https://api.github.com/graphql';
 const budgetMs = () => Number(process.env.GITHUB_TIMEOUT_MS) || 6000;
 const newDeadline = () => Date.now() + Math.round(budgetMs() * 1.5);
 
-async function gql(query, variables, token, deadline = newDeadline()) {
+async function gql(query, variables, token, deadline = newDeadline(), options = {}) {
   let res;
   try {
     res = await fetch(GQL, {
@@ -25,6 +25,7 @@ async function gql(query, variables, token, deadline = newDeadline()) {
   }
   const body = await res.json();
   if (body.errors && body.errors.length) {
+    if (options.partial && body.data && body.errors.every((e) => e.type === 'NOT_FOUND')) return body.data;
     const has = (type) => body.errors.some((e) => e.type === type);
     const err = new Error(body.errors[0].message || 'graphql error');
     err.status = has('NOT_FOUND') ? 404 : has('RATE_LIMITED') ? 429 : 502;
@@ -116,6 +117,37 @@ async function fetchStats(username, token) {
   };
 }
 
+async function fetchMemberActivity(logins, token) {
+  if (!token) {
+    const err = new Error('GITHUB_TOKEN required');
+    err.status = 401;
+    throw err;
+  }
+  if (!logins.length) return {};
+  const now = new Date();
+  const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 364)).toISOString();
+  const variables = { from, to: now.toISOString() };
+  logins.forEach((login, i) => { variables[`l${i}`] = login; });
+  const params = logins.map((_, i) => `$l${i}:String!`).join(',');
+  const fields = logins
+    .map((_, i) => `u${i}:user(login:$l${i}){contributionsCollection(from:$from,to:$to){contributionCalendar{weeks{contributionDays{date contributionCount}}}}}`)
+    .join(' ');
+  const data = await gql(`query($from:DateTime!,$to:DateTime!,${params}){${fields}}`, variables, token, undefined, { partial: true });
+  const out = {};
+  logins.forEach((login, i) => {
+    const entry = data[`u${i}`];
+    if (!entry) return;
+    const days = [];
+    for (const week of entry.contributionsCollection.contributionCalendar.weeks) {
+      for (const day of week.contributionDays) days.push({ date: day.date, count: day.contributionCount });
+    }
+    days.sort((a, b) => (a.date < b.date ? -1 : 1));
+    const streaks = computeStreaks(days);
+    out[login.toLowerCase()] = { total: streaks.total, streak: streaks.current.length, longest: streaks.longest.length };
+  });
+  return out;
+}
+
 const dayNum = (iso) => Math.floor(Date.parse(`${iso}T00:00:00Z`) / 86400000);
 
 function listStreaks(days) {
@@ -171,4 +203,4 @@ function fmtRange(start, end, todayIso = new Date().toISOString().slice(0, 10), 
   return `${left} – ${right}${openEnded ? '' : ','} ${sy}`.replace(' Present,', ' Present');
 }
 
-module.exports = { fetchCalendar, fetchStats, computeStreaks, listStreaks, fmtRange, fmtDate };
+module.exports = { fetchCalendar, fetchStats, fetchMemberActivity, computeStreaks, listStreaks, fmtRange, fmtDate };
