@@ -136,8 +136,11 @@ function renderTerminal({ user, xp, totalStars, topLang, tier }) {
   </svg>`;
 }
 
+const LANG_ALIASES = { JavaScript: 'JS', TypeScript: 'TS', 'Jupyter Notebook': 'Jupyter', 'Objective-C': 'ObjC', 'Visual Basic': 'VB', Dockerfile: 'Docker', PowerShell: 'PShell', 'Vim Script': 'Vim' };
+const shortLang = (name) => LANG_ALIASES[name] || truncate(name, 7);
+
 function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, color }) {
-  const name = esc(user.name || user.login);
+  const name = esc(truncate(user.name || user.login, 18));
   const joined = new Date(user.created_at).getFullYear();
 
   const segs = (langStats || []).slice(0, 4).map((l) => ({ name: l.name, pct: l.pct, color: colorForLang(l.name, color) }));
@@ -158,7 +161,8 @@ function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, c
   let acc = 0;
   const arcs = segs.map((seg) => {
     const len = (seg.pct / segTotal) * C;
-    const dash = Math.max(0, len - (segs.length > 1 ? 2.5 : 0));
+    const gap = segs.length > 1 ? Math.min(2.5, len * 0.4) : 0;
+    const dash = Math.max(0, len - gap);
     const out = `<circle cx="70" cy="${donutCy}" r="${R}" fill="none" stroke="${seg.color}" stroke-width="11" stroke-dasharray="${dash.toFixed(2)} ${C.toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}" transform="rotate(-90 70 ${donutCy})"/>`;
     acc += len;
     return out;
@@ -178,7 +182,7 @@ function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, c
       <style>
         .t1{font:700 16px system-ui,sans-serif;fill:#1c2333;}
         .t2{font:500 11px system-ui,sans-serif;fill:#6b7488;}
-        .lbl{font:500 9px system-ui,sans-serif;fill:#8891a3;letter-spacing:.5px;}
+        .lbl{font:500 10px system-ui,sans-serif;fill:#8891a3;letter-spacing:.4px;}
         .cls{font:600 11px system-ui,sans-serif;fill:${color};}
         .foot{font:500 10px system-ui,sans-serif;fill:#9aa2b3;}
         .sec{font:600 10px system-ui,sans-serif;fill:#8891a3;letter-spacing:1px;}
@@ -191,6 +195,12 @@ function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, c
         <stop offset="0%" stop-color="#eef1f8"/>
         <stop offset="100%" stop-color="#dde3f0"/>
       </linearGradient>
+      <linearGradient id="glassShine" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>
+        <stop offset="18%" stop-color="#ffffff" stop-opacity="0.9"/>
+        <stop offset="82%" stop-color="#ffffff" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+      </linearGradient>
       <filter id="soft"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-opacity="0.12"/></filter>
       <filter id="blob" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="26"/></filter>
       <filter id="avatarGlow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="6"/></filter>
@@ -202,7 +212,7 @@ function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, c
     <circle cx="330" cy="${height - 30}" r="65" fill="${color}" opacity="0.14" filter="url(#blob)"/>
 
     <rect x="16" y="16" width="328" height="${height - 32}" rx="18" fill="#ffffff" opacity="0.55" filter="url(#soft)"/>
-    <rect x="16" y="16" width="328" height="1.5" rx="1" fill="#ffffff" opacity="0.8"/>
+    <rect x="34" y="16" width="292" height="1.5" rx="0.75" fill="url(#glassShine)"/>
 
     <g transform="translate(32,32)">
       <circle cx="36" cy="36" r="38" fill="${color}" opacity="0.35" filter="url(#avatarGlow)"/>
@@ -226,7 +236,7 @@ function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, c
     <circle cx="70" cy="${donutCy}" r="${R}" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="11"/>
     ${arcs}
     <text x="70" y="${donutCy + 3}" text-anchor="middle" class="big">${segs[0].pct}%</text>
-    <text x="70" y="${donutCy + 14}" text-anchor="middle" class="small">${esc(truncate(segs[0].name, 8))}</text>
+    <text x="70" y="${donutCy + 14}" text-anchor="middle" class="small">${esc(shortLang(segs[0].name))}</text>
     ${segs.map((seg, i) => `
       <circle cx="132" cy="${donutCy - 28 + i * 19}" r="4" fill="${seg.color}"/>
       <text x="144" y="${donutCy - 24 + i * 19}" class="lg">${esc(truncate(seg.name, 16))}</text>

@@ -78,7 +78,7 @@ function frame({ width, height, color, theme, title, body, style = {}, css = '' 
       <circle cx="${width - 15}" cy="60" r="60" fill="#8b5cf6" opacity="0.18" filter="url(#blob)"/>
       <circle cx="${width - 30}" cy="${height - 30}" r="65" fill="${color}" opacity="0.14" filter="url(#blob)"/>
       <rect x="10" y="10" width="${width - 20}" height="${height - 20}" rx="18" fill="${style.bg ? p.bg : '#ffffff'}" opacity="${style.bg ? 0.7 : 0.55}" filter="url(#soft)"/>
-      <rect x="10" y="10" width="${width - 20}" height="1.5" rx="1" fill="#ffffff" opacity="0.8"/>`
+      <rect x="28" y="10" width="${width - 56}" height="1.5" rx="0.75" fill="url(#glassShine)"/>`
     : `<rect width="${width}" height="${height}" fill="${p.bg}"/>
       ${theme === 'terminal' ? '' : `<rect width="${width}" height="${height}" fill="url(#grid)" opacity="0.05"/><rect width="${width}" height="${height}" fill="url(#bgA)"/>`}`;
   return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
@@ -96,6 +96,12 @@ function frame({ width, height, color, theme, title, body, style = {}, css = '' 
       <linearGradient id="glassBg" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0%" stop-color="${style.bg ? mixColors(p.bg, '#ffffff', 0.2) : '#eef1f8'}"/>
         <stop offset="100%" stop-color="${style.bg ? p.bg : '#dde3f0'}"/>
+      </linearGradient>
+      <linearGradient id="glassShine" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>
+        <stop offset="18%" stop-color="#ffffff" stop-opacity="0.9"/>
+        <stop offset="82%" stop-color="#ffffff" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
       </linearGradient>
       <filter id="soft"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-opacity="0.12"/></filter>
       <filter id="blob" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="26"/></filter>
