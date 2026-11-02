@@ -74,6 +74,14 @@
       code: '/api/langs?username=',
       alt: 'top languages example',
     },
+    {
+      title: 'Mini badge',
+      text: 'A small shields-style pill: level, rank grade, streak, stars and more. Drop several in a row.',
+      icon: '<rect x="3" y="8" width="18" height="8" rx="4"/><line x1="11" y1="8" x2="11" y2="16"/>',
+      src: '/api/badge?username=octocat&metric=level&style=pill',
+      code: '/api/badge?username=&metric=',
+      alt: 'mini badge example',
+    },
   ];
 
   const typeGrid = $('#typeGrid');

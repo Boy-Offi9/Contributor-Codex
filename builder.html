@@ -121,6 +121,31 @@
           </div>
         </div>
       </div>
+
+      <section class="panel kitPanel" aria-labelledby="kitTitle">
+        <h2 id="kitTitle" class="kitTitle">README kit</h2>
+        <p class="hint">Build your whole profile README: configure a card above, add it here, repeat, then copy everything as one block.</p>
+        <button class="btn" id="kitAdd" type="button">＋ Add current card to kit</button>
+        <p class="kitStatus" id="kitStatus" role="status" aria-live="polite"></p>
+        <p class="hint" id="kitEmpty">Nothing added yet. Your kit is saved in this browser.</p>
+        <ol class="kitList" id="kitList"></ol>
+        <div class="kitOptions">
+          <label for="kitLayout">Layout</label>
+          <select id="kitLayout">
+            <option value="stack">one card per row</option>
+            <option value="grid">two cards per row (HTML table)</option>
+          </select>
+          <label class="kitCheck"><input type="checkbox" id="kitPairs" checked> Light/dark pairs where available</label>
+        </div>
+        <label for="kitOut" class="kitOutLabel">README block</label>
+        <div class="outBox">
+          <textarea id="kitOut" class="mono" readonly rows="7"></textarea>
+        </div>
+        <div class="kitButtons">
+          <button class="btn" id="kitCopy" type="button" disabled>Copy README block</button>
+          <button class="btn ghost" id="kitClear" type="button" disabled>Clear kit</button>
+        </div>
+      </section>
     </div>
   </div>
 </main>

@@ -355,3 +355,23 @@ section.block{padding-block:40px;}
 .membersPanel [hidden]{display:none;}
 .membersToggle{display:inline-flex;align-items:center;min-height:44px;}
 .membersBody{margin-top:14px;}
+
+.kitPanel{margin-top:22px;}
+.kitTitle{font-family:var(--display);font-size:20px;margin:0 0 6px;}
+.kitStatus{min-height:20px;margin:8px 0 0;font-family:var(--mono);font-size:12.5px;color:var(--dim);}
+.kitStatus.error{color:var(--danger);}
+.kitList{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:8px;}
+.kitItem{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--steel);padding:6px 6px 6px 12px;}
+.kitName{font-family:var(--mono);font-size:12.5px;color:var(--ghost);overflow-wrap:anywhere;}
+.kitActions{display:flex;gap:6px;flex:none;}
+.kitActions .btn{min-height:44px;min-width:44px;padding:0 10px;}
+.kitOptions{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:16px 0 12px;font-family:var(--mono);font-size:12.5px;color:var(--dim);}
+.kitCheck{display:inline-flex;align-items:center;gap:8px;min-height:44px;}
+.kitOutLabel{display:block;margin:6px 0 6px;font-family:var(--mono);font-size:12px;color:var(--dim);}
+.kitButtons{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
+.kitButtons .btn{min-height:44px;}
+.kitPanel .btn,.kitPanel select{min-height:44px;}
+.kitCheck input{width:22px;height:22px;accent-color:var(--cyan);}
+.btn,.typeBtn{min-height:44px;}
+.btn.sm{min-height:44px;}
+.siteFooter a{display:inline-flex;align-items:center;min-height:44px;}

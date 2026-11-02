@@ -43,6 +43,13 @@
       fields: [
         { key: 'org', label: 'Organization', placeholder: 'boy-offi9-inc', required: true },
         { key: 'limit', label: 'Member limit (1-20)', placeholder: '10', type: 'number', min: 1, max: 20 },
+        {
+          key: 'sort',
+          label: 'Rank by',
+          type: 'select',
+          options: ['xp', 'stars', 'followers', 'repos', 'contributions', 'streak'],
+          labels: { xp: 'XP (default)', stars: 'stars', followers: 'followers', repos: 'repos', contributions: 'contributions, last 12 months (needs server token)', streak: 'current streak (needs server token)' },
+        },
       ],
     },
     repo: {
@@ -108,6 +115,23 @@
         { key: 'days', label: 'Range', type: 'select', options: ['30', '90', '180', '365'] },
         ANIMATE,
         ...STYLE_FIELDS,
+      ],
+    },
+    badge: {
+      label: 'Mini badge',
+      endpoint: '/api/badge',
+      themes: ['cyberpunk', 'glass'],
+      fields: [
+        USERNAME,
+        {
+          key: 'metric',
+          label: 'Shows',
+          type: 'select',
+          options: ['level', 'xp', 'class', 'stars', 'followers', 'repos', 'rank', 'streak', 'longest', 'contributions'],
+          labels: { level: 'level (default)', rank: 'rank grade (needs server token)', streak: 'current streak (needs server token)', longest: 'longest streak (needs server token)', contributions: 'contributions (needs server token)' },
+        },
+        { key: 'style', label: 'Shape', type: 'select', options: ['flat', 'pill', 'square'], labels: { flat: 'flat (default)' } },
+        { key: 'label', label: 'Custom label (optional)', placeholder: 'my level' },
       ],
     },
     langs: {
@@ -463,7 +487,153 @@
     });
   });
 
+  const KIT_KEY = 'codex.kit.v1';
+  const KIT_MAX = 12;
+  const kitList = $('#kitList');
+  const kitOut = $('#kitOut');
+  const kitStatus = $('#kitStatus');
+  const kitLayout = $('#kitLayout');
+  const kitPairs = $('#kitPairs');
+  const API_ORIGIN = new URL(apiUrl('/api/card', {})).origin;
+  let kit = [];
+
+  const validKitItem = (item) => item && typeof item === 'object' && TYPES[item.type]
+    && typeof item.label === 'string' && typeof item.alt === 'string'
+    && typeof item.url === 'string' && item.url.startsWith(`${API_ORIGIN}/`)
+    && (item.pair === null || (item.pair && typeof item.pair.dark === 'string' && typeof item.pair.light === 'string'
+      && item.pair.dark.startsWith(`${API_ORIGIN}/`) && item.pair.light.startsWith(`${API_ORIGIN}/`)));
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(KIT_KEY) || '[]');
+    kit = Array.isArray(saved) ? saved.filter(validKitItem).slice(0, KIT_MAX) : [];
+  } catch {
+    kit = [];
+  }
+
+  function setKitStatus(text, isError) {
+    kitStatus.textContent = text;
+    kitStatus.classList.toggle('error', Boolean(isError));
+  }
+
+  function saveKit() {
+    try { localStorage.setItem(KIT_KEY, JSON.stringify(kit)); } catch { /* private mode: kit lives for this tab only */ }
+  }
+
+  function subjectOf() {
+    const keys = TYPES[currentType].fields.map((field) => field.key);
+    const value = (key) => (state[key] || '').trim();
+    if (keys.includes('username')) return value('username');
+    if (keys.includes('org')) return value('org');
+    if (keys.includes('owner') && keys.includes('repo')) return value('owner') && value('repo') ? `${value('owner')}/${value('repo')}` : '';
+    return '';
+  }
+
+  function altFor(def) {
+    const subject = subjectOf();
+    if (currentType === 'badge') return `${(state.metric || 'level').trim()} badge${subject ? ` — ${subject}` : ''}`;
+    if (currentType === 'leaderboard' && state.sort) return `${def.label}${subject ? ` — ${subject}` : ''} (by ${state.sort.trim()})`;
+    return `${def.label}${subject ? ` — ${subject}` : ''}`;
+  }
+
+  function addToKit() {
+    const { url, missing } = buildUrl();
+    if (missing) {
+      setKitStatus('Fill in the required fields first.', true);
+      return;
+    }
+    if (kit.length >= KIT_MAX) {
+      setKitStatus(`The kit holds ${KIT_MAX} cards — remove one first.`, true);
+      return;
+    }
+    const def = TYPES[currentType];
+    const customBg = def.fields.some((field) => field.key === 'bg') && (state.bg || '').trim();
+    const pairable = Boolean(def.themes && def.themes.includes('glass') && !customBg);
+    const dark = state.theme && state.theme !== 'glass' ? state.theme : 'cyberpunk';
+    kit.push({
+      type: currentType,
+      label: def.label,
+      alt: altFor(def),
+      url,
+      pair: pairable ? { dark: buildUrl(dark).url, light: buildUrl('glass').url } : null,
+    });
+    setKitStatus(`Added ${def.label}. ${kit.length} in the kit.`);
+    renderKit();
+  }
+
+  function kitMarkup() {
+    const pairs = kitPairs.checked;
+    const alt = (item) => item.alt.replace(/["[\]\n\r]/g, '');
+    const picture = (item, indent = '') => [
+      `${indent}<picture>`,
+      `${indent}  <source media="(prefers-color-scheme: dark)" srcset="${item.pair.dark}">`,
+      `${indent}  <source media="(prefers-color-scheme: light)" srcset="${item.pair.light}">`,
+      `${indent}  <img alt="${alt(item)}" src="${item.pair.dark}">`,
+      `${indent}</picture>`,
+    ].join('\n');
+    const asMarkdown = (item) => (pairs && item.pair ? picture(item) : `![${alt(item)}](${item.url})`);
+    const asHtml = (item, indent) => (pairs && item.pair ? picture(item, indent) : `${indent}<img alt="${alt(item)}" src="${item.url}">`);
+
+    const blocks = [];
+    let run = [];
+    const flush = () => {
+      if (!run.length) return;
+      if (run[0].type === 'badge') {
+        blocks.push(run.map(asMarkdown).join('\n'));
+      } else if (kitLayout.value === 'grid' && run.length > 1) {
+        const rows = [];
+        for (let i = 0; i < run.length; i += 2) rows.push(run.slice(i, i + 2));
+        blocks.push(['<table>', ...rows.map((row) => ['  <tr>', ...row.map((item) => `    <td align="center">\n${asHtml(item, '      ')}\n    </td>`), '  </tr>'].join('\n')), '</table>'].join('\n'));
+      } else {
+        blocks.push(...run.map(asMarkdown));
+      }
+      run = [];
+    };
+    kit.forEach((item) => {
+      if (run.length && (run[0].type === 'badge') !== (item.type === 'badge')) flush();
+      run.push(item);
+    });
+    flush();
+    return blocks.join('\n\n');
+  }
+
+  function renderKit() {
+    kitList.innerHTML = kit.map((item, index) => `
+      <li class="kitItem">
+        <span class="kitName">${esc(item.alt)}</span>
+        <span class="kitActions">
+          <button type="button" class="btn ghost sm" data-act="up" data-i="${index}" aria-label="Move ${esc(item.alt)} up" ${index === 0 ? 'disabled' : ''}>↑</button>
+          <button type="button" class="btn ghost sm" data-act="down" data-i="${index}" aria-label="Move ${esc(item.alt)} down" ${index === kit.length - 1 ? 'disabled' : ''}>↓</button>
+          <button type="button" class="btn ghost sm" data-act="remove" data-i="${index}" aria-label="Remove ${esc(item.alt)}">✕</button>
+        </span>
+      </li>`).join('');
+    kitOut.value = kit.length ? kitMarkup() : '';
+    $('#kitCopy').disabled = !kit.length;
+    $('#kitClear').disabled = !kit.length;
+    $('#kitEmpty').classList.toggle('hidden', kit.length > 0);
+    saveKit();
+  }
+
+  kitList.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-act]');
+    if (!button) return;
+    const index = Number(button.dataset.i);
+    if (button.dataset.act === 'remove') kit.splice(index, 1);
+    if (button.dataset.act === 'up' && index > 0) [kit[index - 1], kit[index]] = [kit[index], kit[index - 1]];
+    if (button.dataset.act === 'down' && index < kit.length - 1) [kit[index + 1], kit[index]] = [kit[index], kit[index + 1]];
+    setKitStatus('');
+    renderKit();
+  });
+  $('#kitAdd').addEventListener('click', addToKit);
+  $('#kitClear').addEventListener('click', () => { kit = []; setKitStatus('Kit cleared.'); renderKit(); });
+  $('#kitCopy').addEventListener('click', async () => {
+    const ok = await copyText($('#kitCopy'), kitOut.value, { fail: 'Select & copy manually' });
+    if (!ok) kitOut.select();
+  });
+  kitLayout.addEventListener('change', renderKit);
+  kitPairs.addEventListener('change', renderKit);
+
   renderTypePicker();
   renderFields();
   update();
+  renderKit();
 })();
