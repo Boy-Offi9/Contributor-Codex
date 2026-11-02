@@ -16,8 +16,9 @@ function calendarFor(login, from, to) {
   const start = Date.parse(`${from.slice(0, 10)}T00:00:00Z`);
   const end = Math.min(Date.parse(to), Date.now());
   for (let t = start; t <= end; t += 86400000) {
-    const ago = Math.round((Date.now() - t) / 86400000);
-    const active = login !== 'empty' && (ago < 12 || (ago > 40 && ago < 70));
+    const ago = Math.floor(Date.now() / 86400000) - Math.floor(t / 86400000);
+    const recent = login === 'mathname' ? 30 : 12;
+    const active = login !== 'empty' && (ago < recent || (ago > 40 && ago < 70));
     days.push({ date: new Date(t).toISOString().slice(0, 10), contributionCount: active ? 3 : 0 });
   }
   return { contributionCalendar: { weeks: days.length ? [{ contributionDays: days }] : [] } };
@@ -25,6 +26,13 @@ function calendarFor(login, from, to) {
 
 function graphql(body) {
   const { query, variables } = JSON.parse(body);
+  if (query.includes('u0:user(')) {
+    const data = {};
+    Object.keys(variables).filter((key) => /^l\d+$/.test(key)).forEach((key) => {
+      data[`u${key.slice(1)}`] = { contributionsCollection: calendarFor(variables[key], variables.from, variables.to) };
+    });
+    return json({ data });
+  }
   const login = variables.login;
   if (login === 'nobody') return json({ data: { user: null }, errors: [{ type: 'NOT_FOUND', message: 'not found' }] });
   const u = users[login] || users.octo;

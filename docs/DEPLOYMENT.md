@@ -66,6 +66,7 @@ Leave `RATE_LIMIT_SHARED_ID` unset and create one rule per ID, spelled exactly a
 | `stats-endpoint` | `/api/stats` | 30 |
 | `streak-endpoint` | `/api/streak` | 30 |
 | `activity-endpoint` | `/api/activity` | 30 |
+| `badge-endpoint` | `/api/badge` | 60 |
 | `leaderboard-endpoint` | `/api/leaderboard` | 10 |
 
 The limits are starting points, weighted by how many GitHub calls an uncached render costs. README images are fetched through GitHub's image proxy, so many readers' cards can arrive from the same few IPs: start generous and tighten after watching Firewall → Traffic.
@@ -123,6 +124,7 @@ api/
   streak.js          Streak Card               (3 themes)
   activity.js        Contribution activity graph
   langs.js           Most-used languages
+  badge.js           Mini shields-style badge  (10 metrics, 3 shapes)
   _lib/
     shared.js        facade: re-exports game.js + github.js + svg.js
     game.js          XP, levels, tiers, language classes (pure functions)
@@ -176,6 +178,8 @@ GitHub requests made for one **uncached** render. Edge caching (1 hour, 6 for th
 | `/api/streak`, `/api/activity` | 2 GraphQL requests (profile, then one aliased query covering every year since the account was created). Requires `GITHUB_TOKEN`. |
 | `/api/stats` | 1 GraphQL request. Requires `GITHUB_TOKEN`. |
 | `/api/langs` | 1 (repo list) + up to 6 (language bytes) |
+| `/api/badge` | 2 REST requests (`level`, `xp`, `class`, `stars`, `followers`, `repos`) or 1 GraphQL request (`rank`, `streak`, `longest`, `contributions`; needs `GITHUB_TOKEN`) |
+| `/api/leaderboard?sort=contributions` or `streak` | 1 member-list request + 1 GraphQL request covering up to 40 members + 2 per displayed member (needs `GITHUB_TOKEN`) |
 
 Avatar images come from GitHub's avatar host and are not counted against the API limit. The Search API has its own, lower limit; pull request and issue counts fail soft when it is exhausted.
 

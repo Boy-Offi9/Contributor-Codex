@@ -57,7 +57,7 @@ Paste this into any README, with your own username:
 
 Then make it yours:
 
-- **[Card Builder](https://contributor-codex.vercel.app/builder.html)** — pick a card type, theme, avatar shape, and color with a live preview, then copy the Markdown, URL, or HTML.
+- **[Card Builder](https://contributor-codex.vercel.app/builder.html)** — pick a card type, theme, avatar shape, and color with a live preview, then copy the Markdown, URL, or HTML. Add the cards you like to the **README kit** and copy them all as one block, with light/dark pairs and a one- or two-column layout.
 - **[Team Leaderboard](https://contributor-codex.vercel.app/roster.html)** — load any organization to rank its public members and copy the embed; member cards are optional.
 
 ## The codex
@@ -73,6 +73,7 @@ Then make it yours:
 | [`/api/streak`](docs/API.md#streak-card) | Total contributions, current streak, longest streak |
 | [`/api/activity`](docs/API.md#activity-graph) | A contribution-activity graph with a labelled peak |
 | [`/api/langs`](docs/API.md#top-languages) | Most-used languages as a stacked bar |
+| [`/api/badge`](docs/API.md#mini-badge) | A small shields-style badge: level, rank, streak, stars and more |
 
 Full parameters, defaults, errors, and caching are in the **[API reference](docs/API.md)**.
 

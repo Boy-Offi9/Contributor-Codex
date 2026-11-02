@@ -44,12 +44,13 @@ Each theme has its own voice — see [Design notes](DESIGN.md#themes). What diff
 
 `GET /api/leaderboard`
 
-Ranks the public members of a GitHub organization by XP.
+Ranks the public members of a GitHub organization — by XP by default, or by another metric with `sort`.
 
 | Param | Required | Values | Default |
 |---|---|---|---|
 | `org` | yes | any GitHub org login | — |
 | `limit` | no | integer, clamped to 1–20 | `10` |
+| `sort` | no | `xp` \| `stars` \| `followers` \| `repos` \| `contributions` \| `streak` | `xp` |
 | `theme` | no | `cyberpunk` \| `terminal` \| `glass` | `cyberpunk` |
 | `color` | no | 6-digit hex, no `#` | accent `#00e5ff`; on `cyberpunk`, when set, it also replaces each row's own tier color |
 | `shape` | no | `hex` \| `circle` \| `rounded` \| `square` | `hex` (`circle` on `glass`) |
@@ -58,7 +59,9 @@ Ranks the public members of a GitHub organization by XP.
 ![Leaderboard](https://contributor-codex.vercel.app/api/leaderboard?org=vercel&limit=5)
 ```
 
-- The header reports how many members were ranked against how many are shown (`TOP 5 OF 60`).
+- The header reports how many members were ranked against how many are shown (`TOP 5 OF 60`) and, for any sort other than XP, what it is ranked by.
+- `contributions` (last 12 months) and `streak` (current streak within the last 12 months) read GitHub's contribution calendars for up to the first 40 public members in **one** GraphQL request, then build rows only for the top `limit`. They need `GITHUB_TOKEN` on the server; without it the card says so instead of guessing. The other sorts need no token.
+- Ties are broken by XP. An unknown `sort` falls back to `xp`.
 - On `cyberpunk` and `glass`, the top three rank badges are gold, silver, and bronze. On `cyberpunk`, each row also has an XP bar drawn relative to first place.
 - Long names are truncated with an ellipsis.
 - There is no `detailed` theme.
@@ -217,6 +220,31 @@ A stacked bar plus legend of the languages you write the most.
 
 - Percentages are by bytes of code across the six most-starred owned, non-fork repositories — the same sample `/api/card` uses.
 
+## Mini Badge
+
+`GET /api/badge`
+
+A small shields-style badge (20 px tall) that sits in a README line next to others.
+
+| Param | Required | Values | Default |
+|---|---|---|---|
+| `username` | yes | any GitHub username | — |
+| `metric` | no | `level` \| `xp` \| `class` \| `stars` \| `followers` \| `repos` \| `rank` \| `streak` \| `longest` \| `contributions` | `level` |
+| `style` | no | `flat` \| `pill` \| `square` | `flat` |
+| `label` | no | custom left text, up to 24 characters | the metric's name |
+| `theme` | no | `cyberpunk` (dark label) \| `glass` (light label) | `cyberpunk` |
+| `color` | no | 6-digit hex, no `#` for the value segment | by metric (`level` and `class` use your tier color, `rank` its grade color, streaks orange, the rest cyan) |
+
+```md
+![level](https://contributor-codex.vercel.app/api/badge?username=octocat&metric=level&style=pill)
+![rank](https://contributor-codex.vercel.app/api/badge?username=octocat&metric=rank&style=pill)
+![streak](https://contributor-codex.vercel.app/api/badge?username=octocat&metric=streak&style=pill)
+```
+
+- `level`, `xp`, `class`, `stars`, `followers` and `repos` use the same two GitHub requests as the contributor card. `rank`, `streak`, `longest` and `contributions` need `GITHUB_TOKEN` on the server; without it the badge says `needs token`.
+- Errors are small badges too (`codex | not found`) so a broken embed never leaves a big error image in a README.
+- Value text switches between black and white for contrast against the segment color.
+
 ## Status
 
 `GET /api/status` returns JSON with the server token's remaining GitHub budget (REST, GraphQL, search), when each resets, and a warning under 10%. It uses GitHub's rate-limit endpoint, which costs no quota, and is cached for 60 seconds. The token is never included. If the token is missing or rejected, the response says so.
@@ -267,7 +295,8 @@ Responses are cached at Vercel's edge via `Cache-Control`:
 | Response | Fresh for | Stale-while-revalidate |
 |---|---|---|
 | `/api/card`, `/api/repo`, `/api/trophies`, `/api/codex` | 1 hour | 24 hours |
-| `/api/streak`, `/api/activity`, `/api/langs` | 6 hours | 24 hours |
+| `/api/streak`, `/api/activity`, `/api/langs`, `/api/stats` | 6 hours | 24 hours |
+| `/api/badge` | 1 hour (6 hours for `rank`, `streak`, `longest`, `contributions`) | 24 hours |
 | `/api/leaderboard` | 6 hours | 24 hours |
 | Leaderboard for an org with no public members | 1 hour | — |
 | Errors (`404`, `503`, `500`) | 1 minute | — |

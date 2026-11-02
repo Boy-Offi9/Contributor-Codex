@@ -24,11 +24,15 @@ const CARDS = [
   ['repo', 'owner=octo&repo=thing'], ['repo', 'owner=octo&repo=thing&theme=glass'],
   ['trophies', 'username=octo'], ['trophies', 'username=octo&trophies=STARGAZER,CURATOR&badge=octagon'],
   ['codex', 'username=octo'], ['codex', 'username=octo&streak=1&badge=diamond'], ['codex', 'username=empty&streak=1'],
-  ['leaderboard', 'org=acme'], ['leaderboard', 'org=acme&theme=terminal'],
+  ['leaderboard', 'org=acme'], ['leaderboard', 'org=acme&theme=terminal'], ['leaderboard', 'org=acme&theme=glass'],
+  ['leaderboard', 'org=acme&sort=streak'], ['leaderboard', 'org=acme&sort=contributions&theme=glass'], ['leaderboard', 'org=acme&sort=stars&theme=terminal'], ['leaderboard', 'org=acme&sort=followers'], ['leaderboard', 'org=acme&sort=repos&theme=glass'], ['leaderboard', 'org=acme&sort=bogus'],
   ['streak', 'username=octo'], ['streak', 'username=octo&profile=1&year=1&animate=1&theme=glass'], ['streak', 'username=empty'],
   ['stats', 'username=octo'], ['stats', 'username=empty&hide=stars,prs'],
   ['activity', 'username=octo'], ['activity', 'username=octo&days=365&animate=1'],
   ['langs', 'username=octo'], ['langs', 'username=octo&bg=1e1e2e&text=cdd6f4&border=89b4fa&hide_border=1'],
+  ['badge', 'username=octo'], ['badge', 'username=octo&metric=xp&style=pill'], ['badge', 'username=octo&metric=class&style=square&theme=glass'],
+  ['badge', 'username=octo&metric=rank'], ['badge', 'username=octo&metric=streak&color=ff4d6d'], ['badge', 'username=empty&metric=longest'],
+  ['badge', 'username=octo&metric=contributions&label=all%20time'],
 ];
 
 for (const [endpoint, query] of CARDS) {
@@ -184,5 +188,76 @@ test('a GitHub request that never answers ends as a 504 card within the timeout'
   } finally {
     clearTimeout(keepAlive);
     delete process.env.GITHUB_TIMEOUT_MS;
+  }
+});
+
+test('leaderboard sorts by the metric asked for and says so', async () => {
+  const position = (body, text) => body.indexOf(text);
+  const streak = (await call('leaderboard', 'org=acme&sort=streak')).body;
+  assert.ok(position(streak, MATH_NAME) !== -1 && position(streak, MATH_NAME) < position(streak, 'Octo Cat'), 'the 30-day streak should outrank the 12-day streak');
+  assert.match(streak, /30 day streak/);
+  assert.match(streak, /12 day streak/, 'the current streak is shown, not the longest run (29 days)');
+  assert.ok(!/29 day streak/.test(streak));
+  assert.match(streak, /BY STREAK/);
+  const followers = (await call('leaderboard', 'org=acme&sort=followers')).body;
+  assert.ok(position(followers, 'Octo Cat') < position(followers, MATH_NAME), '215 followers should outrank 54');
+  const terminal = (await call('leaderboard', 'org=acme&sort=contributions&theme=terminal')).body;
+  assert.match(terminal, /ranked by contributions/);
+  const fallback = (await call('leaderboard', 'org=acme&sort=bogus')).body;
+  assert.match(fallback, /XP/);
+  assert.ok(!/BY BOGUS/.test(fallback));
+});
+
+test('contribution sorts explain a missing token instead of guessing', async () => {
+  const saved = process.env.GITHUB_TOKEN;
+  delete process.env.GITHUB_TOKEN;
+  try {
+    for (const sort of ['streak', 'contributions']) {
+      const { res, body } = await call('leaderboard', `org=acme&sort=${sort}`);
+      assert.equal(res.status, 503);
+      assert.match(body, /GITHUB_TOKEN/);
+    }
+    const { res } = await call('leaderboard', 'org=acme&sort=stars');
+    assert.equal(res.status, 200, 'sorts that use REST data keep working without a token');
+  } finally {
+    process.env.GITHUB_TOKEN = saved;
+  }
+});
+
+test('badge shows the real value for each metric', async () => {
+  const text = async (query) => (await call('badge', query)).body.match(/<title[^>]*>([^<]*)<\/title>/)[1];
+  assert.equal(await text('username=octo&metric=followers'), 'followers: 215');
+  assert.equal(await text('username=octo&metric=repos'), 'repos: 12');
+  assert.match(await text('username=octo&metric=level'), /^level: LV \d+$/);
+  assert.match(await text('username=octo&metric=rank'), /^rank: (C|B\+?|A\+?|S)$/);
+  assert.match(await text('username=octo&metric=streak'), /^streak: 12 days$/);
+  assert.equal(await text('username=empty&metric=streak'), 'streak: 0 days');
+  assert.equal(await text('username=octo&metric=stars&label=my%20stars'), 'my stars: 40');
+});
+
+test('badge refuses bad input with a small error badge, and never trusts the label', async () => {
+  for (const [query, status] of [['', 400], ['username=a%2Fb', 400], ['username=octo&metric=bogus', 400], ['username=nobody', 404], ['username=nobody&metric=streak', 404]]) {
+    const { res, body } = await call('badge', query);
+    assert.equal(res.status, status, query);
+    assertWellFormed(body);
+  }
+  const { body } = await call('badge', 'username=octo&label=%3Cscript%3Ealert(1)%3C%2Fscript%3E%26%22');
+  assertWellFormed(body);
+  assert.ok(!body.includes('<script'));
+  assert.equal((await call('badge', 'username=octo&style=bogus')).res.status, 200);
+});
+
+test('badges that need the calendar or stats explain a missing token', async () => {
+  const saved = process.env.GITHUB_TOKEN;
+  delete process.env.GITHUB_TOKEN;
+  try {
+    for (const metric of ['rank', 'streak', 'longest', 'contributions']) {
+      const { res, body } = await call('badge', `username=octo&metric=${metric}`);
+      assert.equal(res.status, 503, metric);
+      assert.match(body, /needs token/);
+    }
+    assert.equal((await call('badge', 'username=octo&metric=stars')).res.status, 200);
+  } finally {
+    process.env.GITHUB_TOKEN = saved;
   }
 });

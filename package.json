@@ -1,6 +1,6 @@
 {
   "name": "contributor-codex",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "private": true,
   "license": "MIT",
   "description": "GitHub data compiled into visual cards, achievements, team leaderboards, and profiles — embeddable anywhere as server-rendered SVG",
@@ -12,7 +12,7 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@boy-offi9-inc/reqkit": "^0.1.7",
+    "@boy-offi9-inc/reqkit": "^0.3.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/firewall": "^1.2.1"
   }
