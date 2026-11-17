@@ -1,4 +1,5 @@
 const { isRateLimited } = require('./_lib/ratelimit');
+const errors = require('./_lib/errors');
 const { fetchCalendar, computeStreaks } = require('./_lib/contrib');
 const {
   esc, ghFetch, avatarDataUri, computeStats, classFor, trophyTier, sanitizeColor,
@@ -6,14 +7,7 @@ const {
 
 const WIDTH = 480;
 
-function errorSVG(message) {
-  return `<svg width="480" height="120" viewBox="0 0 480 120" xmlns="http://www.w3.org/2000/svg">
-    <rect width="480" height="120" fill="#05070c"/>
-    <rect width="480" height="120" fill="none" stroke="#ff4d6d"/>
-    <text x="20" y="55" font-family="system-ui,sans-serif" font-weight="700" font-size="13" fill="#ff4d6d">CODEX ERROR</text>
-    <text x="20" y="78" font-family="system-ui,sans-serif" font-size="12" fill="#8a94ab">${esc(message)}</text>
-  </svg>`;
-}
+const errorSVG = (message) => errors.errorSVG({ title: 'CODEX ERROR', message });
 
 const COLLECTION_TROPHIES = [
   { key: 'STARGAZER', label: 'STARS', icon: 'star', thresholds: [10, 50, 200, 1000], value: (s, u) => s.totalStars },

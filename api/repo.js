@@ -1,14 +1,8 @@
 const { isRateLimited } = require('./_lib/ratelimit');
+const errors = require('./_lib/errors');
 const { esc, ghFetch, CHAKRA_PETCH_FONT_FACE, sanitizeColor, MONO, isGhName, isGhRepo, readableAccent, svgReply } = require('./_lib/shared');
 
-function errorSVG(message) {
-  return `<svg width="420" height="120" viewBox="0 0 420 120" xmlns="http://www.w3.org/2000/svg">
-    <rect width="420" height="120" fill="#05070c"/>
-    <rect width="420" height="120" fill="none" stroke="#ff4d6d"/>
-    <text x="20" y="55" font-family="system-ui,sans-serif" font-weight="700" font-size="13" fill="#ff4d6d">CARD ERROR</text>
-    <text x="20" y="78" font-family="${MONO}" font-size="11" fill="#7a8399">${esc(message)}</text>
-  </svg>`;
-}
+const errorSVG = (message) => errors.errorSVG({ width: 420, title: 'CARD ERROR', message, messageFont: MONO, messageSize: 11, messageFill: '#7a8399' });
 
 function wrapText(text, maxChars) {
   const words = text.split(' ');

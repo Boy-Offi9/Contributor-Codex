@@ -1,4 +1,5 @@
 const { isRateLimited } = require('./_lib/ratelimit');
+const errors = require('./_lib/errors');
 const { fetchMemberActivity } = require('./_lib/contrib');
 const {
   classFor, esc, ghFetch, avatarDataUri, computeStats, sanitizeColor, XP_FORMULA,
@@ -22,13 +23,7 @@ const ROW_H = 56;
 const WIDTH = 640;
 const HEADER_H = 50;
 
-function errorSVG(message, height = 100) {
-  return `<svg width="${WIDTH}" height="${height}" viewBox="0 0 ${WIDTH} ${height}" xmlns="http://www.w3.org/2000/svg">
-    <rect width="${WIDTH}" height="${height}" fill="#05070c"/>
-    <rect width="${WIDTH}" height="${height}" fill="none" stroke="#ff4d6d"/>
-    <text x="20" y="${height / 2 + 5}" font-family="${MONO}" font-size="12" fill="#ff4d6d">${esc(message)}</text>
-  </svg>`;
-}
+const errorSVG = (message, height) => errors.leaderboardError(WIDTH, message, height);
 
 async function buildEntry(login, token) {
   const user = await ghFetch(`https://api.github.com/users/${login}`, token);

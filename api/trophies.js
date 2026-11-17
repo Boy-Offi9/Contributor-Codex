@@ -1,14 +1,8 @@
 const { isRateLimited } = require('./_lib/ratelimit');
+const errors = require('./_lib/errors');
 const { esc, ghFetch, computeStats, trophyTier, sanitizeColor, badge, sanitizeBadge, SANS, isGhName, readableAccent, svgReply } = require('./_lib/shared');
 
-function errorSVG(message) {
-  return `<svg width="420" height="120" viewBox="0 0 420 120" xmlns="http://www.w3.org/2000/svg">
-    <rect width="420" height="120" fill="#05070c"/>
-    <rect width="420" height="120" fill="none" stroke="#ff4d6d"/>
-    <text x="20" y="55" font-family="system-ui,sans-serif" font-weight="700" font-size="13" fill="#ff4d6d">TROPHY ERROR</text>
-    <text x="20" y="78" font-family="system-ui,sans-serif" font-size="12" fill="#8a94ab">${esc(message)}</text>
-  </svg>`;
-}
+const errorSVG = (message) => errors.errorSVG({ width: 420, title: 'TROPHY ERROR', message });
 
 const TROPHIES = [
   { key: 'STARGAZER', label: 'STARS', thresholds: [10, 50, 200, 1000], value: (s, u) => s.totalStars },

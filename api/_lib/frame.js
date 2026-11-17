@@ -1,3 +1,4 @@
+const errors = require('./errors');
 const { esc, CHAKRA_PETCH_FONT_FACE, DISPLAY, svgReply, sanitizeColor, contrastRatio, mixColors, luminance } = require('./shared');
 
 const FONT = DISPLAY;
@@ -118,14 +119,7 @@ function frame({ width, height, color, theme, title, body, style = {}, css = '' 
   </svg>`;
 }
 
-function errorCard(message, title = 'CODEX ERROR') {
-  return `<svg width="480" height="120" viewBox="0 0 480 120" xmlns="http://www.w3.org/2000/svg">
-    <rect width="480" height="120" fill="#05070c"/>
-    <rect width="480" height="120" fill="none" stroke="#ff4d6d"/>
-    <text x="20" y="55" font-family="system-ui,sans-serif" font-weight="700" font-size="13" fill="#ff4d6d">${esc(title)}</text>
-    <text x="20" y="78" font-family="system-ui,sans-serif" font-size="12" fill="#8a94ab">${esc(message)}</text>
-  </svg>`;
-}
+const errorCard = (message, title = 'CODEX ERROR') => errors.errorSVG({ title, message });
 
 function svgResponse(body, status, cacheControl) {
   return svgReply(body, status, cacheControl);
