@@ -128,8 +128,10 @@ api/
   _lib/
     shared.js        facade: re-exports game.js + github.js + svg.js
     game.js          XP, levels, tiers, language classes (pure functions)
-    github.js        api.github.com access, avatar fetch, name validation
+    github.js        api.github.com access, avatar fetch, PR/issue counts, name validation
     svg.js           escaping, colours, font stacks, avatar frames, icons, badges
+    errors.js        shared error-card factories for all endpoints
+    themes/          the four contributor-card theme renderers (cyberpunk, terminal, glass, detailed)
     frame.js         shared chrome for streak / activity / langs (background, border, glow)
     contrib.js       GraphQL contribution calendar + streak maths
     font-data.js     embedded Chakra Petch (generated)
@@ -156,7 +158,7 @@ THIRD_PARTY_NOTICES.md   embedded font notice (SIL OFL 1.1)
 
 Vercel serverless functions using the Web `Request` / `Response` API directly — no Next.js, no framework. Cards are hand-written SVG strings, with no charting or image library. [`@boy-offi9-inc/reqkit`](https://github.com/boy-offi9-inc/reqkit) handles retry and de-duplication for GitHub requests, and `@vercel/firewall` provides per-IP rate limiting.
 
-Each endpoint file is independently deployable. The original five cards keep their own error cards and layout code; the three calendar cards (streak, activity, languages) share `_lib/frame.js`. `_lib/` holds only what several cards genuinely reuse, split by concern: `game.js` (rules), `github.js` (network and input validation) and `svg.js` (drawing). Endpoints import through `shared.js`, so a helper can move between those files without touching any endpoint.
+Each endpoint file is independently deployable. The original five cards keep their own layout code; the three calendar cards (streak, activity, languages) share `_lib/frame.js`. `_lib/` holds only what several cards genuinely reuse, split by concern: `game.js` (rules), `github.js` (network and input validation), `svg.js` (drawing), `errors.js` (error cards) and `themes/` (the contributor-card theme renderers). Endpoints import those modules directly, so a helper can move between them without touching any endpoint.
 
 Every name that reaches a GitHub URL (`username`, `org`, `owner`, `repo`) is validated with `isGhName` / `isGhRepo` first, because those requests carry the server's token. Anything that isn't a plain GitHub name returns a 400 card.
 

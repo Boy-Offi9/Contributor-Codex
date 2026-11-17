@@ -2,7 +2,7 @@ const { isRateLimited } = require('./_lib/ratelimit');
 const errors = require('./_lib/errors');
 const { fetchCalendar, computeStreaks } = require('./_lib/contrib');
 const { esc, sanitizeColor, CHAKRA_PETCH_FONT_FACE, colorForLang, icon, badge, sanitizeBadge, avatarShape, sanitizeShape, DISPLAY, readableAccent, svgReply, truncate } = require('./_lib/svg');
-const { ghFetch, avatarDataUri, byteWeightedLangs, isGhName } = require('./_lib/github');
+const { ghFetch, avatarDataUri, byteWeightedLangs, isGhName, loadUserWithRepos } = require('./_lib/github');
 const { computeStats, classFor, trophyTier } = require('./_lib/game');
 
 const WIDTH = 480;
@@ -152,11 +152,7 @@ module.exports.GET = async (request) => {
 
   const token = process.env.GITHUB_TOKEN;
   try {
-    const user = await ghFetch(`https://api.github.com/users/${username}`, token);
-    let repos = [];
-    try {
-      repos = await ghFetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`, token);
-    } catch {}
+    const { user, repos } = await loadUserWithRepos(username, token);
 
     const stats = computeStats(user, repos);
     const wantStreak = ['1', 'true', 'yes'].includes((url.searchParams.get('streak') || '').toLowerCase());

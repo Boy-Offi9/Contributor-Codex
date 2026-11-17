@@ -1,7 +1,7 @@
 const { isRateLimited } = require('./_lib/ratelimit');
 const errors = require('./_lib/errors');
 const { sanitizeColor, CHAKRA_PETCH_FONT_FACE, svgReply, readableAccent, MONO, sanitizeShape } = require('./_lib/svg');
-const { isGhName, ghFetch, avatarDataUri, byteWeightedLangs, prIssueCounts } = require('./_lib/github');
+const { isGhName, loadUserWithRepos, avatarDataUri, byteWeightedLangs, prIssueCounts } = require('./_lib/github');
 const { computeStats } = require('./_lib/game');
 const { THEMES, THEME_SHAPE } = require('./_lib/themes');
 
@@ -25,11 +25,7 @@ module.exports.GET = async (request) => {
 
   const token = process.env.GITHUB_TOKEN;
   try {
-    const user = await ghFetch(`https://api.github.com/users/${username}`, token);
-    let repos = [];
-    try {
-      repos = await ghFetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`, token);
-    } catch {}
+    const { user, repos } = await loadUserWithRepos(username, token);
 
     const avatarUri = await avatarDataUri(`${user.avatar_url}&s=160`);
     const fontFace = CHAKRA_PETCH_FONT_FACE;

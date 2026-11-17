@@ -96,6 +96,16 @@ async function prIssueCounts(username, token) {
 }
 
 
+
+async function loadUserWithRepos(username, token) {
+  const user = await ghFetch(`https://api.github.com/users/${username}`, token);
+  let repos = [];
+  try {
+    repos = await ghFetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`, token);
+  } catch {}
+  return { user, repos };
+}
+
 module.exports = {
-  prIssueCounts, isRateLimitResponse, normalizeRateLimit, asTimeout, isGhName, isGhRepo, ghFetch, avatarDataUri, byteWeightedLangs,
+  loadUserWithRepos, prIssueCounts, isRateLimitResponse, normalizeRateLimit, asTimeout, isGhName, isGhRepo, ghFetch, avatarDataUri, byteWeightedLangs,
 };
