@@ -78,6 +78,24 @@ async function byteWeightedLangs(repos, token) {
     .map(([name, bytes]) => ({ name, bytes, pct: Math.round((bytes / grandTotal) * 100) }));
 }
 
+async function prIssueCounts(username, token) {
+  const headers = { Accept: 'application/vnd.github+json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const fetchCount = async (type) => {
+    try {
+      const res = await fetch(`https://api.github.com/search/issues?q=author:${username}+type:${type}&per_page=1`, { headers });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return typeof data.total_count === 'number' ? data.total_count : null;
+    } catch {
+      return null;
+    }
+  };
+  const [prs, issues] = await Promise.all([fetchCount('pr'), fetchCount('issue')]);
+  return { prs, issues };
+}
+
+
 module.exports = {
-  isRateLimitResponse, normalizeRateLimit, asTimeout, isGhName, isGhRepo, ghFetch, avatarDataUri, byteWeightedLangs,
+  prIssueCounts, isRateLimitResponse, normalizeRateLimit, asTimeout, isGhName, isGhRepo, ghFetch, avatarDataUri, byteWeightedLangs,
 };
