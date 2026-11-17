@@ -205,5 +205,5 @@ function mixColors(a, b, t) {
 
 module.exports = {
   svgHeaders, svgReply, a11y, contrastRatio, mixColors,
-  colorForLang, esc, CHAKRA_PETCH_FONT_FACE, sanitizeColor, readableAccent, luminance, truncate, sanitizeShape, avatarShape, ICONS, MONO, SANS, DISPLAY, icon, BADGE_SHAPES, sanitizeBadge, badge,
+  colorForLang, esc, CHAKRA_PETCH_FONT_FACE, sanitizeColor, readableAccent, luminance, truncate, sanitizeShape, avatarShape, MONO, SANS, DISPLAY, icon, sanitizeBadge, badge,
 };

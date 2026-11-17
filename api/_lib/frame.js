@@ -138,4 +138,4 @@ function githubErrorCard(err, subject, what) {
 }
 
 module.exports = {
-  githubErrorCard, ink, inkTheme, FONT, THEMES, PALETTE, paletteFor, styleFromParams, sanitizeTheme, frame, errorCard, svgResponse };
+  githubErrorCard, ink, inkTheme, FONT, THEMES, paletteFor, styleFromParams, sanitizeTheme, frame, errorCard, svgResponse };

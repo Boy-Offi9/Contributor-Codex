@@ -98,5 +98,5 @@ function computeRank(stats) {
 
 module.exports = {
   computeRank,
-  classFor, XP_FORMULA, trophyTier, tierFor, computeStats, clearanceFor,
+  classFor, XP_FORMULA, trophyTier, computeStats, clearanceFor,
 };
