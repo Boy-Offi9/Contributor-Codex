@@ -1,6 +1,7 @@
 (() => {
   const { $, $$, esc, apiUrl, message, copyText } = window.Codex;
 
+// ---------- Catalog: types, fields, presets ----------
   const CAL_THEMES = ['cyberpunk', 'glass', 'terminal'];
   const ALL_THEMES = ['cyberpunk', 'terminal', 'glass', 'detailed'];
   const ALL_TROPHIES = ['STARGAZER', 'BUILDER', 'INFLUENCE', 'VETERAN', 'POLYGLOT', 'FORKED', 'OPEN_SOURCE', 'NETWORKER', 'SNIPPETS', 'ACTIVE', 'HEADLINER', 'CURATOR'];
@@ -153,6 +154,7 @@
   let previewTicket = 0;
   const state = {};
 
+// ---------- State & DOM refs ----------
   const typePicker = $('#typePicker');
   const dynamicFields = $('#dynamicFields');
   const themeField = $('#themeField');
@@ -176,6 +178,7 @@
   const urlOut = $('#urlOut');
   const htmlOut = $('#htmlOut');
 
+// ---------- Field rendering ----------
   function fieldMarkup(field) {
     const id = `f_${field.key}`;
     const label = `<label for="${id}">${esc(field.label)}</label>`;
@@ -218,6 +221,7 @@
     });
   }
 
+// ---------- Style presets & accent ----------
   function renderPresets(def) {
     presetField.classList.toggle('hidden', !def.styleSupport);
     if (!def.styleSupport) {
@@ -267,6 +271,7 @@
     });
   }
 
+// ---------- Form rendering ----------
   function renderFields() {
     const def = TYPES[currentType];
     dynamicFields.innerHTML = def.fields.map(fieldMarkup).join('') + (def.trophyPicker ? trophyMarkup() : '');
@@ -304,6 +309,7 @@
     if (def.badgeSupport) badgeSelect.value = state.badge || '';
   }
 
+// ---------- URL building ----------
   function buildUrl(themeOverride) {
     const def = TYPES[currentType];
     const params = {};
@@ -361,6 +367,7 @@
     pairRow.classList.remove('hidden');
   }
 
+// ---------- Preview ----------
   function showPreviewPrompt(text, withButton) {
     previewTicket += 1;
     pngBtn.disabled = true;
@@ -419,6 +426,7 @@
     }, 250);
   }
 
+// ---------- PNG export ----------
   async function downloadPng() {
     if (!pendingUrl) return;
     const label = pngBtn.textContent;
@@ -457,6 +465,7 @@
     pngBtn.disabled = false;
   }
 
+// ---------- Wiring & init ----------
   function renderTypePicker() {
     typePicker.innerHTML = Object.entries(TYPES).map(([key, def]) =>
       `<button type="button" class="typeBtn" data-type="${key}" aria-pressed="${key === currentType}">${esc(def.label)}</button>`).join('');
@@ -487,6 +496,7 @@
     });
   });
 
+// ---------- README kit ----------
   const KIT_KEY = 'codex.kit.v1';
   const KIT_MAX = 12;
   const kitList = $('#kitList');
