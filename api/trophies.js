@@ -1,6 +1,8 @@
 const { isRateLimited } = require('./_lib/ratelimit');
 const errors = require('./_lib/errors');
-const { esc, ghFetch, computeStats, trophyTier, sanitizeColor, badge, sanitizeBadge, SANS, isGhName, readableAccent, svgReply } = require('./_lib/shared');
+const { esc, sanitizeColor, badge, sanitizeBadge, SANS, readableAccent, svgReply } = require('./_lib/svg');
+const { ghFetch, isGhName } = require('./_lib/github');
+const { computeStats, trophyTier } = require('./_lib/game');
 
 const errorSVG = (message) => errors.errorSVG({ width: 420, title: 'TROPHY ERROR', message });
 

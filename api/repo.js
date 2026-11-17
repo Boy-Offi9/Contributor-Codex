@@ -1,6 +1,7 @@
 const { isRateLimited } = require('./_lib/ratelimit');
 const errors = require('./_lib/errors');
-const { esc, ghFetch, CHAKRA_PETCH_FONT_FACE, sanitizeColor, MONO, isGhName, isGhRepo, readableAccent, svgReply } = require('./_lib/shared');
+const { esc, CHAKRA_PETCH_FONT_FACE, sanitizeColor, MONO, readableAccent, svgReply } = require('./_lib/svg');
+const { ghFetch, isGhName, isGhRepo } = require('./_lib/github');
 
 const errorSVG = (message) => errors.errorSVG({ width: 420, title: 'CARD ERROR', message, messageFont: MONO, messageSize: 11, messageFill: '#7a8399' });
 

@@ -1,9 +1,9 @@
 const { isRateLimited } = require('./_lib/ratelimit');
 const errors = require('./_lib/errors');
 const { fetchCalendar, computeStreaks } = require('./_lib/contrib');
-const {
-  esc, ghFetch, avatarDataUri, computeStats, classFor, trophyTier, sanitizeColor,
-  CHAKRA_PETCH_FONT_FACE, byteWeightedLangs, colorForLang, icon, badge, sanitizeBadge, avatarShape, sanitizeShape, DISPLAY, isGhName, readableAccent, svgReply, truncate } = require('./_lib/shared');
+const { esc, sanitizeColor, CHAKRA_PETCH_FONT_FACE, colorForLang, icon, badge, sanitizeBadge, avatarShape, sanitizeShape, DISPLAY, readableAccent, svgReply, truncate } = require('./_lib/svg');
+const { ghFetch, avatarDataUri, byteWeightedLangs, isGhName } = require('./_lib/github');
+const { computeStats, classFor, trophyTier } = require('./_lib/game');
 
 const WIDTH = 480;
 

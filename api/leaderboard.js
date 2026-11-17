@@ -1,9 +1,9 @@
 const { isRateLimited } = require('./_lib/ratelimit');
 const errors = require('./_lib/errors');
 const { fetchMemberActivity } = require('./_lib/contrib');
-const {
-  classFor, esc, ghFetch, avatarDataUri, computeStats, sanitizeColor, XP_FORMULA,
-  clearanceFor, truncate, avatarShape, sanitizeShape, icon, colorForLang, MONO, isGhName, readableAccent, svgReply } = require('./_lib/shared');
+const { esc, sanitizeColor, truncate, avatarShape, sanitizeShape, icon, colorForLang, MONO, readableAccent, svgReply } = require('./_lib/svg');
+const { ghFetch, avatarDataUri, isGhName } = require('./_lib/github');
+const { classFor, computeStats, XP_FORMULA, clearanceFor } = require('./_lib/game');
 
 const SORTS = {
   xp: { label: 'XP', unit: 'XP', icon: 'bolt', value: (e) => e.xp },
