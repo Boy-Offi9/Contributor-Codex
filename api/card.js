@@ -19,7 +19,7 @@ module.exports.GET = async (request) => {
   if (!isGhName(username)) return svg(errorSVG('invalid username'), 400);
 
   const requestedTheme = url.searchParams.get('theme');
-  const themeName = THEMES[requestedTheme] ? requestedTheme : 'cyberpunk';
+  const themeName = THEMES[requestedTheme] ? requestedTheme : 'holo';
   const render = THEMES[themeName];
   const shape = sanitizeShape(url.searchParams.get('shape'), THEME_SHAPE[themeName]);
 

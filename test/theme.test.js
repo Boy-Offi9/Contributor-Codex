@@ -39,3 +39,29 @@ test('SVG responses: hardened headers and accessible root', () => {
   assert.match(a11y('<svg width="1"><title>Hi</title></svg>'), /^<svg role="img" aria-labelledby="cardTitle" width="1"><title id="cardTitle">/);
   assert.match(a11y('<svg width="1"></svg>'), /^<svg role="img" width="1">/);
 });
+
+test('holo theme: renders a valid instrumented card', () => {
+  const renderHolo = require('../api/_lib/themes/holo');
+  const svg = renderHolo({
+    user: { login: 'Boy-Offi9', name: 'Boy Offi9', public_repos: 42, followers: 310 },
+    level: 12, xp: 8420, totalStars: 1240, topLang: 'TypeScript',
+    color: '#22d3ee', tier: 'ELITE', shape: 'circle', avatarUri: '', fontFace: '',
+  });
+  assert.match(svg, /^<svg width="360" height="360"/);
+  assert.match(svg, /LV\.12/);
+  assert.match(svg, /Boy Offi9/);
+  assert.match(svg, /@Boy-Offi9/);
+  assert.match(svg, /8,420/);
+  assert.match(svg, /ELITE/);
+  assert.ok(!svg.includes('undefined'), 'no undefined leaked into markup');
+});
+
+test('holo theme: hostile login is escaped, missing fields fall back', () => {
+  const renderHolo = require('../api/_lib/themes/holo');
+  const svg = renderHolo({
+    user: { login: '<script>x', name: null }, level: 1, xp: 0, totalStars: 0,
+    color: '#ff0055', tier: 'ROOKIE', shape: 'circle', avatarUri: '', fontFace: '',
+  });
+  assert.ok(!svg.includes('<script>'), 'login must be escaped');
+  assert.match(svg, /@&lt;script&gt;x/);
+});

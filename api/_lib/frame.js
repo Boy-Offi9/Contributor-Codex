@@ -2,7 +2,7 @@ const errors = require('./errors');
 const { esc, CHAKRA_PETCH_FONT_FACE, DISPLAY, svgReply, sanitizeColor, contrastRatio, mixColors, luminance } = require('./shared');
 
 const FONT = DISPLAY;
-const THEMES = ['cyberpunk', 'glass', 'terminal'];
+const THEMES = ['cyberpunk', 'glass', 'terminal', 'holo'];
 const sanitizeTheme = (input, fallback = 'cyberpunk') => {
   const v = String(input || '').toLowerCase();
   return THEMES.includes(v) ? v : fallback;
@@ -12,6 +12,7 @@ const PALETTE = {
   cyberpunk: { bg: '#05070c', text: '#e8edf5', sub: '#c3cadb', dim: '#8a94ab', track: '#1b2233', rule: '#1b2233' },
   glass:     { bg: '#f4f6fb', text: '#1c2333', sub: '#3d4760', dim: '#7b8499', track: '#dfe5f1', rule: '#c9d0e0' },
   terminal:  { bg: '#000000', text: '#d8f5d8', sub: '#b6d9b6', dim: '#7da07d', track: '#12261a', rule: '#16301f' },
+  holo:      { bg: '#04070d', text: '#eef3fa', sub: '#8a95ab', dim: '#5f6b80', track: '#1a2434', rule: '#1c2638' },
 };
 
 function styleFromParams(params, theme) {
