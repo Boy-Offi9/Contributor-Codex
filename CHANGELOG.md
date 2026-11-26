@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.31.0 - 2026-11-26
+
+### Changed
+- Terminal theme identity pass: title bar is now a codex@vercel shell path
+  with the clearance readout on the right, glowing phosphor prompt line,
+  second [OK] boot line (clearance · uptime · tier rank), dotted leaders
+  between keys and values. CRT/phosphor identity unchanged
+
 ## 0.30.0 - 2026-11-26
 
 ### Changed
