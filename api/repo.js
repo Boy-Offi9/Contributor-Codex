@@ -56,48 +56,9 @@ async function latestReleaseTag(owner, repoName, token) {
   }
 }
 
-function renderCyberpunk({ repo, color, fontFace }) {
-  const displayFont = fontFace ? "'Chakra Petch',system-ui,sans-serif" : 'system-ui,sans-serif';
-  const descLines = repo.description ? wrapText(esc(repo.description), 58) : [];
-  const license = licenseOf(repo);
-
-  return `<svg width="420" height="200" viewBox="0 0 420 200" xmlns="http://www.w3.org/2000/svg">
-    <title>${esc(repo.full_name)} — Repository Card</title>
-    <defs>
-      ${fontFace ? `<style>${fontFace}</style>` : ''}
-      <style>
-        .name{font:700 17px ${displayFont};fill:#e8edf5;}
-        .desc{font:400 12px system-ui,sans-serif;fill:#a8b0c2;}
-        .lbl{font:500 10px ${MONO};fill:#7a8399;letter-spacing:1px;}
-        .statVal{font:700 18px ${displayFont};}
-        .chip{font:600 10px ${MONO};fill:#05070c;}
-      </style>
-      <radialGradient id="bg" cx="90%" cy="0%" r="90%">
-        <stop offset="0%" stop-color="${color}" stop-opacity="0.14"/>
-        <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
-      </radialGradient>
-      <clipPath id="cardClip"><polygon points="0,14 14,0 420,0 420,186 406,200 0,200"/></clipPath>
-    </defs>
-    <g clip-path="url(#cardClip)">
-      <rect width="420" height="200" fill="#05070c"/>
-      <rect width="420" height="200" fill="url(#bg)"/>
-    </g>
-    <polygon points="0,14 14,0 420,0 420,186 406,200 0,200" fill="none" stroke="${color}" opacity="0.5"/>
-    <text x="24" y="36" class="name">${esc(repo.name)}</text>
-    <text x="24" y="52" class="desc" fill="#7a8399">${esc(repo.owner.login)}</text>
-    ${descLines.map((line, i) => `<text x="24" y="${118 + i * 16}" class="desc">${line}</text>`).join('')}
-    <text x="24" y="70" class="lbl">STARS</text><text x="24" y="94" class="statVal" fill="${color}">${repo.stargazers_count}</text>
-    <text x="140" y="70" class="lbl">FORKS</text><text x="140" y="94" class="statVal" fill="${color}">${repo.forks_count}</text>
-    <text x="256" y="70" class="lbl">ISSUES</text><text x="256" y="94" class="statVal" fill="${color}">${repo.open_issues_count}</text>
-    ${repo.language ? `<rect x="24" y="164" width="${16 + repo.language.length * 7}" height="20" fill="${color}"/><text x="32" y="178" class="chip">${esc(repo.language)}</text>` : ''}
-    ${license ? `<rect x="${repo.language ? 40 + repo.language.length * 7 : 24}" y="164" width="${16 + license.length * 7}" height="20" fill="none" stroke="#1b2233"/><text x="${repo.language ? 48 + repo.language.length * 7 : 32}" y="178" class="chip" fill="#7a8399">${esc(license)}</text>` : ''}
-  </svg>`;
-}
-
-
-// holo: SciFi UI kit HUD language (chamfered panel, triple-stroke glow,
+// cyberpunk (sci-fi HUD language (chamfered panel, triple-stroke glow,
 // scanlines, corner brackets, traveling border light) applied to repo cards
-function renderHoloRepo({ repo, color, fontFace }) {
+function renderCyberpunk({ repo, color, fontFace }) {
   const displayFont = fontFace ? "'Chakra Petch',system-ui,sans-serif" : 'system-ui,sans-serif';
   const descLines = repo.description ? wrapText(esc(repo.description), 58) : [];
   const license = licenseOf(repo);
@@ -164,6 +125,7 @@ function mix(a, b, f) {
   const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
   return '#' + pa.map((v, i) => Math.round(v + (pb[i] - v) * f).toString(16).padStart(2, '0')).join('');
 }
+
 
 function renderTerminal({ repo }) {
   const green = '#3ddc6a';
@@ -305,7 +267,7 @@ function statBox(x, y, label, value, color) {
     <text x="${x + 12}" y="${y + 46}" font-family="system-ui,sans-serif" font-weight="700" font-size="18" fill="${color}">${value}</text>`;
 }
 
-const THEMES = { holo: renderHoloRepo, cyberpunk: renderCyberpunk, terminal: renderTerminal, glass: renderGlass, detailed: renderDetailed };
+const THEMES = { cyberpunk: renderCyberpunk, terminal: renderTerminal, glass: renderGlass, detailed: renderDetailed };
 
 function svg(body, status, cacheControl) {
   return svgReply(body, status, cacheControl);
@@ -322,7 +284,7 @@ module.exports.GET = async (request) => {
   if (!isGhName(owner) || !isGhRepo(repoName)) return svg(errorSVG('invalid owner or repo'), 400);
 
   const requestedTheme = url.searchParams.get('theme');
-  const render = THEMES[requestedTheme] || THEMES.holo;
+  const render = THEMES[requestedTheme] || THEMES.cyberpunk;
 
   const token = process.env.GITHUB_TOKEN;
   try {

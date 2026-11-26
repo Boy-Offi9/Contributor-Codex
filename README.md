@@ -64,7 +64,7 @@ Then make it yours:
 
 | Endpoint | Renders |
 |---|---|
-| [`/api/card`](docs/API.md#contributor-card) | A user's profile as a card, in five themes (holo is the default — starship-HUD style from scifi-ui-kit) |
+| [`/api/card`](docs/API.md#contributor-card) | A user's profile as a card, in four themes (cyberpunk is the default — starship-HUD style from scifi-ui-kit) |
 | [`/api/leaderboard`](docs/API.md#team-leaderboard) | An organization's public members, ranked |
 | [`/api/repo`](docs/API.md#repository-card) | A repository's vital signs |
 | [`/api/trophies`](docs/API.md#achievements) | Twelve tiered achievements in six badge shapes, plus an optional custom one |

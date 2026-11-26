@@ -1,90 +1,186 @@
-const { esc, colorForLang, icon, avatarShape, truncate, MONO, classFor, clearanceFor, XP_FORMULA } = require('../shared');
+const { esc, MONO, classFor, clearanceFor, XP_FORMULA, icon , truncate } = require('../shared');
 
-function statBar(y, label, value, max, color, iconName) {
-  const pct = Math.max(4, Math.min(100, Math.round((value / max) * 100)));
-  return `
-    ${iconName ? icon(iconName, 28, y - 10, color) : ''}
-    <text x="${iconName ? 46 : 28}" y="${y}" class="lbl">${label}</text>
-    <text x="332" y="${y}" text-anchor="end" class="lbl" filter="url(#glow)">${value}</text>
-    <rect x="28" y="${y + 6}" width="304" height="4" fill="#1b2233"/>
-    <rect x="28" y="${y + 6}" width="${(304 * pct) / 100}" height="4" fill="${color}" filter="url(#glow)"/>
-    <rect x="28" y="${y + 6}" width="${(304 * pct) / 100}" height="1" fill="#ffffff" opacity="0.3"/>`;
+// Design language ported from the SciFi UI kit (boy-offi9-inc/scifi-ui-kit):
+// HudFramePainter (chamfered panel, triple-stroke glow, scanlines, corner
+// brackets, traveling border light), Radar.kt (sweep trail, ticks, dashed
+// rings), SciFiPalette (accent 00E5FF / secondary FF2D6F / dim 7FB8C4).
+
+const PALETTE = { accent: '#00E5FF', secondary: '#FF2D6F', dim: '#7FB8C4', bg: '#05080C', text: '#E8FDFF' };
+const CHAMFER = 18;
+
+function mixHex(a, b, f) {
+  const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
+  const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
+  return '#' + pa.map((v, i) => Math.round(v + (pb[i] - v) * f).toString(16).padStart(2, '0')).join('');
 }
 
+// Segment arc gauge (starship instrumentation, not a flat bar)
+function arcGauge(cx, cy, r, startDeg, sweepDeg, pct, color) {
+  const pts = 14;
+  const segs = [];
+  const lit = Math.round(pts * pct);
+  for (let i = 0; i < pts; i++) {
+    const a0 = ((startDeg + (sweepDeg / pts) * i) * Math.PI) / 180;
+    const a1 = ((startDeg + (sweepDeg / pts) * (i + 1) - 2) * Math.PI) / 180;
+    const rf = r + (i < lit ? 2.5 : 0);
+    segs.push(
+      `<path d="M${(cx + r * Math.cos(a0)).toFixed(1)} ${(cy + r * Math.sin(a0)).toFixed(1)} A${r} ${r} 0 0 1 ${(cx + rf * Math.cos(a1)).toFixed(1)} ${(cy + rf * Math.sin(a1)).toFixed(1)}" fill="none" stroke="${i < lit ? color : '#14202c'}" stroke-width="${i < lit ? 3.5 : 2.5}" stroke-linecap="butt"${i < lit ? ' filter="url(#glow)"' : ''}/>`
+    );
+  }
+  return segs.join('');
+}
+
+function polar(cx, cy, r, deg) {
+  const a = (deg * Math.PI) / 180;
+  return `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`;
+}
 
 function renderCyberpunk({ user, avatarUri, shape, topLang, level, xp, totalStars, tier, color, fontFace }) {
   const name = esc(truncate(user.name || user.login, 22));
-  const classLabel = `${classFor(topLang)}${topLang ? ' · ' + topLang : ''}`;
+  const cls = classFor(topLang);
+  const clearance = clearanceFor(tier);
   const displayFont = fontFace ? "'Chakra Petch',system-ui,sans-serif" : 'system-ui,sans-serif';
-  const shimmer = tier === 'LEGENDARY' ? `
-    <rect x="-400" y="0" width="200" height="360" fill="#ffffff" opacity="0.08" transform="rotate(20)">
-      <animateTransform attributeName="transform" type="translate" from="-400 0" to="760 0" dur="2.4s" repeatCount="indefinite"/>
-    </rect>` : '';
+  const accent = color || PALETTE.accent;
+  const hot = mixHex(accent, PALETTE.secondary, 0.65); // kit secondary, tinted by the accent
+  const bracketCol = mixHex(accent, '#ffffff', 0.55);
+  const sweepCol = mixHex(accent, '#ffffff', 0.8);
+  const cx = 180, cy = 126, R = 52;
+
+  const pct = Math.max(0.04, Math.min(1, (xp % 1000) / 1000));
+
+  // Radar sweep with a degree-based fading trail (Radar.kt trailDeg=95)
+  const trailDeg = 95;
+  const trail = [];
+  const STEPS = 7;
+  for (let i = 0; i < STEPS; i++) {
+    const a0 = -trailDeg + (trailDeg / STEPS) * i;
+    const a1 = -trailDeg + (trailDeg / STEPS) * (i + 1);
+    trail.push(`<path d="M${cx} ${cy} L${polar(cx, cy, R - 6, a0)} A${R - 6} ${R - 6} 0 0 1 ${polar(cx, cy, R - 6, a1)} Z" fill="${accent}" opacity="${(0.05 + (0.14 * (i + 1)) / STEPS).toFixed(3)}"/>`);
+  }
+  const sweep = `
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="3.2s" repeatCount="indefinite"/>
+      ${trail.join('')}
+      <line x1="${cx}" y1="${cy}" x2="${polar(cx, cy, R - 6, 0).split(',')[0]}" y2="${polar(cx, cy, R - 6, 0).split(',')[1]}" stroke="${sweepCol}" stroke-width="1.2" opacity="0.9"/>
+    </g>`;
+
+  // 48 reticle ticks (Radar.kt ticks=48), cardinals brighter
+  const ticks = [];
+  for (let d = 0; d < 360; d += 360 / 48) {
+    const major = d % 90 === 0;
+    ticks.push(`<line x1="${polar(cx, cy, R + (major ? 0 : 2), d).split(',')[0]}" y1="${polar(cx, cy, R + (major ? 0 : 2), d).split(',')[1]}" x2="${polar(cx, cy, R + (major ? 9 : 6), d).split(',')[0]}" y2="${polar(cx, cy, R + (major ? 9 : 6), d).split(',')[1]}" stroke="${accent}" stroke-width="${major ? 1.4 : 0.7}" opacity="${major ? 0.9 : 0.45}"/>`);
+  }
+
+  // Kit brackets: long, top-right + bottom-left only
+  const framePts = `${CHAMFER},0 360,0 360,${360 - CHAMFER} ${360 - CHAMFER},360 0,360 0,${CHAMFER}`;
+  // Perimeter of the chamfered frame (for the traveling light segment)
+  const ch2 = CHAMFER * (2 - Math.SQRT2);
+  const per = 2 * (360 + 360) - 2 * (2 * CHAMFER) + 2 * CHAMFER * Math.SQRT2;
+  const seg = (per * 0.14).toFixed(1);
+  const gap = (per - seg).toFixed(1);
+
+  // Static scanlines every 6px at 10% alpha (HudFramePainter), plus a roaming band
+  const scanlines = Array.from({ length: 58 }, (_, i) => `<line x1="${CHAMFER - 4}" y1="${i * 6}" x2="${360 - CHAMFER + 4}" y2="${i * 6}" stroke="${accent}" stroke-width="1" opacity="0.07"/>`).join('');
+  const scanBand = `
+    <rect x="0" y="-10" width="360" height="7" fill="${accent}" opacity="0.10">
+      <animate attributeName="y" from="-10" to="360" dur="5.5s" repeatCount="indefinite"/>
+    </rect>`;
+
+  const stat = (y, label, value, iconName, isSecondary) => `
+    <g>
+      ${icon(iconName, 26, y - 9, isSecondary ? hot : accent, 1)}
+      <text x="44" y="${y}" font-family="${MONO}" font-size="9" letter-spacing="2" fill="${PALETTE.dim}" opacity="0.85">${label}</text>
+      <text x="334" y="${y}" text-anchor="end" font-family="${MONO}" font-size="12" font-weight="700" fill="${PALETTE.text}">${value}</text>
+      <path d="M26 ${y + 6} H334" stroke="#122230" stroke-width="1"/>
+      <path d="M26 ${y + 6} h10" stroke="${isSecondary ? hot : accent}" stroke-width="2" filter="url(#glow)"/>
+    </g>`;
 
   return `<svg width="360" height="360" viewBox="0 0 360 360" xmlns="http://www.w3.org/2000/svg">
-    <title>${name} — Contributor Card. XP = ${XP_FORMULA}</title>
-    <defs>
-      ${fontFace ? `<style>${fontFace}</style>` : ''}
-      <style>
-        .t1{font:700 16px ${displayFont};fill:#e8edf5;}
-        .t2{font:500 11px ${MONO};fill:#7a8399;}
-        .lbl{font:500 10px ${MONO};fill:#7a8399;letter-spacing:1px;}
-        .tag{font:700 11px ${MONO};}
-        .cls{font:600 11px ${displayFont};fill:${color};letter-spacing:1px;}
-      </style>
-      <clipPath id="cardClip"><polygon points="0,14 14,0 360,0 360,346 346,360 0,360"/></clipPath>
-      <radialGradient id="bg" cx="15%" cy="0%" r="85%">
-        <stop offset="0%" stop-color="${color}" stop-opacity="0.14"/>
-        <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
-      </radialGradient>
-      <radialGradient id="bg2" cx="95%" cy="100%" r="70%">
-        <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.10"/>
-        <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
-      </radialGradient>
-      <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
-        <path d="M24 0H0V24" fill="none" stroke="${color}" stroke-width="0.5" opacity="0.5"/>
-      </pattern>
-      <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
-        <feGaussianBlur stdDeviation="2.4" result="blur"/>
-        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-    </defs>
+  <title>${name} — contributor card. XP = ${XP_FORMULA}</title>
+  <defs>
+    ${fontFace ? `<style>${fontFace}</style>` : ''}
+    <style>
+      .disp{font:700 17px ${displayFont};fill:${PALETTE.text};}
+      .sub{font:500 11px ${MONO};fill:${PALETTE.dim};}
+      .tag{font:700 9px ${MONO};letter-spacing:2.5px;}
+    </style>
+    <clipPath id="chassis"><polygon points="${framePts}"/></clipPath>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <radialGradient id="vig" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" stop-color="${accent}" stop-opacity="0.09"/>
+      <stop offset="100%" stop-color="${accent}" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="reticle"><circle cx="${cx}" cy="${cy}" r="${R - 5}"/></clipPath>
+  </defs>
 
-    <g clip-path="url(#cardClip)">
-      <rect width="360" height="360" fill="#05070c"/>
-      <rect width="360" height="360" fill="url(#grid)" opacity="0.05"/>
-      <rect width="360" height="360" fill="url(#bg)"/>
-      <rect width="360" height="360" fill="url(#bg2)"/>
-      ${shimmer}
-    </g>
-    <polygon points="0,14 14,0 360,0 360,346 346,360 0,360" fill="none" stroke="#1b2233"/>
-    <polygon points="0,14 14,0 360,0 360,346 346,360 0,360" fill="none" stroke="${color}" opacity="0.5">
-      <animate attributeName="opacity" values="0.4;0.85;0.4" dur="3s" repeatCount="indefinite"/>
-    </polygon>
+  <g clip-path="url(#chassis)">
+    <rect width="360" height="360" fill="${PALETTE.bg}"/>
+    <rect width="360" height="360" fill="url(#vig)"/>
+    ${scanlines}
+    ${scanBand}
+  </g>
 
-    <rect x="20" y="20" width="58" height="20" fill="${color}" filter="url(#glow)"/>
-    <text x="49" y="34" text-anchor="middle" class="tag" fill="#05070c">LV ${level}</text>
-    <rect x="270" y="20" width="70" height="20" fill="none" stroke="${color}"/>
-    <text x="305" y="34" text-anchor="middle" class="tag" fill="${color}">${tier}</text>
+  <!-- chamfered panel: kit triple-stroke glow (wide faint to narrow bright) -->
+  <polygon points="${framePts}" fill="${accent}" fill-opacity="0.04"/>
+  <polygon points="${framePts}" fill="none" stroke="${accent}" stroke-opacity="0.08" stroke-width="6"/>
+  <polygon points="${framePts}" fill="none" stroke="${accent}" stroke-opacity="0.18" stroke-width="3.4"/>
+  <polygon points="${framePts}" fill="none" stroke="${accent}" stroke-opacity="0.9" stroke-width="1.4"/>
+  <!-- traveling border light, 14% of perimeter, 3.2s period (HudFramePainter sweep) -->
+  <polygon points="${framePts}" fill="none" stroke="${sweepCol}" stroke-width="2.2" stroke-dasharray="${seg} ${gap}">
+    <animate attributeName="stroke-dashoffset" from="${per.toFixed(1)}" to="0" dur="3.2s" repeatCount="indefinite"/>
+  </polygon>
+  <!-- kit corner brackets: top-right + bottom-left only -->
+  <g fill="none" stroke="${bracketCol}" stroke-width="2.8" stroke-linecap="square">
+    <path d="M${360 - 44} 2 H358 V${2 + 44}"/>
+    <path d="M44 358 H2 V${358 - 44}"/>
+  </g>
 
-    <g transform="translate(144,54)">
-      ${avatarShape({ id: 'avatar', shape, size: 72, uri: avatarUri, ring: color, bg: '#1b2233', glow: true })}
-    </g>
+  <!-- header readouts -->
+  <g font-family="${MONO}" class="tag">
+    <path d="M24 10 h9 M24 10 v9" stroke="${accent}" stroke-width="1.4" opacity="0.9"/>
+    <rect x="30" y="14" width="86" height="15" fill="none" stroke="${accent}" stroke-opacity="0.55"/>
+    <text x="37" y="25.5" fill="${accent}" font-size="9" letter-spacing="2.5">LV.${String(level).padStart(2, '0')}</text>
+    <text x="332" y="25.5" text-anchor="end" fill="${hot}" font-size="9" letter-spacing="2.5">${esc(tier)}</text>
+    <text x="332" y="38" text-anchor="end" fill="${PALETTE.dim}" opacity="0.8" font-size="8" letter-spacing="1.5">${esc(clearance)}</text>
+    <text x="334" y="53" text-anchor="end" fill="${PALETTE.dim}" opacity="0.5" font-size="7" letter-spacing="1.5">SIG 0x${(xp % 65536).toString(16).toUpperCase().padStart(4, '0')}</text>
+  </g>
 
-    <text x="180" y="156" text-anchor="middle" class="t1">${name}</text>
-    <text x="180" y="174" text-anchor="middle" class="t2">@${esc(user.login)}</text>
-    <text x="180" y="194" text-anchor="middle" class="cls">${esc(classLabel.toUpperCase())}</text>
+  <!-- HUD reticle + avatar -->
+  <circle cx="${cx}" cy="${cy}" r="${R + 12}" fill="${accent}" fill-opacity="0.03"/>
+  <circle cx="${cx}" cy="${cy}" r="${R + 12}" fill="none" stroke="#152430" stroke-width="1" stroke-dasharray="4 5"/>
+  ${arcGauge(cx, cy, R + 17, 130, 280, pct, accent)}
+  ${ticks.join('')}
+  ${sweep}
+  <circle cx="${cx}" cy="${cy}" r="${R - 5}" fill="#070d16"/>
+  ${avatarUri ? `<image href="${avatarUri}" x="${cx - R + 5}" y="${cy - R + 5}" width="${2 * R - 10}" height="${2 * R - 10}" preserveAspectRatio="xMidYMid slice" clip-path="url(#reticle)"/>` : ''}
+  <circle cx="${cx}" cy="${cy}" r="${R - 5}" fill="none" stroke="${accent}" stroke-width="1.6" filter="url(#glow)"/>
+  <line x1="${cx - R - 16}" y1="${cy}" x2="${cx - R - 4}" y2="${cy}" stroke="${accent}" stroke-width="1.2" opacity="0.85"/>
+  <line x1="${cx + R + 4}" y1="${cy}" x2="${cx + R + 16}" y2="${cy}" stroke="${accent}" stroke-width="1.2" opacity="0.85"/>
+  <circle cx="${cx}" cy="${cy}" r="2" fill="${accent}"/>
 
-    ${statBar(224, 'REPOS', user.public_repos || 0, 60, color, 'repo')}
-    ${statBar(254, 'STARS', totalStars, 200, color, 'star')}
-    ${statBar(284, 'FOLLOWERS', user.followers || 0, 200, color, 'people')}
+  <!-- identity block -->
+  <text x="180" y="220" text-anchor="middle" class="disp">${name}</text>
+  <text x="180" y="236" text-anchor="middle" class="sub">@${esc(user.login)}</text>
+  <g font-family="${MONO}">
+    <path d="M118 250 l-6 6 6 6 M242 250 l6 6 -6 6" fill="none" stroke="${accent}" stroke-width="1" opacity="0.6"/>
+    <text x="180" y="260" text-anchor="middle" font-size="10" font-weight="700" letter-spacing="3" fill="${accent}" filter="url(#glow)">${esc(cls)}${topLang ? ' · ' + esc(topLang.toUpperCase()) : ''}</text>
+  </g>
 
-    <line x1="28" y1="312" x2="332" y2="312" stroke="#1b2233" stroke-dasharray="3,3"/>
-    ${icon('bolt', 28, 326, color)}
-    <text x="46" y="336" class="lbl">XP<title>${XP_FORMULA}</title></text>
-    <text x="332" y="336" text-anchor="end" class="t1" filter="url(#glow)">${xp.toLocaleString()}</text>
-  </svg>`;
+  <!-- telemetry rows -->
+  ${stat(286, 'REPOSITORIES', user.public_repos ?? '—', 'repo')}
+  ${stat(307, 'STARS EARNED', totalStars ?? '—', 'star')}
+  ${stat(328, 'FOLLOWERS', user.followers ?? '—', 'people')}
+
+  <!-- XP footer -->
+  <g font-family="${MONO}">
+    <text x="240" y="352" text-anchor="start" font-size="9" letter-spacing="2" fill="${PALETTE.dim}">XP</text>
+    <text x="262" y="352" text-anchor="start" font-size="11" font-weight="700" fill="${accent}" filter="url(#glow)">${(xp ?? 0).toLocaleString('en-US')}</text>
+    <text x="334" y="352" text-anchor="end" font-size="8" fill="${PALETTE.dim}" opacity="0.7">${Math.round(pct * 100)}%</text>
+  </g>
+</svg>`;
 }
-
 
 module.exports = renderCyberpunk;

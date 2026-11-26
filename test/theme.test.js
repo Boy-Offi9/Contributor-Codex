@@ -24,7 +24,7 @@ test('colour params: valid ones pass, junk is dropped, unreadable text is ignore
 test('paletteFor picks readable text for a custom background and never mutates the theme', () => {
   const light = paletteFor('cyberpunk', { bg: '#fdf6e3' });
   assert.ok(contrastRatio(light.text, light.bg) >= 4.5, 'auto text must contrast with a light bg');
-  assert.equal(paletteFor('cyberpunk').bg, '#05070c');
+  assert.equal(paletteFor('cyberpunk').bg, '#04070d');
   assert.equal(paletteFor('cyberpunk', { border: '#89b4fa' }).rule, '#89b4fa');
 });
 test('mixColors endpoints', () => {
@@ -40,8 +40,8 @@ test('SVG responses: hardened headers and accessible root', () => {
   assert.match(a11y('<svg width="1"></svg>'), /^<svg role="img" width="1">/);
 });
 
-test('holo theme: renders a valid instrumented card', () => {
-  const renderHolo = require('../api/_lib/themes/holo');
+test('cyberpunk theme: renders a valid instrumented card', () => {
+  const renderHolo = require('../api/_lib/themes/cyberpunk');
   const svg = renderHolo({
     user: { login: 'Boy-Offi9', name: 'Boy Offi9', public_repos: 42, followers: 310 },
     level: 12, xp: 8420, totalStars: 1240, topLang: 'TypeScript',
@@ -56,8 +56,8 @@ test('holo theme: renders a valid instrumented card', () => {
   assert.ok(!svg.includes('undefined'), 'no undefined leaked into markup');
 });
 
-test('holo theme: hostile login is escaped, missing fields fall back', () => {
-  const renderHolo = require('../api/_lib/themes/holo');
+test('cyberpunk theme: hostile login is escaped, missing fields fall back', () => {
+  const renderHolo = require('../api/_lib/themes/cyberpunk');
   const svg = renderHolo({
     user: { login: '<script>x', name: null }, level: 1, xp: 0, totalStars: 0,
     color: '#ff0055', tier: 'ROOKIE', shape: 'circle', avatarUri: '', fontFace: '',
@@ -96,8 +96,8 @@ test('leaderboard class label: lang names escape exactly once', () => {
   // the fix: label built raw, escaped once at interpolation — see leaderboard.js line ~74
 });
 
-test('holo theme: long display names are truncated', () => {
-  const renderHolo = require('../api/_lib/themes/holo');
+test('cyberpunk theme: long display names are truncated', () => {
+  const renderHolo = require('../api/_lib/themes/cyberpunk');
   const svg = renderHolo({
     user: { login: 'x', name: 'N'.repeat(400) }, level: 3, xp: 100, totalStars: 0,
     color: '#00e5ff', tier: 'INITIATE', shape: 'circle', avatarUri: '', fontFace: '',

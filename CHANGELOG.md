@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.24.0 - 2026-11-26
+
+### Changed
+- The `cyberpunk` theme is now the sci-fi HUD card from scifi-ui-kit (formerly
+  shipped as `holo`); the `holo` name is retired — `theme=cyberpunk` is the
+  default for /card and /repo, `theme=holo` falls back to it. Old flat
+  cyberpunk styling is gone.
+
 ## 0.23.1 - 2026-11-26
 
 ### Fixed
