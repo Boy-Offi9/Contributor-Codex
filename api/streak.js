@@ -117,9 +117,28 @@ function debugResponse(cal, streaks, runs) {
     current: streaks.current,
     longest: streaks.longest,
     topStreaks: runs.slice().sort((a, b) => b.length - a.length).slice(0, 5),
-    note: 'Only contributions GitHub exposes to the server token are counted. Private-repo activity appears only if the profile setting "Include private contributions" is on.',
+    note: 'Only contributions the server token can see are counted. Org/private-repo activity appears when you pass your own token (x-github-token header or ?token=).',
   };
   return new Response(JSON.stringify(body, null, 2), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, no-store' } });
+}
+
+
+// Optional per-request token passthrough. GitHub's contribution calendar only
+// counts what the *authenticated viewer* can see — org and private-repo
+// contributions are invisible to the server token, so streaks undercount for
+// users whose work happens in orgs. Supplying your own token (viewer === you)
+// makes GitHub include everything. Header is preferred: it never lands in
+// URLs, access logs or caches. A request with a user token is never cached.
+function pickToken(request, searchParams) {
+  let h = (request && request.headers) || null;
+  let headerToken = null;
+  if (h) {
+    if (typeof h.get === 'function') headerToken = h.get('x-github-token') || null;
+    else if (h.has && h.has('x-github-token')) headerToken = h.get('x-github-token');
+  }
+  const paramToken = (searchParams && searchParams.get('token')) || '';
+  const picked = (headerToken || paramToken).trim();
+  return picked && /^[\w.-]{20,255}$/.test(picked) ? picked : null;
 }
 
 module.exports.GET = async (request) => {
@@ -130,9 +149,10 @@ module.exports.GET = async (request) => {
   const username = (url.searchParams.get('username') || '').trim();
   if (!username) return svgResponse(errorCard('missing ?username='), 400);
   if (!isGhName(username)) return svgResponse(errorCard('invalid username'), 400);
+  const userToken = pickToken(request, url.searchParams);
 
   try {
-    const cal = await fetchCalendar(username, process.env.GITHUB_TOKEN);
+    const cal = await fetchCalendar(username, userToken || process.env.GITHUB_TOKEN);
     const theme = sanitizeTheme(url.searchParams.get('theme'));
     const style = styleFromParams(url.searchParams, theme);
     const accentTheme = style.bg ? (luminance(style.bg) > 0.4 ? 'glass' : 'dark') : theme;
@@ -152,9 +172,10 @@ module.exports.GET = async (request) => {
       avatarUri: profile && cal.avatarUrl ? await avatarDataUri(cal.avatarUrl) : null,
       style,
     };
-    return svgResponse(render({ user: cal, streaks, color, theme, opts }), 200, CACHE_OK);
+    return svgResponse(render({ user: cal, streaks, color, theme, opts }), 200, userToken ? 'no-store' : CACHE_OK);
   } catch (err) {
     return githubErrorCard(err, username, 'streaks');
   }
 };
 module.exports.computeStreaks = computeStreaks;
+module.exports.pickToken = pickToken;

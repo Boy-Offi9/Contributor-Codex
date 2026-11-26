@@ -261,3 +261,17 @@ test('badges that need the calendar or stats explain a missing token', async () 
     process.env.GITHUB_TOKEN = saved;
   }
 });
+
+test('streak token passthrough: header wins, param accepted, junk rejected', async () => {
+  const streak = require('../api/streak.js');
+  const mk = (params) => new URLSearchParams(params);
+  const reqWith = (headers) => ({ url: 'https://x/api/streak?username=a', headers });
+  // header via Headers-like
+  const H = (v) => ({ has: (k) => k === 'x-github-token' && !!v, get: (k) => (k === 'x-github-token' ? v : null) });
+  assert.equal(streak.pickToken(reqWith(H('ghp_aaaaaaaaaaaaaaaaaaaaaaaa')), mk({})), 'ghp_aaaaaaaaaaaaaaaaaaaaaaaa');
+  assert.equal(streak.pickToken(reqWith(H('ghp_headeraaaaaaaaaaaaaaaaaaa')), mk({ token: 'ghp_paramaaaaaaaaaaaaaaaaaaaa' })), 'ghp_headeraaaaaaaaaaaaaaaaaaa');
+  assert.equal(streak.pickToken(reqWith(H(null)), mk({ token: 'ghp_paramaaaaaaaaaaaaaaaaaaaa' })), 'ghp_paramaaaaaaaaaaaaaaaaaaaa');
+  assert.equal(streak.pickToken(reqWith(H(null)), mk({})), null);
+  assert.equal(streak.pickToken(reqWith(H('short')), mk({})), null);
+  assert.equal(streak.pickToken(reqWith(H('bad token with spaces')), mk({})), null);
+});

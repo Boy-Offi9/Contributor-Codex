@@ -177,6 +177,20 @@ Total contributions, the current streak (with a progress ring relative to your p
 
 ```md
 ![Streak](https://contributor-codex.vercel.app/api/streak?username=octocat)
+
+#### Seeing org & private contributions
+
+GitHub only counts contributions the *authenticated viewer* can see. The
+server token cannot see your org or private repos, so streaks and totals
+undercount when your work happens there. Pass **your own** token to see the
+real numbers:
+
+- Header (preferred — never lands in URLs or logs): `x-github-token: <token>`
+- Query param (for `<img>` embeds where headers are impossible): `&token=<token>`
+
+Requests carrying a user token are never cached (`no-store`). The token is
+used only for that request and is never echoed back. Only do this on pages
+you control — anyone who can see the rendered page source can read the URL.
 ```
 
 - Counts GitHub's own contribution calendar (the green squares), in UTC days, across every year the account has been active. The total's date range starts on the account's join date ("since day one"), not on its first contribution.

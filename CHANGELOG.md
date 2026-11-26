@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.29.0 - 2026-11-26
+
+### Added
+- Streak endpoint: per-request token passthrough (`x-github-token` header or
+  `token` param). GitHub only counts contributions visible to the
+  authenticated viewer, so org/private-repo streaks undercounted (real case:
+  52-day streak reported as 29). A user token makes GitHub include everything;
+  such responses are never cached
+
 ## 0.28.0 - 2026-11-26
 
 ### Changed
