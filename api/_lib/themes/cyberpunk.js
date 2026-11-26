@@ -50,12 +50,12 @@ function renderCyberpunk({ user, avatarUri, shape, topLang, level, xp, years, to
   const shareSum = topLangs.reduce((sum, l) => sum + l.pct, 0) || 1;
 
   // dynamic height: header(150) + identity(72) + telemetry(2 rows) + langs + activity + xp
-  const telemetryY = 268;
-  const langY = telemetryY + 74;
+  const telemetryY = 276;
+  const langY = telemetryY + 84;
   const legendRows = Math.ceil(topLangs.length / 3);
   const langBlockH = topLangs.length ? 44 + legendRows * 16 : 0;
   const activityY = langY + langBlockH + (topLangs.length ? 26 : 10);
-  const height = activityY + 92;
+  const height = activityY + 98;
 
   const W = 360;
   const framePts = `${CHAMFER},0 ${W},0 ${W},${height - CHAMFER} ${W - CHAMFER},${height} 0,${height} 0,${CHAMFER}`;
@@ -88,10 +88,10 @@ function renderCyberpunk({ user, avatarUri, shape, topLang, level, xp, years, to
 
   const cell = (x, y, label, value, iconName, isSecondary) => `
     <g>
-      ${icon(iconName, x, y - 18, isSecondary ? hot : accent, 1)}
-      <text x="${x + 18}" y="${y - 14}" font-family="${MONO}" font-size="8.5" letter-spacing="1.5" fill="${PALETTE.dim}" opacity="0.85">${label}</text>
-      <text x="${x}" y="${y + 2}" font-family="${displayFont}" font-size="16" font-weight="700" fill="${PALETTE.text}">${value}</text>
-      <path d="M${x} ${y + 10} H${x + 150}" stroke="#122230" stroke-width="1"/>
+      ${icon(iconName, x, y - 24, isSecondary ? hot : accent, 1)}
+      <text x="${x + 18}" y="${y - 20}" font-family="${MONO}" font-size="8.5" letter-spacing="1.5" fill="${PALETTE.dim}" opacity="0.85">${label}</text>
+      <text x="${x}" y="${y + 4}" font-family="${displayFont}" font-size="16" font-weight="700" fill="${PALETTE.text}">${value}</text>
+      <path d="M${x} ${y + 14} H${x + 150}" stroke="#122230" stroke-width="1"/>
     </g>`;
 
   // lang distribution bar
@@ -187,10 +187,10 @@ function renderCyberpunk({ user, avatarUri, shape, topLang, level, xp, years, to
     <text x="24" y="${telemetryY - 14}" font-size="8.5" letter-spacing="2" fill="${PALETTE.dim}" opacity="0.6">TELEMETRY</text>
     <path d="M92 ${telemetryY - 17} H336" stroke="#1a2434"/>
   </g>
-  ${cell(24, telemetryY + 12, 'REPOSITORIES', (user.public_repos ?? 0).toLocaleString('en-US'), 'repo')}
-  ${cell(186, telemetryY + 12, 'STARS EARNED', (totalStars ?? 0).toLocaleString('en-US'), 'star')}
-  ${cell(24, telemetryY + 46, 'FORKS EARNED', (totalForks ?? 0).toLocaleString('en-US'), 'fork')}
-  ${cell(186, telemetryY + 46, 'FOLLOWERS', (user.followers ?? 0).toLocaleString('en-US'), 'people')}
+  ${cell(24, telemetryY + 16, 'REPOSITORIES', (user.public_repos ?? 0).toLocaleString('en-US'), 'repo')}
+  ${cell(186, telemetryY + 16, 'STARS EARNED', (totalStars ?? 0).toLocaleString('en-US'), 'star')}
+  ${cell(24, telemetryY + 52, 'FORKS EARNED', (totalForks ?? 0).toLocaleString('en-US'), 'fork')}
+  ${cell(186, telemetryY + 52, 'FOLLOWERS', (user.followers ?? 0).toLocaleString('en-US'), 'people')}
 
   <!-- language distribution -->
   ${topLangs.length ? `
@@ -207,10 +207,10 @@ function renderCyberpunk({ user, avatarUri, shape, topLang, level, xp, years, to
     <text x="24" y="${activityY - 30}" font-size="8.5" letter-spacing="2" fill="${PALETTE.dim}" opacity="0.6">ACTIVITY</text>
     <path d="M92 ${activityY - 33} H336" stroke="#1a2434"/>
   </g>
-  ${actStat(24, activityY + 12, 'PULL REQUESTS', (prs ?? '—').toLocaleString('en-US'), 'pr')}
-  ${actStat(186, activityY + 12, 'ISSUES', (issues ?? '—').toLocaleString('en-US'), 'issue')}
-  ${actStat(24, activityY + 46, 'ACCOUNT AGE', years != null ? Math.floor(years) + 'y' : '—', 'calendar')}
-  ${actStat(186, activityY + 46, 'TOP LANGUAGE', topLang ? esc(topLang).toUpperCase().slice(0, 12) : '—', 'code')}
+  ${actStat(24, activityY + 16, 'PULL REQUESTS', (prs ?? '—').toLocaleString('en-US'), 'pr')}
+  ${actStat(186, activityY + 16, 'ISSUES', (issues ?? '—').toLocaleString('en-US'), 'issue')}
+  ${actStat(24, activityY + 52, 'ACCOUNT AGE', years != null ? Math.floor(years) + 'y' : '—', 'calendar')}
+  ${actStat(186, activityY + 52, 'TOP LANGUAGE', topLang ? esc(topLang).toUpperCase().slice(0, 12) : '—', 'code')}
 
   <!-- XP footer -->
   <g font-family="${MONO}">

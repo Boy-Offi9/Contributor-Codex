@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.26.1 - 2026-11-26
+
+### Fixed
+- Cyberpunk dossier: stat icons no longer overlap the value digits (labels and
+  values separated); row spacing rebalanced
+- Codex card rebuilt on the kit HUD chassis — chamfered frame, layered glow,
+  scanlines with scan band, corner brackets, traveling border light (was a
+  single-stroke old-style panel that didn't match the theme)
+
 ## 0.26.0 - 2026-11-26
 
 ### Changed

@@ -64,7 +64,18 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape,
   const langChips = topLangs.slice(0, 5);
   const height = langChips.length ? langsY + 56 : langsY + 4;
 
-  const outline = `0,14 14,0 ${WIDTH},0 ${WIDTH},${height - 14} ${WIDTH - 14},${height} 0,${height}`;
+  // kit HUD chassis (scifi-ui-kit HudFramePainter)
+  const CH = 14;
+  const outline = `${CH},0 ${WIDTH},0 ${WIDTH},${height - CH} ${WIDTH - CH},${height} 0,${height} 0,${CH}`;
+  const mixC = (a, b, f) => {
+    const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
+    const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
+    return '#' + pa.map((v, i) => Math.round(v + (pb[i] - v) * f).toString(16).padStart(2, '0')).join('');
+  };
+  const bracketCol = mixC(color, '#ffffff', 0.55);
+  const sweepCol = mixC(color, '#ffffff', 0.8);
+  const per = 2 * (WIDTH + height) - 2 * (2 * CH) + 2 * CH * Math.SQRT2;
+  const seg = per * 0.14;
   const avatarX = 20;
   const textX = 104;
 
@@ -92,11 +103,23 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape,
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
-    <polygon points="${outline}" fill="#05070c"/>
-    <polygon points="${outline}" fill="url(#grid)"/>
+    <polygon points="${outline}" fill="#04070d"/>
     <polygon points="${outline}" fill="url(#bg)"/>
     <polygon points="${outline}" fill="url(#bg2)"/>
-    <polygon points="${outline}" fill="none" stroke="${color}" opacity="0.5"/>
+    ${Array.from({ length: Math.ceil(height / 6) }, (_, i) => `<line x1="10" y1="${i * 6}" x2="${WIDTH - 10}" y2="${i * 6}" stroke="${color}" stroke-width="1" opacity="0.06"/>`).join('')}
+    <rect x="0" y="-8" width="${WIDTH}" height="6" fill="${color}" opacity="0.08">
+      <animate attributeName="y" from="-8" to="${height}" dur="6s" repeatCount="indefinite"/>
+    </rect>
+    <polygon points="${outline}" fill="none" stroke="${color}" stroke-opacity="0.08" stroke-width="6"/>
+    <polygon points="${outline}" fill="none" stroke="${color}" stroke-opacity="0.18" stroke-width="3.2"/>
+    <polygon points="${outline}" fill="none" stroke="${color}" stroke-opacity="0.9" stroke-width="1.3"/>
+    <polygon points="${outline}" fill="none" stroke="${sweepCol}" stroke-width="2" stroke-dasharray="${seg.toFixed(1)} ${(per - seg).toFixed(1)}">
+      <animate attributeName="stroke-dashoffset" from="${per.toFixed(1)}" to="0" dur="3.2s" repeatCount="indefinite"/>
+    </polygon>
+    <g fill="none" stroke="${bracketCol}" stroke-width="2.6" stroke-linecap="square">
+      <path d="M${WIDTH - 36} 2 H${WIDTH - 2} V36"/>
+      <path d="M36 ${height - 2} H2 V${height - 36}"/>
+    </g>
 
     <g transform="translate(${avatarX},14)">${avatarShape({ id: 'avatar', shape: avatarFrame, size: 68, uri: avatarUri, ring: color, bg: '#1b2233', glow: true })}</g>
     <text x="${textX}" y="36" font-family="${displayFont}" font-weight="700" font-size="19" fill="#e8edf5">${name}</text>
