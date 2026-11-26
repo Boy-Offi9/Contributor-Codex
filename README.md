@@ -82,7 +82,7 @@ Full parameters, defaults, errors, and caching are in the **[API reference](docs
 - **`cyberpunk`** — level, XP, a tier from INITIATE to LEGENDARY, and a character class drawn from your top language.
 - **`terminal`** — a `scan.sh` session, a clearance rung from `SCRIPT KIDDIE` to `ROOT`, and a hex checksum instead of a score.
 - **`glass`** — frosted panels and a language donut, with no level, XP, or rank.
-- **`detailed`** — a letter-grade rank gauge, six stats, and a proportional language bar.
+- **`detailed`** — a letter-grade rank gauge, six stats, and a proportional language bar. It doubles as the base card: `&skin=cyberpunk` / `terminal` / `glass` re-render the same dossier in that design language.
 
 Every avatar can be a `hex`, `circle`, `rounded`, or `square` frame. The reasoning behind all of it is in the **[design notes](docs/DESIGN.md)**.
 

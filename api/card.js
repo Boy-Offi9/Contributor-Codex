@@ -4,6 +4,7 @@ const { sanitizeColor, CHAKRA_PETCH_FONT_FACE, svgReply, readableAccent, MONO, s
 const { isGhName, loadUserWithRepos, avatarDataUri, byteWeightedLangs, prIssueCounts } = require('./_lib/github');
 const { computeStats } = require('./_lib/game');
 const { THEMES, THEME_SHAPE } = require('./_lib/themes');
+const { SKINS } = require('./_lib/themes/skins');
 
 const errorSVG = (message) => errors.errorSVG({ width: 360, title: 'CARD ERROR', message, messageFont: MONO, messageSize: 11, messageFill: '#8a95ab' });
 
@@ -22,6 +23,9 @@ module.exports.GET = async (request) => {
   const themeName = THEMES[requestedTheme] ? requestedTheme : 'cyberpunk';
   const render = THEMES[themeName];
   const shape = sanitizeShape(url.searchParams.get('shape'), THEME_SHAPE[themeName]);
+  // skin param only applies to the detailed base card; anything else falls back to classic
+  const skinParam = url.searchParams.get('skin');
+  const skinName = themeName === 'detailed' && Object.prototype.hasOwnProperty.call(SKINS, skinParam) ? skinParam : 'classic';
 
   const token = process.env.GITHUB_TOKEN;
   try {
@@ -35,7 +39,7 @@ module.exports.GET = async (request) => {
       stats.langs = langStats.map((l) => l.name);
       stats.topLang = langStats[0].name;
     }
-    const colorOverride = readableAccent(sanitizeColor(url.searchParams.get('color')), themeName);
+    const colorOverride = readableAccent(sanitizeColor(url.searchParams.get('color')), skinName === 'glass' ? 'glass' : themeName);
     if (colorOverride) stats.color = colorOverride;
 
     let prs = null, issues = null;
@@ -43,7 +47,7 @@ module.exports.GET = async (request) => {
       ({ prs, issues } = await prIssueCounts(username, token));
     }
 
-    return svg(render({ user, avatarUri, shape, fontFace, langStats, prs, issues, ...stats }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=604800');
+    return svg(render({ user, avatarUri, shape, fontFace, langStats, prs, issues, ...stats, skin: skinName }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=604800');
   } catch (err) {
     if (err.status === 404) return svg(errorSVG(`user "${username}" not found`), 404, 'public, s-maxage=10');
     if (err.status === 429) return svg(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=10');

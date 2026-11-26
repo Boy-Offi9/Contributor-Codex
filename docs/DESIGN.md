@@ -30,6 +30,8 @@ Contributor Codex treats GitHub data as raw material for a visual identity, not 
 
 The `detailed` theme also exists on the Repository Card, where it is a denser layout of repository facts rather than a rank dossier.
 
+The Contributor Card's `detailed` theme is the **base card**: its layout engine (stat grid, rank gauge, language bar) is independent of any visual style, and a `skin` parameter re-renders it in another theme's design language — the kit-HUD chassis for `skin=cyberpunk`, the phosphor CRT frame for `skin=terminal`, the frosted light panel for `skin=glass`, and `skin=classic` (default) for the original look.
+
 ## Avatar shapes
 
 Every avatar — on the Contributor Card and in each leaderboard row — is drawn by one shared helper, `avatarShape()`, so the frame, the clip, and the gap between ring and image are geometrically consistent for every shape:

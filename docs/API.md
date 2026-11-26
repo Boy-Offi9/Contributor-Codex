@@ -28,6 +28,7 @@ A single GitHub user's profile as a card.
 | `theme` | no | `cyberpunk` \| `terminal` \| `glass` \| `detailed` | `cyberpunk` |
 | `color` | no | 6-digit hex, no `#` | the level's tier color (see [Scoring and tiers](#scoring-and-tiers)) |
 | `shape` | no | `hex` \| `circle` \| `rounded` \| `square` | per theme: `hex` (`cyberpunk`), `circle` (`glass`), `rounded` (`detailed`) |
+| `skin` | no | `classic` \| `cyberpunk` \| `terminal` \| `glass` | `classic` (only with `theme=detailed`; anything else renders as `classic`) |
 
 ```md
 ![Card](https://contributor-codex.vercel.app/api/card?username=octocat&theme=detailed&color=ff00aa&shape=rounded)
@@ -38,7 +39,7 @@ Each theme has its own voice — see [Design notes](DESIGN.md#themes). What diff
 - `cyberpunk` shows level, XP, tier, and a language-based class.
 - `terminal` shows a clearance rung and a hex checksum instead of level and XP. It has no avatar, so `shape` has no effect.
 - `glass` shows repos, stars, followers, a language donut, and icon chips for join year and location or company. No level, no XP.
-- `detailed` shows a letter-grade rank gauge, six stats (repos, stars, forks, followers, pull requests, issues), and a proportional language bar with per-language colors.
+- `detailed` shows a letter-grade rank gauge, six stats (repos, stars, forks, followers, pull requests, issues), and a proportional language bar with per-language colors. It is the base card of the four: add `&skin=cyberpunk`, `&skin=terminal`, or `&skin=glass` to render the same dossier in that theme's design language (`skin=classic`, the default, keeps the original look; an unknown skin falls back to `classic`). The other themes are standalone and ignore the parameter.
 
 ## Team Leaderboard
 
