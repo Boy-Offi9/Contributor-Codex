@@ -94,6 +94,77 @@ function renderCyberpunk({ repo, color, fontFace }) {
   </svg>`;
 }
 
+
+// holo: SciFi UI kit HUD language (chamfered panel, triple-stroke glow,
+// scanlines, corner brackets, traveling border light) applied to repo cards
+function renderHoloRepo({ repo, color, fontFace }) {
+  const displayFont = fontFace ? "'Chakra Petch',system-ui,sans-serif" : 'system-ui,sans-serif';
+  const descLines = repo.description ? wrapText(esc(repo.description), 58) : [];
+  const license = licenseOf(repo);
+  const CH = 14, W = 420, H = 200;
+  const framePts = `${CH},0 ${W},0 ${W},${H - CH} ${W - CH},${H} 0,${H} 0,${CH}`;
+  const bracketCol = mix(color, '#ffffff', 0.55);
+  const sweepCol = mix(color, '#ffffff', 0.8);
+  const per = 2 * (W + H) - 2 * (2 * CH) + 2 * CH * Math.SQRT2;
+  const seg = per * 0.14;
+  const scanlines = Array.from({ length: 32 }, (_, i) => `<line x1="${CH - 4}" y1="${i * 6}" x2="${W - CH + 4}" y2="${i * 6}" stroke="${color}" stroke-width="1" opacity="0.07"/>`).join('');
+
+  const stat = (x, label, value) => `
+    <text x="${x}" y="96" font-family="${MONO}" font-size="9" letter-spacing="2" fill="#7fb8c4" opacity="0.85">${label}</text>
+    <text x="${x}" y="120" font-family="${displayFont}" font-size="19" font-weight="700" fill="${color}" filter="url(#rglow)">${Number(value ?? 0).toLocaleString('en-US')}</text>`;
+
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+  <title>${esc(repo.full_name)} — Repository Card</title>
+  <defs>
+    ${fontFace ? `<style>${fontFace}</style>` : ''}
+    <clipPath id="rh"><polygon points="${framePts}"/></clipPath>
+    <filter id="rglow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <radialGradient id="rvig" cx="20%" cy="0%" r="90%">
+      <stop offset="0%" stop-color="${color}" stop-opacity="0.10"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g clip-path="url(#rh)">
+    <rect width="${W}" height="${H}" fill="#05080c"/>
+    <rect width="${W}" height="${H}" fill="url(#rvig)"/>
+    ${scanlines}
+    <rect x="0" y="-8" width="${W}" height="5" fill="${color}" opacity="0.10">
+      <animate attributeName="y" from="-8" to="${H}" dur="5.5s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+  <polygon points="${framePts}" fill="${color}" fill-opacity="0.04"/>
+  <polygon points="${framePts}" fill="none" stroke="${color}" stroke-opacity="0.08" stroke-width="6"/>
+  <polygon points="${framePts}" fill="none" stroke="${color}" stroke-opacity="0.18" stroke-width="3.2"/>
+  <polygon points="${framePts}" fill="none" stroke="${color}" stroke-opacity="0.9" stroke-width="1.3"/>
+  <polygon points="${framePts}" fill="none" stroke="${sweepCol}" stroke-width="2" stroke-dasharray="${seg.toFixed(1)} ${(per - seg).toFixed(1)}">
+    <animate attributeName="stroke-dashoffset" from="${per.toFixed(1)}" to="0" dur="3.2s" repeatCount="indefinite"/>
+  </polygon>
+  <g fill="none" stroke="${bracketCol}" stroke-width="2.6" stroke-linecap="square">
+    <path d="M${W - 36} 2 H${W - 2} V36"/>
+    <path d="M36 ${H - 2} H2 V${H - 36}"/>
+  </g>
+  <!-- HUD readout: repo ident -->
+  <path d="M24 18 h9 M24 18 v9" stroke="${color}" stroke-width="1.3" opacity="0.9"/>
+  <text x="42" y="30" font-family="${MONO}" font-size="8" letter-spacing="2" fill="#7fb8c4" opacity="0.8">REPO // ${esc(repo.owner.login)}</text>
+  <text x="24" y="62" font-family="${displayFont}" font-size="20" font-weight="700" fill="#e8fdff">${esc(repo.name)}</text>
+  ${descLines.map((line, i) => `<text x="24" y="${146 + i * 16}" font-family="system-ui,sans-serif" font-size="12" fill="#9db4c0">${line}</text>`).join('')}
+  ${stat(24, 'STARS', repo.stargazers_count)}
+  ${stat(140, 'FORKS', repo.forks_count)}
+  ${stat(256, 'ISSUES', repo.open_issues_count)}
+  ${stat(364, 'WATCH', repo.subscribers_count ?? repo.watchers_count)}
+  ${repo.language ? `<rect x="24" y="172" width="${16 + repo.language.length * 7}" height="18" fill="${color}"/><text x="32" y="186" font-family="${MONO}" font-size="10" font-weight="600" fill="#05080c">${esc(repo.language)}</text>` : ''}
+  ${license ? `<rect x="${repo.language ? 40 + repo.language.length * 7 : 24}" y="172" width="${16 + license.length * 7}" height="18" fill="none" stroke="#1c3242"/><text x="${repo.language ? 48 + repo.language.length * 7 : 32}" y="186" font-family="${MONO}" font-size="10" font-weight="600" fill="#7fb8c4">${esc(license)}</text>` : ''}
+</svg>`;
+}
+
+function mix(a, b, f) {
+  const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
+  const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
+  return '#' + pa.map((v, i) => Math.round(v + (pb[i] - v) * f).toString(16).padStart(2, '0')).join('');
+}
+
 function renderTerminal({ repo }) {
   const green = '#3ddc6a';
   const license = licenseOf(repo);
@@ -234,7 +305,7 @@ function statBox(x, y, label, value, color) {
     <text x="${x + 12}" y="${y + 46}" font-family="system-ui,sans-serif" font-weight="700" font-size="18" fill="${color}">${value}</text>`;
 }
 
-const THEMES = { cyberpunk: renderCyberpunk, terminal: renderTerminal, glass: renderGlass, detailed: renderDetailed };
+const THEMES = { holo: renderHoloRepo, cyberpunk: renderCyberpunk, terminal: renderTerminal, glass: renderGlass, detailed: renderDetailed };
 
 function svg(body, status, cacheControl) {
   return svgReply(body, status, cacheControl);
@@ -251,7 +322,7 @@ module.exports.GET = async (request) => {
   if (!isGhName(owner) || !isGhRepo(repoName)) return svg(errorSVG('invalid owner or repo'), 400);
 
   const requestedTheme = url.searchParams.get('theme');
-  const render = THEMES[requestedTheme] || THEMES.cyberpunk;
+  const render = THEMES[requestedTheme] || THEMES.holo;
 
   const token = process.env.GITHUB_TOKEN;
   try {

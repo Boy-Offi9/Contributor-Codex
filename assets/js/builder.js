@@ -2,7 +2,7 @@
   const { $, $$, esc, apiUrl, message, copyText } = window.Codex;
 
 // ---------- Catalog: types, fields, presets ----------
-  const CAL_THEMES = ['cyberpunk', 'glass', 'terminal'];
+  const CAL_THEMES = ['holo', 'cyberpunk', 'glass', 'terminal'];
   const ALL_THEMES = ['holo', 'cyberpunk', 'terminal', 'glass', 'detailed'];
   const ALL_TROPHIES = ['STARGAZER', 'BUILDER', 'INFLUENCE', 'VETERAN', 'POLYGLOT', 'FORKED', 'OPEN_SOURCE', 'NETWORKER', 'SNIPPETS', 'ACTIVE', 'HEADLINER', 'CURATOR'];
   const COLOR_KEYS = ['bg', 'text', 'border'];
