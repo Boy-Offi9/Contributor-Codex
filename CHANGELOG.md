@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.27.0 - 2026-11-26
+
+### Changed
+- Site chrome reskinned to the scifi-ui-kit design language: kit palette
+  (#04070d bg, cyan/pink duo), global scanline overlay, chamfered panels with
+  corner brackets, mono uppercase buttons and nav, '//'-prefixed section
+  headers, hero accent rule + brackets, embed block restyled as a HUD readout;
+  theme-color metas and favicon background aligned
+
 ## 0.26.4 - 2026-11-26
 
 ### Fixed
