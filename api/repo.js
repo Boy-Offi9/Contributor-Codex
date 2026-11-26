@@ -58,6 +58,23 @@ async function latestReleaseTag(owner, repoName, token) {
 
 // cyberpunk (sci-fi HUD language (chamfered panel, triple-stroke glow,
 // scanlines, corner brackets, traveling border light) applied to repo cards
+
+// Kit HUD chip: chamfered bottom-right corner, optional accent marker tick.
+// variant: 'solid' (accent fill, dark text) | 'line' (hairline stroke, dim text)
+function hudChip(x, y, w, h, label, variant, color, extraFill) {
+  const c = 6; // corner cut
+  const pts = `M${x + c} ${y} H${x + w} V${y + h - c} L${x + w - c} ${y + h} H${x} Z`;
+  const isSolid = variant === 'solid';
+  const body = isSolid
+    ? `<path d="${pts}" fill="${color}" fill-opacity="0.92"/>`
+    : `<path d="${pts}" fill="${color}" fill-opacity="${extraFill || 0.07}"/>
+       <path d="${pts}" fill="none" stroke="${color}" stroke-opacity="0.65" stroke-width="1"/>`;
+  const textFill = isSolid ? '#04070d' : '#7fb8c4';
+  const tick = isSolid ? '' : `<path d="M${x} ${y} h4" stroke="${color}" stroke-width="2.4" opacity="0.9"/>`;
+  return `${body}${tick}
+    <text x="${x + 8}" y="${y + h / 2 + 3.5}" font-family="'JetBrains Mono',ui-monospace,monospace" font-size="10" font-weight="600" fill="${textFill}" letter-spacing="0.5">${label}</text>`;
+}
+
 function renderCyberpunk({ repo, color, fontFace }) {
   const displayFont = fontFace ? "'Chakra Petch',system-ui,sans-serif" : 'system-ui,sans-serif';
   const descLines = repo.description ? wrapText(esc(repo.description), 58) : [];
@@ -115,8 +132,8 @@ function renderCyberpunk({ repo, color, fontFace }) {
   ${stat(140, 'FORKS', repo.forks_count)}
   ${stat(256, 'ISSUES', repo.open_issues_count)}
   ${stat(364, 'WATCH', repo.subscribers_count ?? repo.watchers_count)}
-  ${repo.language ? `<rect x="24" y="172" width="${16 + repo.language.length * 7}" height="18" fill="${color}"/><text x="32" y="186" font-family="${MONO}" font-size="10" font-weight="600" fill="#05080c">${esc(repo.language)}</text>` : ''}
-  ${license ? `<rect x="${repo.language ? 40 + repo.language.length * 7 : 24}" y="172" width="${16 + license.length * 7}" height="18" fill="none" stroke="#1c3242"/><text x="${repo.language ? 48 + repo.language.length * 7 : 32}" y="186" font-family="${MONO}" font-size="10" font-weight="600" fill="#7fb8c4">${esc(license)}</text>` : ''}
+  ${repo.language ? hudChip(24, 172, 20 + repo.language.length * 7, 18, esc(repo.language), 'solid', color) : ''}
+  ${license ? hudChip(repo.language ? 52 + repo.language.length * 7 : 24, 172, 20 + license.length * 7, 18, esc(license), 'line', color) : ''}
 </svg>`;
 }
 
@@ -157,6 +174,16 @@ function renderTerminal({ repo }) {
   </svg>`;
 }
 
+
+// Glass chip: frosted body, chamfered top-left corner, accent marker dot.
+function glassChip(x, y, w, h, label, inkColor, color) {
+  const c = 6;
+  const pts = `M${x} ${y + c} V${y} H${x + w} V${y + h} H${x} Z`;
+  return `<path d="${pts}" fill="#ffffff" fill-opacity="0.6" stroke="#1c2333" stroke-opacity="0.15"/>
+    <circle cx="${x + 8}" cy="${y + h / 2}" r="2.2" fill="${color}"/>
+    <text x="${x + 15}" y="${y + h / 2 + 3.5}" font-family="'JetBrains Mono',ui-monospace,monospace" font-size="10" font-weight="600" fill="${inkColor}" letter-spacing="0.5">${label}</text>`;
+}
+
 function renderGlass({ repo, color }) {
   const descLines = repo.description ? wrapText(esc(repo.description), 60) : [];
   const license = licenseOf(repo);
@@ -188,8 +215,8 @@ function renderGlass({ repo, color }) {
     <text x="24" y="70" class="lbl">STARS</text><text x="24" y="94" class="statVal" fill="${color}">${repo.stargazers_count}</text>
     <text x="140" y="70" class="lbl">FORKS</text><text x="140" y="94" class="statVal" fill="${color}">${repo.forks_count}</text>
     <text x="256" y="70" class="lbl">ISSUES</text><text x="256" y="94" class="statVal" fill="${color}">${repo.open_issues_count}</text>
-    ${repo.language ? `<rect x="24" y="164" width="${16 + repo.language.length * 7}" height="20" rx="4" fill="#ffffff" opacity="0.7" stroke="#1c2333" stroke-opacity="0.12"/><text x="32" y="178" class="chip">${esc(repo.language)}</text>` : ''}
-    ${license ? `<rect x="${repo.language ? 40 + repo.language.length * 7 : 24}" y="164" width="${16 + license.length * 7}" height="20" rx="4" fill="#ffffff" opacity="0.4" stroke="#1c2333" stroke-opacity="0.12"/><text x="${repo.language ? 48 + repo.language.length * 7 : 32}" y="178" class="chip" fill="#5b6478">${esc(license)}</text>` : ''}
+    ${repo.language ? glassChip(24, 164, 22 + repo.language.length * 7, 20, esc(repo.language), '#1c2333', color) : ''}
+    ${license ? glassChip(repo.language ? 54 + repo.language.length * 7 : 24, 164, 22 + license.length * 7, 20, esc(license), '#5b6478', color) : ''}
   </svg>`;
 }
 
@@ -268,16 +295,16 @@ function renderDetailed({ repo, color, fontFace, contributors, releaseTag }) {
       let tx = 24;
       return topics.map((topic) => {
         const label = esc(topic);
-        const w = 16 + label.length * 6.2;
+        const w = 20 + label.length * 6.2;
         if (tx + w > 416) return '';
-        const out = `<rect x="${tx}" y="${topicsY}" width="${w.toFixed(1)}" height="20" fill="none" stroke="${color}"/><text x="${(tx + w / 2).toFixed(1)}" y="${topicsY + 14}" text-anchor="middle" class="chip">${label}</text>`;
+        const out = hudChip(tx, topicsY, w.toFixed(1), 20, label, 'line', color);
         tx += w + 8;
         return out;
       }).join('');
     })()}
 
-    ${repo.language ? `<rect x="24" y="${langY}" width="${16 + repo.language.length * 7}" height="20" fill="${color}"/><text x="32" y="${langY + 14}" class="topic">${esc(repo.language)}</text>` : ''}
-    ${license ? `<rect x="${(repo.language ? 40 + repo.language.length * 7 : 24)}" y="${langY}" width="${16 + license.length * 7}" height="20" fill="none" stroke="#1a2434"/><text x="${(repo.language ? 48 + repo.language.length * 7 : 32)}" y="${langY + 14}" class="chip" fill="#7fb8c4">${esc(license)}</text>` : ''}
+    ${repo.language ? hudChip(24, langY, 20 + repo.language.length * 7, 20, esc(repo.language), 'solid', color) : ''}
+    ${license ? hudChip(repo.language ? 52 + repo.language.length * 7 : 24, langY, 20 + license.length * 7, 20, esc(license), 'line', color) : ''}
   </svg>`;
 }
 

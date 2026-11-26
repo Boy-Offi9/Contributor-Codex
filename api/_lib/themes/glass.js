@@ -119,15 +119,17 @@ function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, c
       const extra = user.location || (user.company ? user.company.replace(/^@/, '') : null);
       if (extra) chips.push({ ic: user.location ? 'pin' : 'building', text: esc(truncate(extra, 16)) });
       const gap = 8;
-      const widths = chips.map((c) => 30 + c.text.length * 6.1);
+      const widths = chips.map((c) => 34 + c.text.length * 6.1);
       const total = widths.reduce((a, b) => a + b, 0) + gap * (chips.length - 1);
       const left = 180 - total / 2;
       const right = left + total;
       let cx = left;
       const chipMarkup = chips.map((c, i) => {
+        const cw = widths[i].toFixed(1);
         const g = `<g transform="translate(${cx.toFixed(1)},${chipsY})">
-          <rect width="${widths[i].toFixed(1)}" height="24" rx="4" fill="#ffffff" opacity="0.6" stroke="#1c2333" stroke-opacity="0.1"/>
-          ${icon(c.ic, 9, 6, '#8891a3')}
+          <path d="M0 6 V0 H${cw} V24 H0 Z" fill="#ffffff" opacity="0.6" stroke="#1c2333" stroke-opacity="0.12"/>
+          <path d="M0 6 L6 0" stroke="${color}" stroke-width="1.6" opacity="0.8"/>
+          ${icon(c.ic, 9, 6, '#5b6478')}
           <text x="26" y="16" class="foot">${c.text}</text>
         </g>`;
         cx += widths[i] + gap;

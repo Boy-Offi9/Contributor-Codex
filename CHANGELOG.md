@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.30.0 - 2026-11-26
+
+### Changed
+- Chip pass: cyberpunk repo/detailed chips are now HUD chips (chamfered
+  bottom-right corner, accent bracket tick, solid/line variants, mono
+  uppercase lettering); glass chips are frosted panels with a chamfered
+  top-left corner and an accent marker dot (profile card + repo card)
+
 ## 0.29.1 - 2026-11-26
 
 ### Added
