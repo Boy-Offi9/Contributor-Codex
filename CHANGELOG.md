@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.29.1 - 2026-11-26
+
+### Added
+- Token passthrough extended to /api/stats, /api/activity and /api/codex
+  (same contract as streak: x-github-token header or token param, no-store
+  on personalized responses); pickToken moved to _lib/contrib for reuse
+
 ## 0.29.0 - 2026-11-26
 
 ### Added

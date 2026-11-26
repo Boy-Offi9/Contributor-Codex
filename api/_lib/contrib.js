@@ -204,3 +204,22 @@ function fmtRange(start, end, todayIso = new Date().toISOString().slice(0, 10), 
 }
 
 module.exports = { fetchCalendar, fetchStats, fetchMemberActivity, computeStreaks, listStreaks, fmtRange, fmtDate };
+
+// Optional per-request token passthrough. GitHub's contribution data only
+// includes what the authenticated viewer can see — org and private-repo
+// contributions are invisible to the server token. Header is preferred
+// (never lands in URLs or logs); requests carrying a user token must never
+// be cached.
+function pickToken(request, searchParams) {
+  let h = (request && request.headers) || null;
+  let headerToken = null;
+  if (h) {
+    if (typeof h.get === 'function') headerToken = h.get('x-github-token') || null;
+    else if (h.has && h.has('x-github-token')) headerToken = h.get('x-github-token');
+  }
+  const paramToken = (searchParams && searchParams.get('token')) || '';
+  const picked = (headerToken || paramToken).trim();
+  return picked && /^[\w.-]{20,255}$/.test(picked) ? picked : null;
+}
+
+module.exports.pickToken = pickToken;

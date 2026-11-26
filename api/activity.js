@@ -1,6 +1,6 @@
 const { isRateLimited } = require('./_lib/ratelimit');
 const { sanitizeColor, esc, isGhName, readableAccent, luminance } = require('./_lib/shared');
-const { fetchCalendar, fmtDate } = require('./_lib/contrib');
+const { fetchCalendar, fmtDate, pickToken } = require('./_lib/contrib');
 const { FONT, paletteFor, styleFromParams, ink, inkTheme, sanitizeTheme, frame, errorCard, svgResponse, githubErrorCard } = require('./_lib/frame');
 
 const WIDTH = 480;
@@ -126,14 +126,15 @@ module.exports.GET = async (request) => {
   const asked = Number(url.searchParams.get('days'));
   const range = RANGES.includes(asked) ? asked : 90;
 
+  const userToken = pickToken(request, url.searchParams);
   try {
-    const cal = await fetchCalendar(username, process.env.GITHUB_TOKEN);
+    const cal = await fetchCalendar(username, userToken || process.env.GITHUB_TOKEN);
     const theme = sanitizeTheme(url.searchParams.get('theme'));
     const style = styleFromParams(url.searchParams, theme);
     const accentTheme = style.bg ? (luminance(style.bg) > 0.4 ? 'glass' : 'dark') : theme;
     const color = readableAccent(sanitizeColor(url.searchParams.get('color')), accentTheme) || '#00e5ff';
     const animate = ['1', 'true', 'yes'].includes((url.searchParams.get('animate') || '').toLowerCase());
-    return svgResponse(render({ user: cal, days: cal.days, range, color, theme, style, animate }), 200, CACHE_OK);
+    return svgResponse(render({ user: cal, days: cal.days, range, color, theme, style, animate }), 200, userToken ? 'no-store' : CACHE_OK);
   } catch (err) {
     return githubErrorCard(err, username, 'activity graphs');
   }

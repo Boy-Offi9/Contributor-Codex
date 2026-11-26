@@ -1,6 +1,6 @@
 const { isRateLimited } = require('./_lib/ratelimit');
 const { sanitizeColor, icon, esc, isGhName, readableAccent, luminance, avatarDataUri, avatarShape, sanitizeShape, truncate } = require('./_lib/shared');
-const { fetchCalendar, computeStreaks, listStreaks, fmtRange, fmtDate } = require('./_lib/contrib');
+const { fetchCalendar, computeStreaks, listStreaks, fmtRange, fmtDate, pickToken } = require('./_lib/contrib');
 const { FONT, paletteFor, styleFromParams, ink, inkTheme, sanitizeTheme, frame, errorCard, svgResponse, githubErrorCard } = require('./_lib/frame');
 
 const WIDTH = 480;
@@ -123,23 +123,6 @@ function debugResponse(cal, streaks, runs) {
 }
 
 
-// Optional per-request token passthrough. GitHub's contribution calendar only
-// counts what the *authenticated viewer* can see — org and private-repo
-// contributions are invisible to the server token, so streaks undercount for
-// users whose work happens in orgs. Supplying your own token (viewer === you)
-// makes GitHub include everything. Header is preferred: it never lands in
-// URLs, access logs or caches. A request with a user token is never cached.
-function pickToken(request, searchParams) {
-  let h = (request && request.headers) || null;
-  let headerToken = null;
-  if (h) {
-    if (typeof h.get === 'function') headerToken = h.get('x-github-token') || null;
-    else if (h.has && h.has('x-github-token')) headerToken = h.get('x-github-token');
-  }
-  const paramToken = (searchParams && searchParams.get('token')) || '';
-  const picked = (headerToken || paramToken).trim();
-  return picked && /^[\w.-]{20,255}$/.test(picked) ? picked : null;
-}
 
 module.exports.GET = async (request) => {
   const rateLimited = await isRateLimited('streak-endpoint', request);

@@ -1,6 +1,6 @@
 const { isRateLimited } = require('./_lib/ratelimit');
 const errors = require('./_lib/errors');
-const { fetchCalendar, computeStreaks } = require('./_lib/contrib');
+const { fetchCalendar, computeStreaks, pickToken } = require('./_lib/contrib');
 const { esc, sanitizeColor, CHAKRA_PETCH_FONT_FACE, colorForLang, icon, badge, sanitizeBadge, avatarShape, sanitizeShape, DISPLAY, readableAccent, svgReply, truncate } = require('./_lib/svg');
 const { ghFetch, avatarDataUri, byteWeightedLangs, isGhName, loadUserWithRepos } = require('./_lib/github');
 const { computeStats, classFor, trophyTier } = require('./_lib/game');
@@ -173,7 +173,8 @@ module.exports.GET = async (request) => {
   if (!username) return svg(errorSVG('missing ?username='), 400);
   if (!isGhName(username)) return svg(errorSVG('invalid username'), 400);
 
-  const token = process.env.GITHUB_TOKEN;
+  const token = pickToken(request, url.searchParams) || process.env.GITHUB_TOKEN;
+  const personalized = Boolean(pickToken(request, url.searchParams));
   try {
     const { user, repos } = await loadUserWithRepos(username, token);
 
@@ -189,7 +190,7 @@ module.exports.GET = async (request) => {
     const avatarFrame = sanitizeShape(url.searchParams.get('shape'), 'hex');
     const badgeShape = sanitizeBadge(url.searchParams.get('badge'), 'hex');
 
-    return svg(render({ user, stats, avatarUri, topLangs, fontFace: CHAKRA_PETCH_FONT_FACE, color, badgeShape, avatarFrame, streaks }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=604800');
+    return svg(render({ user, stats, avatarUri, topLangs, fontFace: CHAKRA_PETCH_FONT_FACE, color, badgeShape, avatarFrame, streaks }), 200, personalized ? 'no-store' : 'public, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=604800');
   } catch (err) {
     if (err.status === 404) return svg(errorSVG(`user "${username}" not found`), 404, 'public, s-maxage=10');
     if (err.status === 429) return svg(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=10');

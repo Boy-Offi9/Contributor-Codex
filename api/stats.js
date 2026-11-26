@@ -1,6 +1,6 @@
 const { isRateLimited } = require('./_lib/ratelimit');
 const { sanitizeColor, icon, esc, isGhName, readableAccent, luminance, computeRank } = require('./_lib/shared');
-const { fetchStats } = require('./_lib/contrib');
+const { fetchStats, pickToken } = require('./_lib/contrib');
 const { FONT, paletteFor, styleFromParams, ink, inkTheme, sanitizeTheme, frame, errorCard, svgResponse, githubErrorCard } = require('./_lib/frame');
 
 const WIDTH = 480;
@@ -74,14 +74,15 @@ module.exports.GET = async (request) => {
   let cells = CELLS.filter((c) => !hidden.has(c.key));
   if (!cells.length) cells = CELLS;
 
+  const userToken = pickToken(request, url.searchParams);
   try {
-    const stats = await fetchStats(username, process.env.GITHUB_TOKEN);
+    const stats = await fetchStats(username, userToken || process.env.GITHUB_TOKEN);
     const theme = sanitizeTheme(url.searchParams.get('theme'));
     const style = styleFromParams(url.searchParams, theme);
     const accentTheme = style.bg ? (luminance(style.bg) > 0.4 ? 'glass' : 'dark') : theme;
     const color = readableAccent(sanitizeColor(url.searchParams.get('color')), accentTheme) || '#00e5ff';
     const rank = computeRank(stats);
-    return svgResponse(render({ stats, rank, cells, color, theme, style, animate: flag(url.searchParams.get('animate')) }), 200, CACHE_OK);
+    return svgResponse(render({ stats, rank, cells, color, theme, style, animate: flag(url.searchParams.get('animate')) }), 200, userToken ? 'no-store' : CACHE_OK);
   } catch (err) {
     return githubErrorCard(err, username, 'stats');
   }
