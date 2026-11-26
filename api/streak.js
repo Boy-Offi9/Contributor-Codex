@@ -8,7 +8,7 @@ const BASE_HEIGHT = 172;
 const HEADER_H = 72;   // ?profile=1 — avatar, name, join year
 const FOOTER_H = 34;   // ?year=1   — contributions this year
 const CACHE_OK = 'public, s-maxage=21600, stale-while-revalidate=86400, stale-if-error=604800'; // 6h — a streak only changes daily
-const CACHE_ERR = 'public, s-maxage=60';
+const CACHE_ERR = 'public, s-maxage=10';
 const THEME_SHAPE = { cyberpunk: 'hex', glass: 'circle', terminal: 'hex' };
 
 const fmtNumber = (n) => n.toLocaleString('en-US');
@@ -119,7 +119,7 @@ function debugResponse(cal, streaks, runs) {
     topStreaks: runs.slice().sort((a, b) => b.length - a.length).slice(0, 5),
     note: 'Only contributions GitHub exposes to the server token are counted. Private-repo activity appears only if the profile setting "Include private contributions" is on.',
   };
-  return new Response(JSON.stringify(body, null, 2), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, s-maxage=300' } });
+  return new Response(JSON.stringify(body, null, 2), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, no-store' } });
 }
 
 module.exports.GET = async (request) => {
@@ -138,7 +138,7 @@ module.exports.GET = async (request) => {
     const accentTheme = style.bg ? (luminance(style.bg) > 0.4 ? 'glass' : 'dark') : theme;
     const color = readableAccent(sanitizeColor(url.searchParams.get('color')), accentTheme) || '#00e5ff';
     const streaks = computeStreaks(cal.days);
-    if (url.searchParams.get('debug') === '1') return debugResponse(cal, streaks, listStreaks(cal.days));
+    if (process.env.ENABLE_STREAK_DEBUG === '1' && url.searchParams.get('debug') === '1') return debugResponse(cal, streaks, listStreaks(cal.days));
 
     const profile = flag(url.searchParams.get('profile'));
     const yearStat = flag(url.searchParams.get('year'));

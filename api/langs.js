@@ -4,7 +4,7 @@ const { FONT, paletteFor, styleFromParams, ink, inkTheme, sanitizeTheme, frame, 
 
 const WIDTH = 480;
 const CACHE_OK = 'public, s-maxage=21600, stale-while-revalidate=86400, stale-if-error=604800';
-const CACHE_ERR = 'public, s-maxage=60';
+const CACHE_ERR = 'public, s-maxage=10';
 
 function render({ username, langs, color, theme, style }) {
   const p = paletteFor(theme, style);

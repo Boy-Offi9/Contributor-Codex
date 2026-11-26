@@ -13,8 +13,8 @@ function statBar(y, label, value, max, color, iconName) {
 
 
 function renderCyberpunk({ user, avatarUri, shape, topLang, level, xp, totalStars, tier, color, fontFace }) {
-  const name = esc(user.name || user.login);
-  const classLabel = `${classFor(topLang)}${topLang ? ' · ' + esc(topLang) : ''}`;
+  const name = esc(truncate(user.name || user.login, 22));
+  const classLabel = `${classFor(topLang)}${topLang ? ' · ' + topLang : ''}`;
   const displayFont = fontFace ? "'Chakra Petch',system-ui,sans-serif" : 'system-ui,sans-serif';
   const shimmer = tier === 'LEGENDARY' ? `
     <rect x="-400" y="0" width="200" height="360" fill="#ffffff" opacity="0.08" transform="rotate(20)">

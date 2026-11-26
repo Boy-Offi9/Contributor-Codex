@@ -71,7 +71,7 @@ function cyberpunkRow(index, entry, total, topValue, shape, override, sort) {
   const { user, avatarUri, topLang, level } = entry;
   const color = override || entry.color;
   const name = esc(truncate(user.name || user.login, 24));
-  const classLabel = `${classFor(topLang)}${topLang ? ' · ' + esc(truncate(topLang, 14)) : ''}`;
+  const classLabel = `${classFor(topLang)}${topLang ? ' · ' + truncate(topLang, 14) : ''}`;
   const medal = MEDALS[index];
   const pct = topValue ? Math.max(3, Math.round((metricValue(sort, entry) / topValue) * 100)) : 0;
   const barX = 330;
@@ -258,7 +258,7 @@ module.exports.GET = async (request) => {
     let entries;
     let ranked;
     if (ACTIVITY_SORTS.has(sort)) {
-      if (!token) return svgResponse(errorSVG('this sort needs GITHUB_TOKEN on the server'), 503, 'public, s-maxage=60');
+      if (!token) return svgResponse(errorSVG('this sort needs GITHUB_TOKEN on the server'), 503, 'public, s-maxage=10');
       const pool = members.slice(0, ACTIVITY_CAP).map((member) => member.login).filter(isGhName);
       const activity = await fetchMemberActivity(pool, token);
       const key = sort === 'streak' ? 'streak' : 'total';
@@ -283,11 +283,11 @@ module.exports.GET = async (request) => {
 
     return svgResponse(svg, 200, 'public, s-maxage=21600, stale-while-revalidate=86400, stale-if-error=604800');
   } catch (err) {
-    if (err.status === 404) return svgResponse(errorSVG(`org "${org}" not found`), 404, 'public, s-maxage=60');
-    if (err.status === 401) return svgResponse(errorSVG(err.rejected ? 'server token was rejected — check /api/status' : 'this sort needs GITHUB_TOKEN on the server'), 503, 'public, s-maxage=60');
-    if (err.status === 429) return svgResponse(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=60');
-    if (err.status === 403) return svgResponse(errorSVG('GitHub refused this request'), 502, 'public, s-maxage=60');
-    if (err.status === 504) return svgResponse(errorSVG('GitHub is slow right now — try again soon'), 504, 'public, s-maxage=60');
-    return svgResponse(errorSVG('failed to load'), 500, 'public, s-maxage=60');
+    if (err.status === 404) return svgResponse(errorSVG(`org "${org}" not found`), 404, 'public, s-maxage=10');
+    if (err.status === 401) return svgResponse(errorSVG(err.rejected ? 'server token was rejected — check /api/status' : 'this sort needs GITHUB_TOKEN on the server'), 503, 'public, s-maxage=10');
+    if (err.status === 429) return svgResponse(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=10');
+    if (err.status === 403) return svgResponse(errorSVG('GitHub refused this request'), 502, 'public, s-maxage=10');
+    if (err.status === 504) return svgResponse(errorSVG('GitHub is slow right now — try again soon'), 504, 'public, s-maxage=10');
+    return svgResponse(errorSVG('failed to load'), 500, 'public, s-maxage=10');
   }
 };

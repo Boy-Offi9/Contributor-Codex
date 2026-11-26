@@ -1,4 +1,4 @@
-const { esc, MONO, classFor, clearanceFor, XP_FORMULA, icon } = require('../shared');
+const { esc, MONO, classFor, clearanceFor, XP_FORMULA, icon , truncate } = require('../shared');
 
 // Design language ported from the SciFi UI kit (boy-offi9-inc/scifi-ui-kit):
 // HudFramePainter (chamfered panel, triple-stroke glow, scanlines, corner
@@ -36,7 +36,7 @@ function polar(cx, cy, r, deg) {
 }
 
 function renderHolo({ user, avatarUri, shape, topLang, level, xp, totalStars, tier, color, fontFace }) {
-  const name = esc(user.name || user.login);
+  const name = esc(truncate(user.name || user.login, 22));
   const cls = classFor(topLang);
   const clearance = clearanceFor(tier);
   const displayFont = fontFace ? "'Chakra Petch',system-ui,sans-serif" : 'system-ui,sans-serif';

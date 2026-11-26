@@ -8,7 +8,7 @@ const { fetchCalendar, fetchStats, computeStreaks } = require('./_lib/contrib');
 const HEIGHT = 20;
 const CACHE_REST = 'public, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=604800';
 const CACHE_GRAPHQL = 'public, s-maxage=21600, stale-while-revalidate=86400, stale-if-error=604800';
-const CACHE_ERR = 'public, s-maxage=60';
+const CACHE_ERR = 'public, s-maxage=10';
 const STYLES = { flat: 3, pill: 10, square: 0 };
 const GRADE_COLORS = { C: '#7a8399', B: '#00e5ff', 'B+': '#2dd4bf', A: '#8b5cf6', 'A+': '#ff4d6d', S: '#ffb020' };
 const fmt = (n) => Number(n).toLocaleString('en-US');
@@ -85,7 +85,8 @@ module.exports.GET = async (request) => {
 
   const url = new URL(request.url);
   const username = (url.searchParams.get('username') || '').trim();
-  const style = STYLES[url.searchParams.get('style')] === undefined ? 'flat' : url.searchParams.get('style');
+  const styleReq = url.searchParams.get('style');
+  const style = styleReq && Object.prototype.hasOwnProperty.call(STYLES, styleReq) ? styleReq : 'flat';
   if (!username) return errorBadge('missing username', 400, style);
   if (!isGhName(username)) return errorBadge('invalid username', 400, style);
   const metricKey = (url.searchParams.get('metric') || 'level').toLowerCase();

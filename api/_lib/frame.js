@@ -126,7 +126,7 @@ function svgResponse(body, status, cacheControl) {
   return svgReply(body, status, cacheControl);
 }
 
-const ERROR_CACHE = 'public, s-maxage=60';
+const ERROR_CACHE = 'public, s-maxage=10';
 
 function githubErrorCard(err, subject, what) {
   const make = (message, status) => svgResponse(errorCard(message), status, ERROR_CACHE);

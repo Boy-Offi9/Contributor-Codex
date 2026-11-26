@@ -59,15 +59,17 @@ function computeStats(user, repos) {
   const langs = Object.entries(langCounts).sort((a, b) => b[1] - a[1]).map(([l]) => l);
   const topLang = langs[0] || null;
 
-  const years = (Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24 * 365);
-  const repoCount = user.public_repos || 0;
-  const followers = user.followers || 0;
+  const created = new Date(user.created_at).getTime();
+  const years = Number.isFinite(created) ? (Date.now() - created) / (1000 * 60 * 60 * 24 * 365) : 0;
+  const repoCount = Number(user.public_repos) || 0;
+  const followers = Number(user.followers) || 0;
 
   const xp = repoCount * XP_WEIGHTS.repo + totalStars * XP_WEIGHTS.star + followers * XP_WEIGHTS.follower + Math.floor(years) * XP_WEIGHTS.year;
-  const level = Math.max(1, Math.min(99, 1 + Math.floor(Math.sqrt(xp) / 6)));
+  const safeXp = Number.isFinite(xp) ? xp : 0;
+  const level = Math.max(1, Math.min(99, 1 + Math.floor(Math.sqrt(safeXp) / 6)));
   const { color, tier } = tierFor(level);
 
-  return { topLang, langs, totalStars, totalForks, years, xp, level, color, tier };
+  return { topLang, langs, totalStars, totalForks, years, xp: safeXp, level, color, tier };
 }
 
 const TIER_ORDER = ['INITIATE', 'OPERATIVE', 'SPECIALIST', 'ELITE', 'LEGENDARY'];

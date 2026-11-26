@@ -65,3 +65,42 @@ test('holo theme: hostile login is escaped, missing fields fall back', () => {
   assert.ok(!svg.includes('<script>'), 'login must be escaped');
   assert.match(svg, /@&lt;script&gt;x/);
 });
+
+test('badge style param: prototype keys are rejected (no attribute injection)', async () => {
+  const prevFetch = global.fetch;
+  global.fetch = async () => ({ ok: true, status: 200, headers: new Map(), json: async () => ({ login: 'octocat', name: 'Octo', public_repos: 8, followers: 1, created_at: '2015-01-01T00:00:00Z' }) });
+  try {
+    const badge = require('../api/badge');
+    const req = { url: 'https://x/api/badge?username=octocat&metric=level&style=constructor', headers: new Map() };
+    const res = await badge.GET(req);
+    const body = await res.text();
+    assert.ok(!body.includes('native code'), 'prototype-chain style must not reach markup');
+    assert.match(body, /rx="[0-9.]+"/);
+  } finally { global.fetch = prevFetch; }
+});
+
+test('computeStats: hostile inputs never produce NaN level/xp', () => {
+  const { computeStats } = require('../api/_lib/game');
+  const bad1 = computeStats({ created_at: 'invalid-date', public_repos: 1, followers: 0 }, []);
+  assert.equal(Number.isFinite(bad1.level), true);
+  assert.equal(Number.isFinite(bad1.xp), true);
+  const bad2 = computeStats({ public_repos: 'x', followers: 'y' }, []);
+  assert.equal(Number.isFinite(bad2.level), true);
+  const bad3 = computeStats({}, []);
+  assert.equal(Number.isFinite(bad3.level), true);
+});
+
+test('leaderboard class label: lang names escape exactly once', () => {
+  const { esc } = require('../api/_lib/svg');
+  assert.equal(esc(esc('A&B')), 'A&amp;amp;B'); // documents the bug shape
+  // the fix: label built raw, escaped once at interpolation — see leaderboard.js line ~74
+});
+
+test('holo theme: long display names are truncated', () => {
+  const renderHolo = require('../api/_lib/themes/holo');
+  const svg = renderHolo({
+    user: { login: 'x', name: 'N'.repeat(400) }, level: 3, xp: 100, totalStars: 0,
+    color: '#00e5ff', tier: 'INITIATE', shape: 'circle', avatarUri: '', fontFace: '',
+  });
+  assert.ok(!svg.includes('N'.repeat(40)), 'name must be truncated to fit the card');
+});

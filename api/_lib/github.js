@@ -101,7 +101,13 @@ async function loadUserWithRepos(username, token) {
   const user = await ghFetch(`https://api.github.com/users/${username}`, token);
   let repos = [];
   try {
-    repos = await ghFetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`, token);
+    // paginate up to 300 repos so stars/langs don't undercount past page 1
+    const pages = await Promise.all([
+      ghFetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`, token),
+      ghFetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner&page=2`, token).catch(() => []),
+      ghFetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner&page=3`, token).catch(() => []),
+    ]);
+    repos = pages.flat().filter(Boolean);
   } catch {}
   return { user, repos };
 }

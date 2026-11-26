@@ -7,7 +7,7 @@ const WIDTH = 480;
 const HEIGHT = 238;
 const RANGES = [30, 90, 180, 365];
 const CACHE_OK = 'public, s-maxage=21600, stale-while-revalidate=86400, stale-if-error=604800';
-const CACHE_ERR = 'public, s-maxage=60';
+const CACHE_ERR = 'public, s-maxage=10';
 
 function niceMax(value) {
   if (value <= 4) return 4;
@@ -57,6 +57,14 @@ function render({ user, days, range, color, theme, style, animate }) {
 
   const x0 = 48, x1 = WIDTH - 22, y0 = 82, y1 = 190;
   const xAt = (i) => x0 + ((x1 - x0) * i) / Math.max(1, series.length - 1);
+  if (!series.length) {
+    const emptyBody = `
+      <text x="22" y="32" font-family="${FONT}" font-weight="700" font-size="12" fill="${ink(color, inkTheme(theme, style))}" letter-spacing="1">CONTRIBUTION ACTIVITY</text>
+      <text x="22" y="49" font-family="${FONT}" font-weight="600" font-size="11" fill="${p.sub}">@${esc(user.login)}</text>
+      <text x="${WIDTH / 2}" y="${(y0 + y1) / 2}" text-anchor="middle" font-family="${FONT}" font-size="12" fill="${p.dim}">no contributions recorded yet</text>`;
+    return frame({ width: WIDTH, height: HEIGHT, color, theme, style, css: '', title: `${user.login} — Contribution activity`, body: emptyBody });
+  }
+
   const yAt = (v) => y1 - ((y1 - y0) * v) / top;
   const pts = series.map((s, i) => [xAt(i), yAt(s.value)]);
   const line = smoothPath(pts);

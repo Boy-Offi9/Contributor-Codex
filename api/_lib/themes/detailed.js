@@ -1,4 +1,4 @@
-const { esc, colorForLang, icon, avatarShape, MONO } = require('../shared');
+const { esc, colorForLang, icon, avatarShape, MONO , truncate } = require('../shared');
 
 function statBox(x, y, label, value, color, iconName, width = 178) {
   return `
@@ -51,7 +51,7 @@ const RANK_FORMULA = 'sqrt(stars/300)×30 + sqrt(repos/60)×20 + sqrt(followers/
 
 
 function renderDetailed({ user, avatarUri, shape, langStats, totalStars, totalForks, prs, issues, color, fontFace }) {
-  const name = esc(user.name || user.login);
+  const name = esc(truncate(user.name || user.login, 22));
   const displayFont = fontFace ? "'Chakra Petch',system-ui,sans-serif" : 'system-ui,sans-serif';
   const bioLines = user.bio ? wrapBio(esc(user.bio), 52) : [];
   const bioBlockH = bioLines.length * 16;
