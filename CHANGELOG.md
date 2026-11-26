@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.32.0 - 2026-11-26
+
+### Changed
+- Terminal theme rebuilt as a full phosphor dossier: boot log with
+  clearance/rank, box-drawn TELEMETRY / LANG WEIGHT / IDENTITY sections,
+  dotted-leader rows, ASCII XP meter with level progress, language weight
+  meters (▓░), [EOF] marker. /api/card now fetches PR/issue counts for the
+  terminal theme too. Dynamic height
+
 ## 0.31.0 - 2026-11-26
 
 ### Changed
