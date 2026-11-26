@@ -21,7 +21,7 @@ const XP_WEIGHTS = { repo: 15, star: 5, follower: 10, year: 20 };
 const XP_FORMULA = `repos×${XP_WEIGHTS.repo} + stars×${XP_WEIGHTS.star} + followers×${XP_WEIGHTS.follower} + years×${XP_WEIGHTS.year}`;
 
 const TIERS = [
-  { name: 'INITIATE', color: '#7a8399' },
+  { name: 'INITIATE', color: '#7fb8c4' },
   { name: 'OPERATIVE', color: '#00e5ff' },
   { name: 'SPECIALIST', color: '#8b5cf6' },
   { name: 'ELITE', color: '#ff4d6d' },

@@ -5,7 +5,7 @@ const { isGhName, loadUserWithRepos, avatarDataUri, byteWeightedLangs, prIssueCo
 const { computeStats } = require('./_lib/game');
 const { THEMES, THEME_SHAPE } = require('./_lib/themes');
 
-const errorSVG = (message) => errors.errorSVG({ width: 360, title: 'CARD ERROR', message, messageFont: MONO, messageSize: 11, messageFill: '#7a8399' });
+const errorSVG = (message) => errors.errorSVG({ width: 360, title: 'CARD ERROR', message, messageFont: MONO, messageSize: 11, messageFill: '#8a95ab' });
 
 const svg = (body, status, cacheControl) => svgReply(body, status, cacheControl);
 

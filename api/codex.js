@@ -20,7 +20,7 @@ const LABEL_FONT = DISPLAY;
 
 function statBox(x, y, w, label, value, color, iconName, suffix) {
   return `
-    <rect x="${x}" y="${y}" width="${w}" height="58" fill="none" stroke="#1b2233"/>
+    <rect x="${x}" y="${y}" width="${w}" height="58" fill="none" stroke="#1a2434"/>
     <rect x="${x}" y="${y}" width="${w}" height="2" fill="${color}" opacity="0.35"/>
     ${icon(iconName, x + 10, y + 9, color)}
     <text x="${x + 28}" y="${y + 20}" font-family="${LABEL_FONT}" font-weight="600" font-size="10" fill="#8a94ab" letter-spacing=".5">${label}</text>
@@ -46,7 +46,7 @@ function achievement(x, y, cellW, def, value, tier, shape) {
     <text x="${cx}" y="${y + 66}" text-anchor="middle" font-family="${LABEL_FONT}" font-weight="700" font-size="16" fill="${tier.color}">${value}</text>
     <text x="${cx}" y="${y + 80}" text-anchor="middle" font-family="${LABEL_FONT}" font-weight="600" font-size="10.5" fill="#8a94ab" letter-spacing=".8">${def.label}</text>
     <text x="${cx}" y="${y + 93}" text-anchor="middle" font-family="${LABEL_FONT}" font-weight="700" font-size="10" fill="${tier.color}" letter-spacing=".6">${tier.name}</text>
-    <rect x="${cx - barW / 2}" y="${y + 99}" width="${barW}" height="3" fill="#1b2233"/>
+    <rect x="${cx - barW / 2}" y="${y + 99}" width="${barW}" height="3" fill="#1a2434"/>
     <rect x="${cx - barW / 2}" y="${y + 99}" width="${(barW * pct) / 100}" height="3" fill="${tier.color}"/>`;
 }
 
@@ -121,7 +121,7 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape,
       <path d="M36 ${height - 2} H2 V${height - 36}"/>
     </g>
 
-    <g transform="translate(${avatarX},14)">${avatarShape({ id: 'avatar', shape: avatarFrame, size: 68, uri: avatarUri, ring: color, bg: '#1b2233', glow: true })}</g>
+    <g transform="translate(${avatarX},14)">${avatarShape({ id: 'avatar', shape: avatarFrame, size: 68, uri: avatarUri, ring: color, bg: '#1a2434', glow: true })}</g>
     <text x="${textX}" y="36" font-family="${displayFont}" font-weight="700" font-size="19" fill="#e8edf5">${name}</text>
     <text x="${textX}" y="54" font-family="${LABEL_FONT}" font-weight="600" font-size="12" fill="#8a94ab">@${esc(user.login)}</text>
     <text x="${textX}" y="74" font-family="${LABEL_FONT}" font-weight="700" font-size="11" fill="${color}" letter-spacing=".6">${esc(classLabel.toUpperCase())}${stats.topLang ? ' · ' + esc(stats.topLang) : ''}</text>
@@ -130,7 +130,7 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape,
     ${icon('bolt', WIDTH - 20 - xpLabel.length * 6.6 - 16, 47, color)}
     <text x="${WIDTH - 20}" y="57" text-anchor="end" font-family="${LABEL_FONT}" font-weight="600" font-size="11.5" fill="#8a94ab">${xpLabel}</text>
 
-    <line x1="20" y1="${headerH}" x2="${WIDTH - 20}" y2="${headerH}" stroke="#1b2233"/>
+    <line x1="20" y1="${headerH}" x2="${WIDTH - 20}" y2="${headerH}" stroke="#1a2434"/>
 
     ${statBox(20, statsY, boxW, 'STARS', stats.totalStars, color, 'star')}
     ${statBox(20 + (boxW + 8), statsY, boxW, 'FORKS', stats.totalForks, color, 'fork')}
@@ -152,7 +152,7 @@ function render({ user, stats, avatarUri, topLangs, fontFace, color, badgeShape,
         return langChips.map((lang) => {
           const w = 32 + lang.length * 7.4;
           if (cx + w > WIDTH - 20) return '';
-          const chip = `<rect x="${cx}" y="${langsY + 24}" width="${w}" height="26" fill="none" stroke="#1b2233"/><circle cx="${cx + 13}" cy="${langsY + 37}" r="4" fill="${colorForLang(lang, color)}"/><text x="${cx + 24}" y="${langsY + 41.5}" font-family="${LABEL_FONT}" font-weight="600" font-size="11.5" fill="#d3d9e8">${esc(lang)}</text>`;
+          const chip = `<rect x="${cx}" y="${langsY + 24}" width="${w}" height="26" fill="none" stroke="#1a2434"/><circle cx="${cx + 13}" cy="${langsY + 37}" r="4" fill="${colorForLang(lang, color)}"/><text x="${cx + 24}" y="${langsY + 41.5}" font-family="${LABEL_FONT}" font-weight="600" font-size="11.5" fill="#d3d9e8">${esc(lang)}</text>`;
           cx += w + 8;
           return chip;
         }).join('');

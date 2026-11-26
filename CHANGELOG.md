@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.26.3 - 2026-11-26
+
+### Fixed
+- Missed-surface sweep: detailed card's leftover old outline removed; detailed
+  repo card rebuilt on the HUD chassis; error cards (all endpoints) restyled
+  to the kit chassis with the danger accent; remaining old palette values
+  (#05070c/#1b2233/#7a8399 dim text) aligned to the kit trio
+
 ## 0.26.2 - 2026-11-26
 
 ### Changed

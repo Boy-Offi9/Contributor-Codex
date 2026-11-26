@@ -3,7 +3,7 @@ const errors = require('./_lib/errors');
 const { esc, CHAKRA_PETCH_FONT_FACE, sanitizeColor, MONO, readableAccent, svgReply } = require('./_lib/svg');
 const { ghFetch, isGhName, isGhRepo } = require('./_lib/github');
 
-const errorSVG = (message) => errors.errorSVG({ width: 420, title: 'CARD ERROR', message, messageFont: MONO, messageSize: 11, messageFill: '#7a8399' });
+const errorSVG = (message) => errors.errorSVG({ width: 420, title: 'CARD ERROR', message, messageFont: MONO, messageSize: 11, messageFill: '#7fb8c4' });
 
 function wrapText(text, maxChars) {
   const words = text.split(' ');
@@ -219,20 +219,25 @@ function renderDetailed({ repo, color, fontFace, contributors, releaseTag }) {
       <style>
         .name{font:700 19px ${displayFont};fill:#e8edf5;}
         .desc{font:400 12px system-ui,sans-serif;fill:#a8b0c2;}
-        .lbl{font:500 10px ${MONO};fill:#7a8399;letter-spacing:1px;}
+        .lbl{font:500 10px ${MONO};fill:#7fb8c4;letter-spacing:1px;}
         .statVal{font:700 17px ${displayFont};}
         .chip{font:600 10px ${MONO};fill:${color};}
-        .topic{font:600 10px ${MONO};fill:#05070c;}
+        .topic{font:600 10px ${MONO};fill:#04070d;}
       </style>
-      <clipPath id="cardClip"><polygon points="0,14 14,0 440,0 440,${height - 14} 426,${height} 0,${height}"/></clipPath>
+      <clipPath id="cardClip"><polygon points="14,0 440,0 440,${height - 14} 426,${height} 0,${height} 0,14"/></clipPath>
     </defs>
     <g clip-path="url(#cardClip)">
-      <rect width="440" height="${height}" fill="#05070c"/>
+      <rect width="440" height="${height}" fill="#04070d"/>
     </g>
-    <polygon points="0,14 14,0 440,0 440,${height - 14} 426,${height} 0,${height}" fill="none" stroke="${color}" opacity="0.5"/>
+    <polygon points="14,0 440,0 440,${height - 14} 426,${height} 0,${height} 0,14" fill="none" stroke="${color}" stroke-opacity="0.14" stroke-width="4"/>
+    <polygon points="14,0 440,0 440,${height - 14} 426,${height} 0,${height} 0,14" fill="none" stroke="${color}" stroke-opacity="0.8" stroke-width="1.3"/>
+    <g fill="none" stroke="${color}" stroke-width="2.4" stroke-linecap="square" opacity="0.85">
+      <path d="M406 2 H438 V34"/>
+      <path d="M34 ${height - 2} H2 V${height - 34}"/>
+    </g>
 
     <text x="24" y="40" class="name">${esc(repo.name)}</text>
-    <text x="24" y="58" class="desc" fill="#7a8399">${esc(repo.full_name)}</text>
+    <text x="24" y="58" class="desc" fill="#7fb8c4">${esc(repo.full_name)}</text>
     ${descLines.map((line, i) => `<text x="24" y="${86 + i * 16}" class="desc">${line}</text>`).join('')}
 
     ${statBox(24, row1Y, 'STARS', repo.stargazers_count, color)}
@@ -265,14 +270,14 @@ function renderDetailed({ repo, color, fontFace, contributors, releaseTag }) {
     })()}
 
     ${repo.language ? `<rect x="24" y="${langY}" width="${16 + repo.language.length * 7}" height="20" fill="${color}"/><text x="32" y="${langY + 14}" class="topic">${esc(repo.language)}</text>` : ''}
-    ${license ? `<rect x="${(repo.language ? 40 + repo.language.length * 7 : 24)}" y="${langY}" width="${16 + license.length * 7}" height="20" fill="none" stroke="#1b2233"/><text x="${(repo.language ? 48 + repo.language.length * 7 : 32)}" y="${langY + 14}" class="chip" fill="#7a8399">${esc(license)}</text>` : ''}
+    ${license ? `<rect x="${(repo.language ? 40 + repo.language.length * 7 : 24)}" y="${langY}" width="${16 + license.length * 7}" height="20" fill="none" stroke="#1a2434"/><text x="${(repo.language ? 48 + repo.language.length * 7 : 32)}" y="${langY + 14}" class="chip" fill="#7fb8c4">${esc(license)}</text>` : ''}
   </svg>`;
 }
 
 function statBox(x, y, label, value, color) {
   return `
-    <rect x="${x}" y="${y}" width="204" height="60" fill="none" stroke="#1b2233"/>
-    <text x="${x + 12}" y="${y + 22}" font-family="${MONO}" font-size="10" fill="#7a8399" letter-spacing=".6">${label}</text>
+    <rect x="${x}" y="${y}" width="204" height="60" fill="none" stroke="#1a2434"/>
+    <text x="${x + 12}" y="${y + 22}" font-family="${MONO}" font-size="10" fill="#7fb8c4" letter-spacing=".6">${label}</text>
     <text x="${x + 12}" y="${y + 46}" font-family="system-ui,sans-serif" font-weight="700" font-size="18" fill="${color}">${value}</text>`;
 }
 

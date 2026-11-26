@@ -2,10 +2,10 @@ const { esc, colorForLang, icon, avatarShape, MONO , truncate } = require('../sh
 
 function statBox(x, y, label, value, color, iconName, width = 178) {
   return `
-    <rect x="${x}" y="${y}" width="${width}" height="60" fill="none" stroke="#1b2233"/>
+    <rect x="${x}" y="${y}" width="${width}" height="60" fill="none" stroke="#1a2434"/>
     <rect x="${x}" y="${y}" width="${width}" height="2" fill="${color}" opacity="0.35"/>
     ${iconName ? icon(iconName, x + 12, y + 8, color) : ''}
-    <text x="${iconName ? x + 30 : x + 12}" y="${y + 22}" font-family="${MONO}" font-size="10" fill="#7a8399" letter-spacing=".6">${label}</text>
+    <text x="${iconName ? x + 30 : x + 12}" y="${y + 22}" font-family="${MONO}" font-size="10" fill="#7fb8c4" letter-spacing=".6">${label}</text>
     <text x="${x + 12}" y="${y + 46}" font-family="system-ui,sans-serif" font-weight="700" font-size="18" fill="${color}" filter="url(#glow)">${value}</text>`;
 }
 
@@ -84,11 +84,11 @@ function renderDetailed({ user, avatarUri, shape, langStats, totalStars, totalFo
       ${fontFace ? `<style>${fontFace}</style>` : ''}
       <style>
         .t1{font:700 18px ${displayFont};fill:#e8edf5;}
-        .t2{font:500 12px ${MONO};fill:#7a8399;}
-        .bio{font:400 12px system-ui,sans-serif;fill:#a8b0c2;}
-        .rankLbl{font:600 10px ${MONO};fill:#7a8399;letter-spacing:1px;}
+        .t2{font:500 12px ${MONO};fill:#7fb8c4;}
+        .bio{font:400 12px system-ui,sans-serif;fill:#9db4c0;}
+        .rankLbl{font:600 10px ${MONO};fill:#7fb8c4;letter-spacing:1px;}
         .rankGrade{font:700 18px ${displayFont};fill:${color};}
-        .legend{font:500 10px ${MONO};fill:#a8b0c2;}
+        .legend{font:500 10px ${MONO};fill:#9db4c0;}
       </style>
       <radialGradient id="bg" cx="10%" cy="0%" r="80%">
         <stop offset="0%" stop-color="${color}" stop-opacity="0.10"/>
@@ -106,7 +106,7 @@ function renderDetailed({ user, avatarUri, shape, langStats, totalStars, totalFo
     </defs>
 
     <g clip-path="url(#cardClip)">
-      <rect width="420" height="${height}" fill="#05070c"/>
+      <rect width="420" height="${height}" fill="#04070d"/>
       <rect width="420" height="${height}" fill="url(#bg)"/>
       <g opacity="1">${Array.from({ length: Math.ceil(height / 6) }, (_, i) => `<line x1="10" y1="${i * 6}" x2="410" y2="${i * 6}" stroke="${color}" stroke-width="1" opacity="0.06"/>`).join('')}</g>
       <rect x="0" y="-8" width="420" height="6" fill="${color}" opacity="0.08">
@@ -114,17 +114,17 @@ function renderDetailed({ user, avatarUri, shape, langStats, totalStars, totalFo
       </rect>
       <rect width="420" height="${height}" fill="url(#bg2)"/>
     </g>
-    <polygon points="0,14 14,0 420,0 420,${height - 14} 406,${height} 0,${height}" fill="none" stroke="${color}" opacity="0.5"/>
+
 
     <g transform="translate(24,24)">
-      ${avatarShape({ id: 'avatar', shape, size: 72, uri: avatarUri, ring: color, bg: '#1b2233', glow: true })}
+      ${avatarShape({ id: 'avatar', shape, size: 72, uri: avatarUri, ring: color, bg: '#1a2434', glow: true })}
     </g>
     <text x="112" y="48" class="t1">${name}</text>
     <text x="112" y="66" class="t2">@${esc(user.login)}</text>
 
     <g transform="translate(${rCx},${rCy})">
       <title>${RANK_FORMULA}</title>
-      <circle r="${rR}" fill="none" stroke="#1b2233" stroke-width="5"/>
+      <circle r="${rR}" fill="none" stroke="#1a2434" stroke-width="5"/>
       <circle r="${rR}" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round"
         stroke-dasharray="${circumference}" stroke-dashoffset="${dashoffset}"
         transform="rotate(-90)" filter="url(#glow)"/>
@@ -142,7 +142,7 @@ function renderDetailed({ user, avatarUri, shape, langStats, totalStars, totalFo
     ${statBox(280, statsY2, 'ISSUES', issues ?? '—', color, 'issue', 116)}
 
     ${topLangs.length ? `
-      <rect x="24" y="${langBarY}" width="${barW}" height="10" rx="5" fill="#1b2233"/>
+      <rect x="24" y="${langBarY}" width="${barW}" height="10" rx="5" fill="#1a2434"/>
       ${segments.map((s) => `<rect x="${24 + s.x}" y="${langBarY}" width="${s.w}" height="10" fill="${s.color}"/>`).join('')}
       ${(() => {
         let lx = 24;
