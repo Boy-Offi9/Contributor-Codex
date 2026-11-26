@@ -35,7 +35,7 @@ function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, c
 
   const tile = (x, label, value, ic) => `
     <g transform="translate(${x},${tilesY})">
-      <rect width="94" height="60" rx="12" fill="#ffffff" opacity="0.7"/>
+      <rect width="94" height="60" rx="4" fill="#ffffff" opacity="0.7" stroke="#1c2333" stroke-opacity="0.12"/>
       ${icon(ic, 41, 9, color)}
       <text x="47" y="31" text-anchor="middle" class="lbl">${label}</text>
       <text x="47" y="51" text-anchor="middle" class="t1">${value}</text>
@@ -47,10 +47,10 @@ function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, c
       <style>
         .t1{font:700 16px system-ui,sans-serif;fill:#1c2333;}
         .t2{font:500 11px system-ui,sans-serif;fill:#6b7488;}
-        .lbl{font:500 10px system-ui,sans-serif;fill:#8891a3;letter-spacing:.4px;}
+        .lbl{font:500 9.5px 'JetBrains Mono',ui-monospace,monospace;fill:#5b6478;letter-spacing:1.1px;}
         .cls{font:600 11px system-ui,sans-serif;fill:${color};}
-        .foot{font:500 10px system-ui,sans-serif;fill:#9aa2b3;}
-        .sec{font:600 10px system-ui,sans-serif;fill:#8891a3;letter-spacing:1px;}
+        .foot{font:500 10px 'JetBrains Mono',ui-monospace,monospace;fill:#6b7488;}
+        .sec{font:600 9.5px 'JetBrains Mono',ui-monospace,monospace;fill:#5b6478;letter-spacing:1.6px;}
         .lg{font:500 11px system-ui,sans-serif;fill:#1c2333;}
         .lgp{font:600 11px system-ui,sans-serif;fill:#6b7488;}
         .big{font:700 15px system-ui,sans-serif;fill:#1c2333;}
@@ -71,13 +71,20 @@ function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, c
       <filter id="avatarGlow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="6"/></filter>
     </defs>
 
-    <rect width="360" height="${height}" rx="24" fill="url(#glassBg)"/>
+    <polygon points="18,0 360,0 360,${height - 18} 342,${height} 0,${height} 0,18" fill="url(#glassBg)"/>
     <circle cx="30" cy="20" r="70" fill="${color}" opacity="0.22" filter="url(#blob)"/>
-    <circle cx="345" cy="60" r="60" fill="#8b5cf6" opacity="0.18" filter="url(#blob)"/>
+    <circle cx="345" cy="60" r="60" fill="#ff2d6f" opacity="0.16" filter="url(#blob)"/>
     <circle cx="330" cy="${height - 30}" r="65" fill="${color}" opacity="0.14" filter="url(#blob)"/>
 
-    <rect x="16" y="16" width="328" height="${height - 32}" rx="18" fill="#ffffff" opacity="0.55" filter="url(#soft)"/>
-    <rect x="34" y="16" width="292" height="1.5" rx="0.75" fill="url(#glassShine)"/>
+    <polygon points="32,16 344,16 344,${height - 34} 326,${height - 16} 16,${height - 16} 16,32" fill="#ffffff" opacity="0.55" filter="url(#soft)"/>
+    <polygon points="32,16 344,16 344,${height - 34} 326,${height - 16} 16,${height - 16} 16,32" fill="none" stroke="#1c2333" stroke-opacity="0.1" stroke-width="4"/>
+    <polygon points="32,16 344,16 344,${height - 34} 326,${height - 16} 16,${height - 16} 16,32" fill="none" stroke="#1c2333" stroke-opacity="0.35" stroke-width="1.2"/>
+    <g fill="none" stroke="#1c2333" stroke-width="2.2" stroke-linecap="square" opacity="0.65">
+      <path d="M312 17 H343 V48"/>
+      <path d="M48 ${height - 17} H17 V${height - 48}"/>
+    </g>
+    ${Array.from({ length: Math.ceil(height / 7) }, (_, i) => `<line x1="24" y1="${i * 7}" x2="336" y2="${i * 7}" stroke="#1c2333" stroke-width="1" opacity="0.035"/>`).join('')}
+    <rect x="40" y="16" width="264" height="1.5" rx="0.75" fill="url(#glassShine)"/>
 
     <g transform="translate(32,32)">
       <circle cx="36" cy="36" r="38" fill="${color}" opacity="0.35" filter="url(#avatarGlow)"/>
@@ -90,7 +97,7 @@ function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, c
       <path d="M-4 0l3 3.2L4.2 -3.4" stroke="#ffffff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </g>
     <text x="120" y="68" class="t2">@${esc(user.login)}</text>
-    ${topLang ? `<rect x="120" y="82" width="${18 + esc(topLang).length * 6.5}" height="20" rx="10" fill="${color}" opacity="0.12"/><text x="${130 + esc(topLang).length * 3.25}" y="96" text-anchor="middle" class="cls">${esc(topLang)}</text>` : ''}
+    ${topLang ? `<rect x="120" y="82" width="${18 + esc(topLang).length * 6.5}" height="20" rx="4" fill="${color}" opacity="0.12"/><text x="${130 + esc(topLang).length * 3.25}" y="96" text-anchor="middle" class="cls">${esc(topLang)}</text>` : ''}
 
     ${tile(32, 'REPOS', user.public_repos || 0, 'repo')}
     ${tile(133, 'STARS', totalStars, 'star')}
@@ -119,7 +126,7 @@ function renderGlass({ user, avatarUri, shape, topLang, totalStars, langStats, c
       let cx = left;
       const chipMarkup = chips.map((c, i) => {
         const g = `<g transform="translate(${cx.toFixed(1)},${chipsY})">
-          <rect width="${widths[i].toFixed(1)}" height="24" rx="12" fill="#ffffff" opacity="0.6"/>
+          <rect width="${widths[i].toFixed(1)}" height="24" rx="4" fill="#ffffff" opacity="0.6" stroke="#1c2333" stroke-opacity="0.1"/>
           ${icon(c.ic, 9, 6, '#8891a3')}
           <text x="26" y="16" class="foot">${c.text}</text>
         </g>`;

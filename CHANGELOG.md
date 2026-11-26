@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.28.0 - 2026-11-26
+
+### Changed
+- Glass theme joins the kit design language while keeping its light frosted
+  identity: chamfered chassis with layered ink strokes, corner brackets,
+  subtle scanlines, mono labels, squared HUD tiles/chips; purple accent blob
+  replaced with the kit pink; glass repo card rebuilt the same way. Name
+  stays `glass`
+
 ## 0.27.0 - 2026-11-26
 
 ### Changed

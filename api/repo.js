@@ -166,23 +166,30 @@ function renderGlass({ repo, color }) {
       <style>
         .name{font:700 17px system-ui,sans-serif;fill:#1c2333;}
         .desc{font:400 12px system-ui,sans-serif;fill:#5b6478;}
-        .lbl{font:500 9px system-ui,sans-serif;fill:#8891a3;letter-spacing:.5px;}
+        .lbl{font:500 9px 'JetBrains Mono',ui-monospace,monospace;fill:#5b6478;letter-spacing:1.2px;}
         .statVal{font:700 18px system-ui,sans-serif;}
-        .chip{font:600 10px system-ui,sans-serif;fill:#1c2333;}
+        .chip{font:600 10px 'JetBrains Mono',ui-monospace,monospace;fill:#1c2333;}
       </style>
       <linearGradient id="glassBg" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0%" stop-color="#eef1f8"/><stop offset="100%" stop-color="#dde3f0"/>
       </linearGradient>
     </defs>
-    <rect width="420" height="200" rx="18" fill="url(#glassBg)"/>
+    <polygon points="16,0 420,0 420,184 404,200 0,200 0,16" fill="url(#glassBg)"/>
+    <polygon points="16,0 420,0 420,184 404,200 0,200 0,16" fill="none" stroke="#1c2333" stroke-opacity="0.1" stroke-width="4"/>
+    <polygon points="16,0 420,0 420,184 404,200 0,200 0,16" fill="none" stroke="#1c2333" stroke-opacity="0.35" stroke-width="1.2"/>
+    <g fill="none" stroke="#1c2333" stroke-width="2.2" stroke-linecap="square" opacity="0.65">
+      <path d="M388 1 H419 V32"/>
+      <path d="M32 199 H1 V168"/>
+    </g>
+    ${Array.from({ length: 29 }, (_, i) => `<line x1="8" y1="${i * 7}" x2="412" y2="${i * 7}" stroke="#1c2333" stroke-width="1" opacity="0.035"/>`).join('')}
     <text x="24" y="36" class="name">${esc(repo.name)}</text>
     <text x="24" y="52" class="desc">${esc(repo.owner.login)}</text>
     ${descLines.map((line, i) => `<text x="24" y="${118 + i * 16}" class="desc">${line}</text>`).join('')}
     <text x="24" y="70" class="lbl">STARS</text><text x="24" y="94" class="statVal" fill="${color}">${repo.stargazers_count}</text>
     <text x="140" y="70" class="lbl">FORKS</text><text x="140" y="94" class="statVal" fill="${color}">${repo.forks_count}</text>
     <text x="256" y="70" class="lbl">ISSUES</text><text x="256" y="94" class="statVal" fill="${color}">${repo.open_issues_count}</text>
-    ${repo.language ? `<rect x="24" y="164" width="${16 + repo.language.length * 7}" height="20" rx="10" fill="#ffffff" opacity="0.7"/><text x="32" y="178" class="chip">${esc(repo.language)}</text>` : ''}
-    ${license ? `<rect x="${repo.language ? 40 + repo.language.length * 7 : 24}" y="164" width="${16 + license.length * 7}" height="20" rx="10" fill="#ffffff" opacity="0.4"/><text x="${repo.language ? 48 + repo.language.length * 7 : 32}" y="178" class="chip" fill="#5b6478">${esc(license)}</text>` : ''}
+    ${repo.language ? `<rect x="24" y="164" width="${16 + repo.language.length * 7}" height="20" rx="4" fill="#ffffff" opacity="0.7" stroke="#1c2333" stroke-opacity="0.12"/><text x="32" y="178" class="chip">${esc(repo.language)}</text>` : ''}
+    ${license ? `<rect x="${repo.language ? 40 + repo.language.length * 7 : 24}" y="164" width="${16 + license.length * 7}" height="20" rx="4" fill="#ffffff" opacity="0.4" stroke="#1c2333" stroke-opacity="0.12"/><text x="${repo.language ? 48 + repo.language.length * 7 : 32}" y="178" class="chip" fill="#5b6478">${esc(license)}</text>` : ''}
   </svg>`;
 }
 
@@ -287,6 +294,7 @@ function svg(body, status, cacheControl) {
   return svgReply(body, status, cacheControl);
 }
 
+module.exports.__THEMES = THEMES;
 module.exports.GET = async (request) => {
   const rateLimited = await isRateLimited('repo-endpoint', request);
   if (rateLimited) return svg(errorSVG('rate limited — slow down a bit'), 429, 'no-store');
