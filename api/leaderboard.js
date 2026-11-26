@@ -84,14 +84,14 @@ function cyberpunkRow(index, entry, total, topValue, shape, override, sort) {
 
   return `
     ${medal ? `<rect x="8" y="${y + 2}" width="${WIDTH - 16}" height="${ROW_H - 4}" fill="url(#medal${index})"/>` : ''}
-    ${index < total - 1 ? `<line x1="16" y1="${y + ROW_H}" x2="${WIDTH - 16}" y2="${y + ROW_H}" stroke="#1b2233" stroke-dasharray="2,3"/>` : ''}
+    ${index < total - 1 ? `<line x1="16" y1="${y + ROW_H}" x2="${WIDTH - 16}" y2="${y + ROW_H}" stroke="#1a2434" stroke-dasharray="2,3"/>` : ''}
     ${rank}
     <g transform="translate(60,${y + (ROW_H - 42) / 2})">
-      ${avatarShape({ id: `av${index}`, shape, size: 42, uri: avatarUri, ring: color, bg: '#1b2233', ringWidth: 1.4 })}
+      ${avatarShape({ id: `av${index}`, shape, size: 42, uri: avatarUri, ring: color, bg: '#12202e', ringWidth: 1.4 })}
     </g>
     <text x="114" y="${mid - 3}" class="name">${name}</text>
     <text x="114" y="${mid + 12}" class="cls" fill="${color}">${esc(classLabel.toUpperCase())}</text>
-    <rect x="${barX}" y="${mid - 2}" width="${barW}" height="4" fill="#1b2233"/>
+    <rect x="${barX}" y="${mid - 2}" width="${barW}" height="4" fill="#1a2434"/>
     <rect x="${barX}" y="${mid - 2}" width="${(barW * pct) / 100}" height="4" fill="${color}"/>
     <rect x="${barX}" y="${mid - 2}" width="${(barW * pct) / 100}" height="1" fill="#ffffff" opacity="0.3"/>
     <rect x="${WIDTH - 176}" y="${mid - 9}" width="46" height="18" fill="${color}"/>
@@ -113,7 +113,7 @@ function renderCyberpunkBoard(org, top, ranked, accent, shape, override, sort) {
     <defs>
       <style>
         .title{font:700 15px system-ui,sans-serif;fill:#e8edf5;letter-spacing:1px;}
-        .meta{font:500 10px ${MONO};fill:#7a8399;letter-spacing:1px;}
+        .meta{font:500 10px ${MONO};fill:#7fb8c4;letter-spacing:1px;}
         .rankNum{font:700 12px ${MONO};}
         .rankDim{font:700 12px ${MONO};fill:#5a6480;}
         .name{font:600 13.5px system-ui,sans-serif;fill:#e8edf5;}
@@ -129,18 +129,24 @@ function renderCyberpunkBoard(org, top, ranked, accent, shape, override, sort) {
         <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.09"/>
         <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
       </radialGradient>${medalDefs}
-      <clipPath id="cardClip"><polygon points="0,14 14,0 ${WIDTH},0 ${WIDTH},${height - 14} ${WIDTH - 14},${height} 0,${height}"/></clipPath>
+      <clipPath id="cardClip"><polygon points="14,0 ${WIDTH},0 ${WIDTH},${height - 14} ${WIDTH - 14},${height} 0,${height} 0,14"/></clipPath>
     </defs>
     <g clip-path="url(#cardClip)">
-      <rect width="${WIDTH}" height="${height}" fill="#05070c"/>
+      <rect width="${WIDTH}" height="${height}" fill="#04070d"/>
+    ${Array.from({ length: Math.ceil(height / 6) }, (_, i) => `<line x1="10" y1="${i * 6}" x2="${WIDTH - 10}" y2="${i * 6}" stroke="${accent}" stroke-width="1" opacity="0.05"/>`).join('')}
       <rect width="${WIDTH}" height="${height}" fill="url(#bg)"/>
       <rect width="${WIDTH}" height="${height}" fill="url(#bg2)"/>
     </g>
-    <polygon points="0,14 14,0 ${WIDTH},0 ${WIDTH},${height - 14} ${WIDTH - 14},${height} 0,${height}" fill="none" stroke="${accent}" opacity="0.45"/>
+    <polygon points="14,0 ${WIDTH},0 ${WIDTH},${height - 14} ${WIDTH - 14},${height} 0,${height} 0,14" fill="none" stroke="${accent}" stroke-opacity="0.14" stroke-width="4"/>
+    <polygon points="14,0 ${WIDTH},0 ${WIDTH},${height - 14} ${WIDTH - 14},${height} 0,${height} 0,14" fill="none" stroke="${accent}" stroke-opacity="0.7" stroke-width="1.3"/>
+    <g fill="none" stroke="${accent}" stroke-width="2.4" stroke-linecap="square" opacity="0.85">
+      <path d="M${WIDTH - 34} 2 H${WIDTH - 2} V34"/>
+      <path d="M34 ${height - 2} H2 V${height - 34}"/>
+    </g>
     <rect x="16" y="16" width="3" height="20" fill="${accent}"/>
     <text x="28" y="32" class="title">${esc(truncate(org.toUpperCase(), 28))} // LEADERBOARD</text>
     <text x="${WIDTH - 16}" y="31" text-anchor="end" class="meta">TOP ${top.length} OF ${ranked}${sort === 'xp' ? '' : ` · BY ${SORTS[sort].label.toUpperCase()}`}</text>
-    <line x1="16" y1="${HEADER_H - 8}" x2="${WIDTH - 16}" y2="${HEADER_H - 8}" stroke="#1b2233"/>
+    <line x1="16" y1="${HEADER_H - 8}" x2="${WIDTH - 16}" y2="${HEADER_H - 8}" stroke="#1a2434"/>
     ${rows}
   </svg>`;
 }

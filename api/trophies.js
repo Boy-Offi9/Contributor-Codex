@@ -1,6 +1,6 @@
 const { isRateLimited } = require('./_lib/ratelimit');
 const errors = require('./_lib/errors');
-const { esc, sanitizeColor, badge, sanitizeBadge, SANS, readableAccent, svgReply } = require('./_lib/svg');
+const { esc, sanitizeColor, badge, sanitizeBadge, SANS, MONO, readableAccent, svgReply } = require('./_lib/svg');
 const { ghFetch, isGhName } = require('./_lib/github');
 const { computeStats, trophyTier } = require('./_lib/game');
 
@@ -79,7 +79,7 @@ function renderTrophies(user, stats, selected, trophyDefs, shape) {
     <defs>
       <style>
         .val{font:700 16px ${SANS};}
-        .lbl{font:600 10px ${SANS};fill:#8a94ab;letter-spacing:.6px;}
+        .lbl{font:600 9.5px ${MONO};fill:#7fb8c4;letter-spacing:1.2px;}
         .tier{font:700 10px ${SANS};letter-spacing:.5px;}
       </style>
       <radialGradient id="bg" cx="10%" cy="0%" r="90%">
@@ -94,10 +94,16 @@ function renderTrophies(user, stats, selected, trophyDefs, shape) {
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
-    <rect width="${width}" height="120" fill="#05070c"/>
-    <rect width="${width}" height="120" fill="url(#grid)" opacity="0.05"/>
+    <rect width="${width}" height="120" fill="#04070d"/>
     <rect width="${width}" height="120" fill="url(#bg)"/>
-    <rect width="${width}" height="120" fill="none" stroke="#1b2233"/>
+    ${Array.from({ length: 20 }, (_, i) => `<line x1="10" y1="${i * 6}" x2="${width - 10}" y2="${i * 6}" stroke="${accent}" stroke-width="1" opacity="0.06"/>`).join('')}
+    <polygon points="14,0 ${width},0 ${width},106 ${width - 14},120 0,120 0,14" fill="none" stroke="${accent}" stroke-opacity="0.08" stroke-width="6"/>
+    <polygon points="14,0 ${width},0 ${width},106 ${width - 14},120 0,120 0,14" fill="none" stroke="${accent}" stroke-opacity="0.18" stroke-width="3"/>
+    <polygon points="14,0 ${width},0 ${width},106 ${width - 14},120 0,120 0,14" fill="none" stroke="${accent}" stroke-opacity="0.9" stroke-width="1.3"/>
+    <g fill="none" stroke="${accent}" stroke-width="2.4" stroke-linecap="square" opacity="0.9">
+      <path d="M${width - 34} 2 H${width - 2} V34"/>
+      <path d="M34 118 H2 V86"/>
+    </g>
     ${badges}
   </svg>`;
 }

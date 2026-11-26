@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.26.2 - 2026-11-26
+
+### Changed
+- Small-surface pass to the kit design language: badges use the mono font,
+  darker kit label segment and a seam tick; trophies strip rebuilt on the HUD
+  chassis (chamfered frame, brackets, scanlines, mono labels); leaderboard
+  palette aligned to the kit trio and its frame got brackets + scanlines
+
 ## 0.26.1 - 2026-11-26
 
 ### Fixed

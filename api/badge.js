@@ -1,7 +1,7 @@
 const { isRateLimited } = require('./_lib/ratelimit');
 const {
   esc, ghFetch, computeStats, classFor, computeRank, sanitizeColor, readableAccent, contrastRatio,
-  isGhName, truncate, svgReply, SANS,
+  isGhName, truncate, svgReply, SANS, MONO,
 } = require('./_lib/shared');
 const { fetchCalendar, fetchStats, computeStreaks } = require('./_lib/contrib');
 
@@ -45,8 +45,8 @@ function badgeSvg({ label, value, color, style, light }) {
   const labelW = textWidth(label) + 14;
   const valueW = textWidth(value) + 14;
   const width = labelW + valueW;
-  const labelBg = light ? '#e6eaf4' : '#1b2233';
-  const labelFg = light ? '#3d4760' : '#c3cadb';
+  const labelBg = light ? '#e6eaf4' : '#12202e';
+  const labelFg = light ? '#3d4760' : '#7fb8c4';
   const valueFg = contrastRatio('#05070c', color) >= contrastRatio('#ffffff', color) ? '#05070c' : '#ffffff';
   const gloss = style === 'square' ? '' : `<rect width="${width}" height="${HEIGHT}" fill="url(#gloss)"/>`;
   return `<svg width="${width}" height="${HEIGHT}" viewBox="0 0 ${width} ${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
@@ -58,9 +58,10 @@ function badgeSvg({ label, value, color, style, light }) {
     <g clip-path="url(#clip)">
       <rect width="${labelW}" height="${HEIGHT}" fill="${labelBg}"/>
       <rect x="${labelW}" width="${valueW}" height="${HEIGHT}" fill="${color}"/>
+      <rect x="${labelW - 1}" width="2" height="${HEIGHT}" fill="#ffffff" opacity="0.35"/>
       ${gloss}
     </g>
-    <g font-family="${SANS}" font-size="11" text-anchor="middle">
+    <g font-family="${MONO}" font-size="10.5" text-anchor="middle">
       <text x="${labelW / 2}" y="14" fill="${labelFg}" textLength="${labelW - 14}" lengthAdjust="spacingAndGlyphs">${esc(label)}</text>
       <text x="${labelW + valueW / 2}" y="14" fill="${valueFg}" font-weight="700" textLength="${valueW - 14}" lengthAdjust="spacingAndGlyphs">${esc(value)}</text>
     </g>
