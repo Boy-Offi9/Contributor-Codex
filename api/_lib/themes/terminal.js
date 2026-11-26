@@ -28,7 +28,16 @@ function renderTerminal({ user, xp, totalStars, topLang, tier }) {
       </style>
     </defs>
     <rect width="360" height="${height}" fill="#020402"/>
-    <rect width="360" height="${height}" fill="none" stroke="${green}" opacity="0.5"/>
+    <g opacity="0.14">${Array.from({ length: Math.ceil(height / 6) }, (_, i) => `<line x1="0" y1="${i * 6}" x2="360" y2="${i * 6}" stroke="${green}" stroke-width="1"/>`).join('')}</g>
+    <rect x="0" y="-8" width="360" height="5" fill="${green}" opacity="0.10">
+      <animate attributeName="y" from="-8" to="${height}" dur="6s" repeatCount="indefinite"/>
+    </rect>
+    <rect width="360" height="${height}" fill="none" stroke="${green}" stroke-opacity="0.14" stroke-width="4"/>
+    <rect width="360" height="${height}" fill="none" stroke="${green}" stroke-opacity="0.7" stroke-width="1"/>
+    <g fill="none" stroke="${green}" stroke-width="2" stroke-linecap="square" opacity="0.8">
+      <path d="M324 2 H358 V36"/>
+      <path d="M36 ${height - 2} H2 V${height - 36}"/>
+    </g>
     <rect x="0" y="0" width="360" height="24" fill="#0a140a"/>
     <circle cx="14" cy="12" r="4" fill="#ff4d6d"/>
     <circle cx="30" cy="12" r="4" fill="#ffb020"/>

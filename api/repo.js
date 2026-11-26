@@ -142,7 +142,16 @@ function renderTerminal({ repo }) {
     <title>${esc(repo.full_name)} — Repository Card (terminal theme)</title>
     <defs><style>.term{font:400 13px ${MONO};fill:${green};}.head{font:700 13px ${MONO};fill:${green};}</style></defs>
     <rect width="420" height="220" fill="#020402"/>
-    <rect width="420" height="220" fill="none" stroke="${green}" opacity="0.5"/>
+    <g opacity="0.14">${Array.from({ length: 37 }, (_, i) => `<line x1="0" y1="${i * 6}" x2="420" y2="${i * 6}" stroke="${green}" stroke-width="1"/>`).join('')}</g>
+    <rect x="0" y="-8" width="420" height="5" fill="${green}" opacity="0.10">
+      <animate attributeName="y" from="-8" to="220" dur="6s" repeatCount="indefinite"/>
+    </rect>
+    <rect width="420" height="220" fill="none" stroke="${green}" stroke-opacity="0.14" stroke-width="4"/>
+    <rect width="420" height="220" fill="none" stroke="${green}" stroke-opacity="0.7" stroke-width="1"/>
+    <g fill="none" stroke="${green}" stroke-width="2" stroke-linecap="square" opacity="0.8">
+      <path d="M384 2 H418 V36"/>
+      <path d="M36 218 H2 V184"/>
+    </g>
     <text x="16" y="30" class="head">$ git remote show origin</text>
     ${rows.map((line, i) => `<text x="16" y="${58 + i * 20}" class="term">${esc(line)}</text>`).join('')}
   </svg>`;

@@ -58,18 +58,44 @@ function frame({ width, height, color, theme, title, body, style = {}, css = '' 
   const p = paletteFor(theme, style);
   const cyber = theme === 'cyberpunk';
   const glass = theme === 'glass';
+  // kit HUD chassis (scifi-ui-kit HudFramePainter): chamfered top-left +
+  // bottom-right, triple-stroke glow, scanlines, long brackets, traveling light
+  const CH = 14;
   const outline = cyber
-    ? `0,14 14,0 ${width},0 ${width},${height - 14} ${width - 14},${height} 0,${height}`
+    ? `${CH},0 ${width},0 ${width},${height - CH} ${width - CH},${height} 0,${height} 0,${CH}`
     : null;
   const clip = cyber
     ? `<clipPath id="cardClip"><polygon points="${outline}"/></clipPath>`
     : `<clipPath id="cardClip"><rect width="${width}" height="${height}" rx="${glass ? 24 : 2}"/></clipPath>`;
   const bStroke = style.border || color;
   const bOpacity = style.border ? 1 : cyber ? 0.5 : 0.6;
+  const mix = (a, b, f) => {
+    const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
+    const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
+    return '#' + pa.map((v, i) => Math.round(v + (pb[i] - v) * f).toString(16).padStart(2, '0')).join('');
+  };
+  const sweepCol = mix(bStroke.startsWith('#') ? bStroke : '#00e5ff', '#ffffff', 0.8);
+  const bracketCol = mix(bStroke.startsWith('#') ? bStroke : '#00e5ff', '#ffffff', 0.55);
+  const per = 2 * (width + height) - 2 * (2 * CH) + 2 * CH * Math.SQRT2;
+  const seg = per * 0.14;
+  const hudBorder = style.hideBorder
+    ? ''
+    : `
+    <polygon points="${outline}" fill="${bStroke}" fill-opacity="0.04"/>
+    <polygon points="${outline}" fill="none" stroke="${bStroke}" stroke-opacity="0.08" stroke-width="6"/>
+    <polygon points="${outline}" fill="none" stroke="${bStroke}" stroke-opacity="0.18" stroke-width="3.2"/>
+    <polygon points="${outline}" fill="none" stroke="${bStroke}" stroke-opacity="0.9" stroke-width="1.3"/>
+    <polygon points="${outline}" fill="none" stroke="${sweepCol}" stroke-width="2" stroke-dasharray="${seg.toFixed(1)} ${(per - seg).toFixed(1)}">
+      <animate attributeName="stroke-dashoffset" from="${per.toFixed(1)}" to="0" dur="3.2s" repeatCount="indefinite"/>
+    </polygon>
+    <g fill="none" stroke="${bracketCol}" stroke-width="2.6" stroke-linecap="square">
+      <path d="M${width - 36} 2 H${width - 2} V36"/>
+      <path d="M36 ${height - 2} H2 V${height - 36}"/>
+    </g>`;
   const border = style.hideBorder
     ? ''
     : cyber
-      ? `<polygon points="${outline}" fill="none" stroke="${bStroke}" opacity="${bOpacity}"/>`
+      ? hudBorder
       : glass
         ? (style.border ? `<rect x=".5" y=".5" width="${width - 1}" height="${height - 1}" rx="24" fill="none" stroke="${style.border}"/>` : '')
         : `<rect x=".5" y=".5" width="${width - 1}" height="${height - 1}" rx="2" fill="none" stroke="${bStroke}" opacity="${bOpacity}"/>`;
@@ -81,7 +107,13 @@ function frame({ width, height, color, theme, title, body, style = {}, css = '' 
       <rect x="10" y="10" width="${width - 20}" height="${height - 20}" rx="18" fill="${style.bg ? p.bg : '#ffffff'}" opacity="${style.bg ? 0.7 : 0.55}" filter="url(#soft)"/>
       <rect x="28" y="10" width="${width - 56}" height="1.5" rx="0.75" fill="url(#glassShine)"/>`
     : `<rect width="${width}" height="${height}" fill="${p.bg}"/>
-      ${theme === 'terminal' ? '' : `<rect width="${width}" height="${height}" fill="url(#grid)" opacity="0.05"/><rect width="${width}" height="${height}" fill="url(#bgA)"/>`}`;
+      ${theme === 'terminal'
+        ? `<g opacity="0.5">${Array.from({ length: Math.ceil(height / 4) }, (_, i) => `<rect x="0" y="${i * 4}" width="${width}" height="1" fill="#000" opacity="0.35"/>`).join('')}</g>`
+        : cyber
+          ? `<rect width="${width}" height="${height}" fill="url(#bgA)"/>
+             ${Array.from({ length: Math.ceil(height / 6) }, (_, i) => `<line x1="${CH - 4}" y1="${i * 6}" x2="${width - CH + 4}" y2="${i * 6}" stroke="${bStroke}" stroke-width="1" opacity="0.07"/>`).join('')}
+             <rect x="0" y="-8" width="${width}" height="6" fill="${bStroke}" opacity="0.09"><animate attributeName="y" from="-8" to="${height}" dur="5.5s" repeatCount="indefinite"/></rect>`
+          : `<rect width="${width}" height="${height}" fill="url(#grid)" opacity="0.05"/><rect width="${width}" height="${height}" fill="url(#bgA)"/>`}`;
   return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
     <title>${esc(title)}</title>
     <defs>

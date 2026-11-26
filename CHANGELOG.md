@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.25.0 - 2026-11-26
+
+### Changed
+- The shared card frame (streak, langs, stats, activity in cyberpunk) now uses
+  the scifi-ui-kit HUD language: chamfered chassis, triple-stroke glow,
+  scanlines with a roaming scan band, corner brackets, traveling border light
+- Terminal themes (card + repo) upgraded to the kit's phosphor variant: CRT
+  scanlines, phosphor sweep, solid double frame, corner brackets
+- Detailed theme: kit chassis — scanlines, scan band, brackets, layered frame
+- Glass intentionally kept as the light/accessible variant (see README)
+
 ## 0.24.0 - 2026-11-26
 
 ### Changed

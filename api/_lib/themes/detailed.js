@@ -102,12 +102,16 @@ function renderDetailed({ user, avatarUri, shape, langStats, totalStars, totalFo
         <feGaussianBlur stdDeviation="2.4" result="blur"/>
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
-      <clipPath id="cardClip"><polygon points="0,14 14,0 420,0 420,${height - 14} 406,${height} 0,${height}"/></clipPath>
+      <clipPath id="cardClip"><polygon points="14,0 420,0 420,${height - 14} 406,${height} 0,${height} 0,14"/></clipPath>
     </defs>
 
     <g clip-path="url(#cardClip)">
       <rect width="420" height="${height}" fill="#05070c"/>
       <rect width="420" height="${height}" fill="url(#bg)"/>
+      <g opacity="1">${Array.from({ length: Math.ceil(height / 6) }, (_, i) => `<line x1="10" y1="${i * 6}" x2="410" y2="${i * 6}" stroke="${color}" stroke-width="1" opacity="0.06"/>`).join('')}</g>
+      <rect x="0" y="-8" width="420" height="6" fill="${color}" opacity="0.08">
+        <animate attributeName="y" from="-8" to="${height}" dur="6.5s" repeatCount="indefinite"/>
+      </rect>
       <rect width="420" height="${height}" fill="url(#bg2)"/>
     </g>
     <polygon points="0,14 14,0 420,0 420,${height - 14} 406,${height} 0,${height}" fill="none" stroke="${color}" opacity="0.5"/>
