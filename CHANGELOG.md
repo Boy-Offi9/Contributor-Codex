@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.33.0 - 2026-11-26
+
+### Added
+- `detailed` is now an opt-in base card with design-language skins:
+  `?theme=detailed&skin=cyberpunk|terminal|glass` renders the spec-sheet
+  layout (rank gauge, stat grid, language bar) in that theme's design
+  language. `skin=classic` (default) keeps the original look unchanged;
+  unknown/missing/hostile skin values fall back to classic, and other
+  themes ignore the parameter.
+- New skin contract under `api/_lib/themes/skins/` (chassis, statCell,
+  sectionHeader, langTrack, legendEntry, palette); detailed.js is now a
+  pure layout engine consuming it. Renderer-side color hardening: a raw
+  non-hex `color` can no longer reach markup.
+
 ## 0.32.0 - 2026-11-26
 
 ### Changed
