@@ -58,7 +58,7 @@ function shield(x, key, label, value, tier, shape, pitch) {
     <text x="${cx}" y="72" text-anchor="middle" class="val" fill="${tier.color}">${value}</text>
     <text x="${cx}" y="85" text-anchor="middle" class="lbl">${label}</text>
     <text x="${cx}" y="97" text-anchor="middle" class="tier" fill="${tier.color}">${tier.name}</text>
-    <rect x="${cx - barW / 2}" y="104" width="${barW}" height="3" fill="#1b2233"/>
+    <rect x="${cx - barW / 2}" y="104" width="${barW}" height="3" fill="#1a2434"/>
     <rect x="${cx - barW / 2}" y="104" width="${(barW * pct) / 100}" height="3" fill="${tier.color}"/>`;
 }
 

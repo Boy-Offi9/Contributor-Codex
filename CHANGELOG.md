@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.26.4 - 2026-11-26
+
+### Fixed
+- Trophies XP bar track color aligned to kit rule color
+
 ## 0.26.3 - 2026-11-26
 
 ### Fixed
