@@ -159,6 +159,8 @@
   const dynamicFields = $('#dynamicFields');
   const themeField = $('#themeField');
   const themeSelect = $('#themeSelect');
+  const skinField = $('#skinField');
+  const skinSelect = $('#skinSelect');
   const shapeField = $('#shapeField');
   const shapeSelect = $('#shapeSelect');
   const badgeField = $('#badgeField');
@@ -298,6 +300,10 @@
     } else {
       themeField.classList.add('hidden');
     }
+    // Skin picker only applies to the detailed base card.
+    const skinAllowed = currentType === 'card' && state.theme === 'detailed';
+    skinField.classList.toggle('hidden', !skinAllowed);
+    if (skinAllowed) skinSelect.value = state.skin || 'classic';
 
     colorFieldWrap.classList.toggle('hidden', currentType === 'trophies');
     syncAccentUi();
@@ -336,6 +342,7 @@
 
     const theme = themeOverride || state.theme;
     if (def.themes && theme) params.theme = theme;
+    if (currentType === 'card' && theme === 'detailed' && state.skin && state.skin !== 'classic') params.skin = state.skin;
     if (def.shapeSupport && state.shape) params.shape = state.shape;
     if (def.badgeSupport && state.badge) params.badge = state.badge;
 
@@ -481,6 +488,7 @@
   });
 
   themeSelect.addEventListener('change', () => { state.theme = themeSelect.value; update(); });
+  skinSelect.addEventListener('change', () => { state.skin = skinSelect.value; update(); });
   shapeSelect.addEventListener('change', () => { state.shape = shapeSelect.value; update(); });
   badgeSelect.addEventListener('change', () => { state.badge = badgeSelect.value; update(); });
   colorPicker.addEventListener('input', () => { colorText.value = colorPicker.value.replace(/^#/, ''); update(); });

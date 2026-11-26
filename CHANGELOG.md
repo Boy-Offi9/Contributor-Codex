@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.34.0 - 2026-11-26
+
+### Added
+- Repo card: `skin` param for `theme=detailed` (same contract as the
+  contributor card — classic/cyberpunk/terminal/glass; invalid values fall
+  back to classic). Terminal and glass get real design-language treatments
+  (phosphor CRT cells / frosted light tiles), not recolors
+- Builder: skin dropdown appears when the detailed theme is selected on the
+  contributor card and is wired into the generated URL
+
 ## 0.33.0 - 2026-11-26
 
 ### Added

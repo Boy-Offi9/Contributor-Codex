@@ -228,7 +228,8 @@ function formatDate(iso) {
   return new Date(iso).toISOString().slice(0, 10);
 }
 
-function renderDetailed({ repo, color, fontFace, contributors, releaseTag }) {
+function renderDetailed({ repo, color, fontFace, contributors, releaseTag, skinName = 'classic' }) {
+  const S = Object.prototype.hasOwnProperty.call(REPO_SKINS, skinName) ? REPO_SKINS[skinName] : REPO_SKINS.classic;
   const displayFont = fontFace ? "'Chakra Petch',system-ui,sans-serif" : 'system-ui,sans-serif';
   const descLines = repo.description ? wrapText(esc(repo.description), 56) : [];
   const license = licenseOf(repo);
@@ -246,50 +247,65 @@ function renderDetailed({ repo, color, fontFace, contributors, releaseTag }) {
   const langY = topics.length ? topicsY + 32 : topicsY;
   const height = langY + 32;
 
+  const isKit = !S.frame; // classic + cyberpunk share the kit HUD chassis
+  const cell = S.statCell || ((x, y, label, value, c, w) => statBox(x, y, label, value, c));
+  const chip = S.chip || ((x, y, w, h, label, variant, c) => hudChip(x, y, w, h, label, variant, c));
+  const nameFill = S.ink || '#e8edf5';
+  const subFill = S.sub || '#7fb8c4';
+  const descFill = S.dim || '#a8b0c2';
+  const statW = 204;
+
   return `<svg width="440" height="${height}" viewBox="0 0 440 ${height}" xmlns="http://www.w3.org/2000/svg">
-    <title>${esc(repo.full_name)} — Repository Card (detailed theme)</title>
+    <title>${esc(repo.full_name)} — Repository Card (detailed theme${isKit ? '' : ', ' + S.name + ' skin'})</title>
     <defs>
       ${fontFace ? `<style>${fontFace}</style>` : ''}
+      ${S.name === 'glass' ? '<linearGradient id="repoGlassBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#eef1f8"/><stop offset="100%" stop-color="#dde3f0"/></linearGradient>' : ''}
       <style>
-        .name{font:700 19px ${displayFont};fill:#e8edf5;}
-        .desc{font:400 12px system-ui,sans-serif;fill:#a8b0c2;}
-        .lbl{font:500 10px ${MONO};fill:#7fb8c4;letter-spacing:1px;}
+        .name{font:700 19px ${displayFont};fill:${nameFill};${S.name === 'terminal' ? 'filter:url(#phosRepo);' : ''}}
+        .desc{font:400 12px system-ui,sans-serif;fill:${descFill};}
+        .lbl{font:500 10px ${MONO};fill:${subFill};letter-spacing:1px;}
         .statVal{font:700 17px ${displayFont};}
         .chip{font:600 10px ${MONO};fill:${color};}
-        .topic{font:600 10px ${MONO};fill:#04070d;}
+        .topic{font:600 10px ${MONO};fill:${S.light ? '#04070d' : '#04070d'};}
       </style>
+      ${S.name === 'terminal' ? '<filter id="phosRepo" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.4"/></filter>' : ''}
       <clipPath id="cardClip"><polygon points="14,0 440,0 440,${height - 14} 426,${height} 0,${height} 0,14"/></clipPath>
     </defs>
     <g clip-path="url(#cardClip)">
-      <rect width="440" height="${height}" fill="#04070d"/>
+      ${S.name === 'glass'
+        ? `<rect width="440" height="${height}" fill="url(#repoGlassBg)"/>`
+        : `<rect width="440" height="${height}" fill="${S.bg || '#04070d'}"/>`}
+      ${S.scan ? S.scan(440, height) : ''}
     </g>
-    <polygon points="14,0 440,0 440,${height - 14} 426,${height} 0,${height} 0,14" fill="none" stroke="${color}" stroke-opacity="0.14" stroke-width="4"/>
+    ${S.frame
+      ? S.frame(440, height)
+      : `<polygon points="14,0 440,0 440,${height - 14} 426,${height} 0,${height} 0,14" fill="none" stroke="${color}" stroke-opacity="0.14" stroke-width="4"/>
     <polygon points="14,0 440,0 440,${height - 14} 426,${height} 0,${height} 0,14" fill="none" stroke="${color}" stroke-opacity="0.8" stroke-width="1.3"/>
     <g fill="none" stroke="${color}" stroke-width="2.4" stroke-linecap="square" opacity="0.85">
       <path d="M406 2 H438 V34"/>
       <path d="M34 ${height - 2} H2 V${height - 34}"/>
-    </g>
+    </g>`}
 
     <text x="24" y="40" class="name">${esc(repo.name)}</text>
-    <text x="24" y="58" class="desc" fill="#7fb8c4">${esc(repo.full_name)}</text>
+    <text x="24" y="58" class="desc" fill="${subFill}">${esc(repo.full_name)}</text>
     ${descLines.map((line, i) => `<text x="24" y="${86 + i * 16}" class="desc">${line}</text>`).join('')}
 
-    ${statBox(24, row1Y, 'STARS', repo.stargazers_count, color)}
-    ${statBox(212, row1Y, 'FORKS', repo.forks_count, color)}
-    ${statBox(24, row2Y, 'ISSUES', repo.open_issues_count, color)}
-    ${statBox(212, row2Y, 'WATCHERS', repo.watchers_count, color)}
-    ${statBox(24, row3Y, 'CONTRIBUTORS', contributors ?? '—', color)}
-    ${statBox(212, row3Y, 'RELEASE', releaseTag ? esc(releaseTag) : '—', color)}
+    ${cell(24, row1Y, 'STARS', repo.stargazers_count, color, statW)}
+    ${cell(212, row1Y, 'FORKS', repo.forks_count, color, statW)}
+    ${cell(24, row2Y, 'ISSUES', repo.open_issues_count, color, statW)}
+    ${cell(212, row2Y, 'WATCHERS', repo.watchers_count, color, statW)}
+    ${cell(24, row3Y, 'CONTRIBUTORS', contributors ?? '—', color, statW)}
+    ${cell(212, row3Y, 'RELEASE', releaseTag ? esc(releaseTag) : '—', color, statW)}
 
     <text x="24" y="${metaY}" class="lbl">DEFAULT BRANCH</text>
-    <text x="24" y="${metaValY}" class="desc">${esc(repo.default_branch)}</text>
+    <text x="24" y="${metaValY}" class="desc" fill="${S.dim || '#a8b0c2'}">${esc(repo.default_branch)}</text>
     <text x="150" y="${metaY}" class="lbl">LAST PUSH</text>
-    <text x="150" y="${metaValY}" class="desc">${formatDate(repo.pushed_at)}</text>
+    <text x="150" y="${metaValY}" class="desc" fill="${S.dim || '#a8b0c2'}">${formatDate(repo.pushed_at)}</text>
 
     <text x="24" y="${meta2Y}" class="lbl">CREATED</text>
-    <text x="24" y="${meta2ValY}" class="desc">${formatDate(repo.created_at)}</text>
+    <text x="24" y="${meta2ValY}" class="desc" fill="${S.dim || '#a8b0c2'}">${formatDate(repo.created_at)}</text>
     <text x="150" y="${meta2Y}" class="lbl">SIZE</text>
-    <text x="150" y="${meta2ValY}" class="desc">${formatSize(repo.size)}</text>
+    <text x="150" y="${meta2ValY}" class="desc" fill="${S.dim || '#a8b0c2'}">${formatSize(repo.size)}</text>
 
     ${(() => {
       let tx = 24;
@@ -297,16 +313,78 @@ function renderDetailed({ repo, color, fontFace, contributors, releaseTag }) {
         const label = esc(topic);
         const w = 20 + label.length * 6.2;
         if (tx + w > 416) return '';
-        const out = hudChip(tx, topicsY, w.toFixed(1), 20, label, 'line', color);
+        const out = chip(tx, topicsY, w.toFixed(1), 20, label, 'line', color);
         tx += w + 8;
         return out;
       }).join('');
     })()}
 
-    ${repo.language ? hudChip(24, langY, 20 + repo.language.length * 7, 20, esc(repo.language), 'solid', color) : ''}
-    ${license ? hudChip(repo.language ? 52 + repo.language.length * 7 : 24, langY, 20 + license.length * 7, 20, esc(license), 'line', color) : ''}
+    ${repo.language ? chip(24, langY, 20 + repo.language.length * 7, 20, esc(repo.language), 'solid', color) : ''}
+    ${license ? chip(repo.language ? 52 + repo.language.length * 7 : 24, langY, 20 + license.length * 7, 20, esc(license), 'line', color) : ''}
   </svg>`;
 }
+
+
+// Repo-card skins for the detailed base renderer. Each entry restyles the
+// spec-sheet layout in a theme's design language (classic/cyberpunk share the
+// kit HUD chassis; terminal is phosphor CRT; glass is frosted light).
+const REPO_SKINS = {
+  classic: { name: 'classic' },
+  cyberpunk: { name: 'cyberpunk' },
+  terminal: {
+    name: 'terminal',
+    bg: '#020402',
+    ink: '#3ddc6a',
+    sub: '#7fb8c4',
+    dim: '#2a6b3d',
+    rule: '#1c3a24',
+    frame: (W, H) => `
+    <rect width="${W}" height="${H}" fill="none" stroke="#3ddc6a" stroke-opacity="0.14" stroke-width="4"/>
+    <rect width="${W}" height="${H}" fill="none" stroke="#3ddc6a" stroke-opacity="0.7" stroke-width="1"/>
+    <g fill="none" stroke="#3ddc6a" stroke-width="2" stroke-linecap="square" opacity="0.8">
+      <path d="M${W - 36} 2 H${W - 2} V36"/>
+      <path d="M36 ${H - 2} H2 V${H - 36}"/>
+    </g>`,
+    scan: (W, H) => `<g opacity="0.12">${Array.from({ length: Math.ceil(H / 6) }, (_, i) => `<line x1="0" y1="${i * 6}" x2="${W}" y2="${i * 6}" stroke="#3ddc6a" stroke-width="1"/>`).join('')}</g>
+    <rect x="0" y="-8" width="${W}" height="5" fill="#3ddc6a" opacity="0.10"><animate attributeName="y" from="-8" to="${H}" dur="6s" repeatCount="indefinite"/></rect>`,
+    statCell: (x, y, label, value, color, W) => `
+    <rect x="${x}" y="${y}" width="${W}" height="60" fill="none" stroke="#3ddc6a" stroke-dasharray="6 3" stroke-opacity="0.8"/>
+    <text x="${x + 12}" y="${y + 22}" font-family="${MONO}" font-size="10" fill="#2a6b3d" letter-spacing="1">┌ ${label} ${'─'.repeat(Math.max(0, 12 - label.length))}</text>
+    <text x="${x + 12}" y="${y + 46}" font-family="${MONO}" font-weight="700" font-size="17" fill="#7dffa8">${value}</text>`,
+    chip: (x, y, w, h, label, variant, color) => {
+      const solid = variant === 'solid';
+      return `<path d="M${x + 6} ${y} H${x + w} V${y + h - 6} L${x + w - 6} ${y + h} H${x} Z" fill="${solid ? '#3ddc6a' : 'none'}" fill-opacity="${solid ? 0.9 : 0}" stroke="${solid ? 'none' : '#3ddc6a'}" stroke-opacity="${solid ? 0 : 0.7}"/>
+    <text x="${x + 8}" y="${y + h / 2 + 3.5}" font-family="${MONO}" font-size="10" font-weight="600" fill="${solid ? '#020402' : '#3ddc6a'}">${label}</text>`;
+    },
+  },
+  glass: {
+    name: 'glass',
+    light: true,
+    bg: 'url(#repoGlassBg)',
+    ink: '#1c2333',
+    sub: '#5b6478',
+    dim: '#8891a3',
+    rule: '#c9d2e4',
+    frame: (W, H) => `
+    <polygon points="14,0 ${W},0 ${W},${H - 14} ${W - 14},${H} 0,${H} 0,14" fill="none" stroke="#1c2333" stroke-opacity="0.1" stroke-width="4"/>
+    <polygon points="14,0 ${W},0 ${W},${H - 14} ${W - 14},${H} 0,${H} 0,14" fill="none" stroke="#1c2333" stroke-opacity="0.35" stroke-width="1.2"/>
+    <g fill="none" stroke="#1c2333" stroke-width="2.2" stroke-linecap="square" opacity="0.65">
+      <path d="M${W - 36} 2 H${W - 2} V36"/>
+      <path d="M36 ${H - 2} H2 V${H - 36}"/>
+    </g>`,
+    statCell: (x, y, label, value, color, W) => `
+    <rect x="${x}" y="${y}" width="${W}" height="60" rx="4" fill="#ffffff" opacity="0.65" stroke="#1c2333" stroke-opacity="0.14"/>
+    <circle cx="${x + 12}" cy="${y + 18}" r="2.4" fill="${color}"/>
+    <text x="${x + 20}" y="${y + 22}" font-family="${MONO}" font-size="10" fill="#8891a3" letter-spacing="1">${label}</text>
+    <text x="${x + 12}" y="${y + 46}" font-family="system-ui,sans-serif" font-weight="700" font-size="18" fill="#1c2333">${value}</text>`,
+    chip: (x, y, w, h, label, variant, color) => {
+      const solid = variant === 'solid';
+      return `<path d="M${x} ${y + 6} V${y} H${x + w} V${y + h} H${x} Z" fill="#ffffff" fill-opacity="0.6" stroke="#1c2333" stroke-opacity="0.15"/>
+    <circle cx="${x + 8}" cy="${y + h / 2}" r="2.2" fill="${color}"/>
+    <text x="${x + 15}" y="${y + h / 2 + 3.5}" font-family="${MONO}" font-size="10" font-weight="600" fill="${solid ? '#1c2333' : '#5b6478'}">${label}</text>`;
+    },
+  },
+};
 
 function statBox(x, y, label, value, color) {
   return `
@@ -334,6 +412,8 @@ module.exports.GET = async (request) => {
 
   const requestedTheme = url.searchParams.get('theme');
   const render = THEMES[requestedTheme] || THEMES.cyberpunk;
+  const skinParam = Object.prototype.hasOwnProperty.call(REPO_SKINS, url.searchParams.get('skin') || '')
+    ? url.searchParams.get('skin') : null;
 
   const token = process.env.GITHUB_TOKEN;
   try {
@@ -350,7 +430,8 @@ module.exports.GET = async (request) => {
       ]);
     }
 
-    return svg(render({ repo, color, fontFace, contributors, releaseTag }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=604800');
+    const skinArgs = requestedTheme === 'detailed' && skinParam && skinParam !== 'classic' ? { skinName: skinParam } : {};
+    return svg(render({ repo, color, fontFace, contributors, releaseTag, ...skinArgs }), 200, 'public, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=604800');
   } catch (err) {
     if (err.status === 404) return svg(errorSVG(`"${owner}/${repoName}" not found`), 404, 'public, s-maxage=10');
     if (err.status === 429) return svg(errorSVG('rate limited — set GITHUB_TOKEN'), 503, 'public, s-maxage=10');
