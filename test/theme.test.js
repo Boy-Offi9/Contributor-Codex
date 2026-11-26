@@ -47,12 +47,18 @@ test('cyberpunk theme: renders a valid instrumented card', () => {
     level: 12, xp: 8420, totalStars: 1240, topLang: 'TypeScript',
     color: '#22d3ee', tier: 'ELITE', shape: 'circle', avatarUri: '', fontFace: '',
   });
-  assert.match(svg, /^<svg width="360" height="360"/);
+  assert.match(svg, /^<svg width="360" height="\d+"/);
   assert.match(svg, /LV\.12/);
   assert.match(svg, /Boy Offi9/);
   assert.match(svg, /@Boy-Offi9/);
   assert.match(svg, /8,420/);
   assert.match(svg, /ELITE/);
+  // full dossier: telemetry grid, lang distribution, activity
+  assert.match(svg, /TELEMETRY/);
+  assert.match(svg, /FORKS EARNED/);
+  assert.match(svg, /PULL REQUESTS/);
+  assert.match(svg, /ISSUES/);
+  assert.match(svg, /ACCOUNT AGE/);
   assert.ok(!svg.includes('undefined'), 'no undefined leaked into markup');
 });
 

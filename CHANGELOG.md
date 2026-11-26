@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.26.0 - 2026-11-26
+
+### Changed
+- Cyberpunk card is now the full dossier: telemetry grid (repos, stars, forks,
+  followers), language distribution bar with legend, activity row (pull
+  requests, issues, account age, top language), XP footer with level progress.
+  Dynamic height; /card now fetches PR/issue counts for cyberpunk too.
+
 ## 0.25.0 - 2026-11-26
 
 ### Changed

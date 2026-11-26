@@ -39,7 +39,7 @@ module.exports.GET = async (request) => {
     if (colorOverride) stats.color = colorOverride;
 
     let prs = null, issues = null;
-    if (requestedTheme === 'detailed') {
+    if (requestedTheme === 'detailed' || requestedTheme === 'cyberpunk') {
       ({ prs, issues } = await prIssueCounts(username, token));
     }
 
